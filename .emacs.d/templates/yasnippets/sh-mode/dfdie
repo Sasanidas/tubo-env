@@ -1,0 +1,14 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: defdie
+# key: dfdie
+# --
+die() {
+    set +x
+    local IFS=$' \t\n'
+    set +e
+
+    echo -e "$@" | while read -r ; do
+        echo " $BAD*$NORMAL $RC_INDENTATION$REPLY" >&2
+    done
+    exit 1
+}

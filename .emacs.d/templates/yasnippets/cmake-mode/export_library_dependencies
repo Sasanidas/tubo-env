@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: export_library_dependencies
+# key: eld
+# --
+export_library_dependencies($0)

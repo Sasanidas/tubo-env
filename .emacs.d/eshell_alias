@@ -1,0 +1,5 @@
+alias ("restart_pg" "finished")  $*
+alias Process  $*
+alias clear recenter 0
+alias eww eww-open-file $1
+alias ll ls -l $1

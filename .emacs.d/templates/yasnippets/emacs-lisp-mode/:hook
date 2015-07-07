@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: :hook
+# key: :hk
+# --
+:hook ((${1:HOOK} . ${2:FUNC}))

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: variable_watch
+# key: vw
+# --
+variable_watch($0)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: set_directory_properties
+# key: sdp
+# --
+set_directory_properties($0)

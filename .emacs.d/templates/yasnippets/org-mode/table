@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: table
+# key: tbl
+# --
+# Should be rerenced as [[$2]]
+#+CAPTION: ${1:caption}
+#+NAME: ${2:data-table}
+`(org-table-create)`

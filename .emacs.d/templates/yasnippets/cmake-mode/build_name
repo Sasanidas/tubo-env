@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: build_name
+# key: bn
+# --
+build_name($0)

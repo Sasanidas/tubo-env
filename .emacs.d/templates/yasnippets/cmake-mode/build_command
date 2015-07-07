@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: build_command
+# key: bc
+# --
+build_command($0)

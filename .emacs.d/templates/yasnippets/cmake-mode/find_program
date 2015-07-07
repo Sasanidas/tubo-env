@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: find_program
+# key: fp
+# --
+find_program($0)

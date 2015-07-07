@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: get_property
+# key: gp
+# --
+get_property($0)

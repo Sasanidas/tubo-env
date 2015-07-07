@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: try_compile
+# key: tc
+# --
+try_compile($0)

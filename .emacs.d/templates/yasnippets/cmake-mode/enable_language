@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: enable_language
+# key: el
+# --
+enable_language($0)

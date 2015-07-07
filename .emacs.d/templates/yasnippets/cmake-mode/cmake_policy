@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cmake_policy
+# key: cp
+# --
+cmake_policy($0)

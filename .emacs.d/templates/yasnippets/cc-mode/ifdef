@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: ifd
+# --
+#ifdef ${1:VAR}
+${2:TODO}
+#else
+#${3:TODO}
+#endif

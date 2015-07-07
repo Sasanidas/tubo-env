@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: exec_program
+# key: ep
+# --
+exec_program($0)

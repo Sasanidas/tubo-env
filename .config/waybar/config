@@ -1,0 +1,201 @@
+// -*- mode: js -*-
+[{
+    "layer": "top",
+    "position": "top",
+    "height": 25,
+    "modules-left": ["sway/workspaces", "sway/window", "sway/mode"],
+    "modules-center": ["clock" ],
+    "modules-right": ["backlight", "pulseaudio", "cpu", "memory",
+                      "temperature", "idle_inhibitor",
+                      "network#wireless", "battery", "tray"],
+
+	"output": "eDP-1",
+
+
+    "sway/mode": {
+        "format": "<span style=\"italic\">{}</span>"
+    },
+    "idle_inhibitor": {
+        "tooltip": false,
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        }
+    },
+    "tray": {
+        "icon-size": 24,
+        "spacing": 10
+    },
+    "clock": {
+        "tooltip": false,
+        "interval": 1,
+        "format": " {:%I:%M %p}",
+        "format-alt": " {:%d %B %Y, %A}"
+    },
+    "cpu": {
+        "format": "{}% ﬙",
+        "tooltip": false
+    },
+    "memory": {
+        "format": "{}% ",
+        "tooltip": false
+    },
+    "temperature": {
+        "critical-threshold": 80,
+        "format": "{temperatureC}°C {icon}",
+        "format-icons": ["", "", ""]
+    },
+    "backlight": {
+        "format": "{percent}%{icon}",
+        "format-icons": ["","ﯦ",""]
+    },
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon}",
+        "format-charging": "{capacity}%",
+        "format-plugged": "",
+        "format-alt": "{capacity}%{icon}",
+        "format-icons": ["","","", "", "", "", "", "", "", ""],
+        "tooltip": false
+    },
+    "network#wireless": {
+        "interval": 10,
+        "interface" : "wlp5s0",
+        "format-wifi": "直",
+        "format-linked": "睊",
+        "format-disconnected": "睊",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "tooltip": false
+    },
+    "network#ethernet": {
+        "interval": 10,
+        "interface" : "enp4s0",
+        "format-ethernet": "",
+        "format-linked": "",
+        "format-disconnected": "",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "tooltip": false
+    },
+    "pulseaudio": {
+        "tooltip": false,
+        "format": "{volume}% {icon}",
+        "format-bluetooth": "{volume}% {icon}",
+        "format-muted": "ﱝ",
+        "format-source": "{volume}% ",
+        "format-source-muted": "",
+        "format-icons": {
+            "headphones": "",
+            "handsfree": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["奄", "奔","奔", "墳", "墳"]
+        }
+    }
+},
+
+ {
+     "layer": "top",
+     "position": "top",
+     "height": 25,
+     "modules-left": ["sway/workspaces", "sway/window", "sway/mode"],
+     "modules-center": ["clock" ],
+     "modules-right": ["pulseaudio", "cpu", "memory", "temperature",
+                       "network#wireless",   "network#ethernet", "battery", "tray"],
+
+     "output": "HDMI-A-1",
+
+     "sway/mode": {
+         "format": "<span style=\"italic\">{}</span>"
+     },
+     "idle_inhibitor": {
+         "tooltip": false,
+         "format": "{icon}",
+         "format-icons": {
+             "activated": "",
+             "deactivated": ""
+         }
+     },
+     "tray": {
+         "icon-size": 24,
+         "spacing": 10
+     },
+     "clock": {
+         "tooltip": false,
+         "interval": 1,
+         "format": " {:%I:%M %p}",
+         "format-alt": " {:%d %B %Y, %A}"
+     },
+     "cpu": {
+         "format": "{}% ﬙",
+         "tooltip": false
+     },
+     "memory": {
+         "format": "{}% ",
+         "tooltip": false
+     },
+     "temperature": {
+         "critical-threshold": 80,
+         "format": "{temperatureC}°C {icon}",
+         "format-icons": ["", "", ""]
+     },
+     "backlight": {
+         "format": "{percent}%{icon}",
+         "format-icons": ["","ﯦ",""]
+     },
+     "battery": {
+         "states": {
+             "good": 95,
+             "warning": 30,
+             "critical": 15
+         },
+         "format": "{icon}",
+         "format-charging": "{capacity}% ",
+         "format-plugged": "",
+         "format-alt": "{capacity}%{icon}",
+         "format-icons": ["","","", "", "", "", "", "", "", ""],
+         "tooltip": false
+     },
+     "network#wireless": {
+         "interval": 10,
+         "interface" : "wlp5s0",
+         "format-wifi": "直",
+         "format-linked": "睊",
+         "format-disconnected": "睊",
+         "format-alt": "{ifname}: {ipaddr}/{cidr}",
+         "tooltip": false
+     },
+     "network#ethernet": {
+         "interval": 10,
+         "interface" : "enp4s0",
+         "format-ethernet": "",
+         "format-linked": "",
+         "format-disconnected": "",
+         "format-alt": "{ifname}: {ipaddr}/{cidr}",
+         "tooltip": false
+     },
+     "pulseaudio": {
+         "tooltip": false,
+         "format": "{volume}% {icon}",
+         "format-bluetooth": "{volume}% {icon}",
+         "format-muted": "ﱝ",
+         "format-source": "{volume}% ",
+         "format-source-muted": "",
+         "format-icons": {
+             "headphones": "",
+             "handsfree": "",
+             "headset": "",
+             "phone": "",
+             "portable": "",
+             "car": "",
+             "default": ["奄", "奔","奔", "墳", "墳"]
+         }
+     }
+ }
+]

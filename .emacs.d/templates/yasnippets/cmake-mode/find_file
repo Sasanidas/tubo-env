@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: find_file
+# key: ff
+# --
+find_file($0)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: write_file
+# key: wf
+# --
+write_file($0)

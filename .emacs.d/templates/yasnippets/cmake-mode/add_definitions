@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: add_definitions
+# key: adf
+# --
+add_definitions(-D$0)

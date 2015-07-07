@@ -1,0 +1,3 @@
+# -*- mode: snippet -*-
+# --
+<label for="$1">$2</label>

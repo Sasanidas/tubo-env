@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: get_target_property
+# key: gtp
+# --
+get_target_property($0)

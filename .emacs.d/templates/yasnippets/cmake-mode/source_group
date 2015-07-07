@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: source_group
+# key: sg
+# --
+source_group($0)

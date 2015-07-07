@@ -1,0 +1,7 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: :init
+# key: :in
+# --
+:init$>
+(progn$>
+$0)$>

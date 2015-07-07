@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: advice-add
+# key: adva
+# --
+(defun yc/$1-adv (${2:$(if (string-match "^ar" yas-text) "func ")}&rest args)$>
+"Advice for '$1'.
+Call FUNC which is '$1 with ARGS."$>
+$0$>
+)$>
+
+(advice-add '${1:ORIG_FUNC} :${2:b}${2:$(cond
+((string-match "^b" yas-text) "efore")
+((string-match "^ar" yas-text) "ound")
+((string-match "^af" yas-text) "ter")
+((string-match "^o" yas-text) "override")
+(t ""))} #'yc/$1-adv)$>

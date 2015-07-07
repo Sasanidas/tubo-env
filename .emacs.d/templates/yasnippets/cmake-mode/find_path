@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: find_path
+# key: fp
+# --
+find_path($0)

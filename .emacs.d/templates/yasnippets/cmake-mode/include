@@ -1,0 +1,5 @@
+# type: command
+# name: inc
+# key: in
+# --
+include ($0)

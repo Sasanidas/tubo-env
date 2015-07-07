@@ -1,0 +1,23 @@
+# -*- mode: snippet -*-
+# --
+<font size="4"> <strong>简介：</strong><br /></font>
+<font size=3><tt>
+${1:填写简介}<br />$>
+转载请<a href="http://www.cnblogs.com/yangyingchao/">注明出处</a>。<br />$>
+</tt></font>
+<br />
+<br />
+<font size="3">$>
+<p>$>
+${正文}$>
+</p>$>
+</font>
+<br>$>
+<br>
+<br>
+<font size="3" color="#CC9966">
+<a href="http://www.cnblogs.com/yangyingchao/">$>
+Author:yangyingchao,$>
+`(insert-current-date)`$>
+</a>$>
+</font>

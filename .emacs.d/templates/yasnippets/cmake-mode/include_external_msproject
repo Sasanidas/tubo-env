@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: include_external_msproject
+# key: iem
+# --
+include_external_msproject($0)

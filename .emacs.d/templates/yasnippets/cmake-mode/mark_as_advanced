@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: mark_as_advanced
+# key: maa
+# --
+mark_as_advanced($0)

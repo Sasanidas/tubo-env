@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: add_executable
+# key: ade
+# --
+add_executable(${1:name} $0)

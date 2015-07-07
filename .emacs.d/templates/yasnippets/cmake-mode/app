@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: app
+# key: ap
+# --
+project (${1:name})
+add_subdirectory(src)$>

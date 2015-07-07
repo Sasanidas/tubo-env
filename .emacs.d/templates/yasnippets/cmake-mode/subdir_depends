@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: subdir_depends
+# key: sd
+# --
+subdir_depends($0)

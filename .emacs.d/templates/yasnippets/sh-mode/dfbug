@@ -1,0 +1,11 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: dfbug
+# key: dfbug
+# --
+DEBUG_ON=
+PDEBUG()
+{
+    if [ ! -z \${DEBUG_ON} ]; then
+        echo "*DEBUG: $*"
+    fi
+}

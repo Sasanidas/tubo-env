@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: site_name
+# key: sn
+# --
+site_name($0)

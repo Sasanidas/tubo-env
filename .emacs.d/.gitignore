@@ -1,0 +1,21 @@
+# cedet build script.
+*.elc
+*.info*
+*-compile-script
+*-make-script
+elpa/
+.emacs.desktop
+ac-comphist.dat
+database/
+ede-projects.el
+/tramp
+
+server/
+docview/
+log_cache/
+.emacs.desktop.lock
+session.*
+*dot-wy.el
+
+*99*-proj-*.el
+/irony

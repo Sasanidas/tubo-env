@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: get_directory_property
+# key: gdp
+# --
+get_directory_property($0)
