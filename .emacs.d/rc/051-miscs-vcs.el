@@ -7,27 +7,9 @@
 ;;; Code:
 
  ;; ************************** magit ****************************
-(use-package magit-auto-revert
-  :commands (magit-auto-revert-mode))
-
-(use-package mule :commands (recode-region))
-
-(use-package git-commit
-  :defer t
-  :hook (git-commit-mode . (lambda ()
-                        (setq fill-column 72)
-                        (turn-on-flyspell)
-                        (goto-char (point-min))
-                        (PDEBUG "CURR-POINT: " (point))
-                        ))
-  :config
-  (progn
-    (substitute-key-definition
-     'kill-buffer  'git-commit-abort git-commit-mode-map)
-    (substitute-key-definition
-     'ido-kill-buffer  'git-commit-abort git-commit-mode-map)))
 
 (use-package magit
+  :pin melpa
   :commands (magit-blame-addition)
   :bind (:map ctl-x-map
               ("gs" . magit-status)
@@ -53,13 +35,21 @@
    (quote
     (
      magit-insert-status-headers
-     magit-insert-merge-log magit-insert-rebase-sequence magit-insert-am-sequence
-     magit-insert-sequencer-sequence magit-insert-bisect-output
-     magit-insert-bisect-rest magit-insert-bisect-log
-     magit-insert-untracked-files magit-insert-unstaged-changes
-     magit-insert-staged-changes magit-insert-stashes
-     magit-insert-unpulled-from-upstream magit-insert-unpulled-from-pushremote
-     magit-insert-unpushed-to-upstream magit-insert-unpushed-to-pushremote)))
+     magit-insert-merge-log
+     magit-insert-rebase-sequence
+     magit-insert-am-sequence
+     magit-insert-sequencer-sequence
+     magit-insert-bisect-output
+     magit-insert-bisect-rest
+     magit-insert-bisect-log
+     magit-insert-untracked-files
+     magit-insert-unstaged-changes
+     magit-insert-staged-changes
+     magit-insert-stashes
+     magit-insert-unpulled-from-upstream
+     magit-insert-unpulled-from-pushremote
+     magit-insert-unpushed-to-upstream
+     magit-insert-unpushed-to-pushremote)))
 
   :hook ((magit-find-file .       (lambda () ;; Guess proper encoding for files.
                                     (setq buffer-read-only nil)
@@ -67,26 +57,29 @@
                                     (setq buffer-read-only t)))
 
 
-         (magit-status-mode .       (lambda ()
-                                      (when (executable-find "arc")
-                                        (require 'magit-arc)
-                                        (magit-arc-mode))
-                                      (when (try-require 'magit-svn)
-                                        (define-key magit-mode-map (kbd "N") 'magit-svn-popup)))))
+         ;; (magit-status-mode .       (lambda ()
+         ;;                              (when (executable-find "arc")
+         ;;                                (require 'magit-arc)
+         ;;                                (magit-arc-mode))
+         ;;                              (when (try-require 'magit-svn)
+         ;;                                (define-key magit-mode-map (kbd "N") 'magit-svn-popup))))
+         )
   :config
   (progn
-    (magit-define-popup-option 'magit-merge-popup
-      ?x "Strategy options" "--strategy-option=" #'read-from-minibuffer)
+    ;; (magit-define-popup-option 'magit-merge-popup
+    ;;   ?x "Strategy options" "--strategy-option=" #'read-from-minibuffer)
     (magit-auto-revert-mode 1)))
 
 (use-package magit-files
+  :pin melpa
   :defer t
   :config
   (progn
     (define-key magit-file-mode-map "\C-xg" nil)
-    (magit-define-popup-action 'magit-file-popup
-      ?f "Find file"  'magit-find-file-other-window)
-))
+    ;; (magit-define-popup-action 'magit-file-popup
+    ;;   ?f "Find file"  'magit-find-file-other-window)
+)
+  )
 
 
 (use-package magit-log :bind ((;; ,(kbd "C-x g l")
@@ -116,23 +109,23 @@ Call FUNC with ARGS."
 
 (advice-add 'magit-stash-format-patch :around #'yc/magit-stash-format-patch)
 
-(defun yc/magit-log-buffer-file-popup-adv (&rest args)
-  "Advice for 'magit-log-buffer-file-popup'.
-Call FUNC which is 'magit-log-buffer-file-popup with ARGS."
-  (if-let ((file (magit-file-relative-name)))
-      (let ((magit-log-arguments
-             (append magit-log-arguments
-                     (magit-popup-import-file-args
-                      (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
-                          (with-current-buffer buffer
-                            (nth 2 magit-refresh-args))
-                        (default-value 'magit-log-arguments))
-                      (list file)))))
-        (magit-invoke-popup 'magit-log-popup nil nil))
-    (user-error "Buffer isn't visiting a file")))
+;; (defun yc/magit-log-buffer-file-popup-adv (&rest args)
+;;   "Advice for 'magit-log-buffer-file-popup'.
+;; Call FUNC which is 'magit-log-buffer-file-popup with ARGS."
+;;   (if-let ((file (magit-file-relative-name)))
+;;       (let ((magit-log-arguments
+;;              (append magit-log-arguments
+;;                      (magit-popup-import-file-args
+;;                       (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
+;;                           (with-current-buffer buffer
+;;                             (nth 2 magit-refresh-args))
+;;                         (default-value 'magit-log-arguments))
+;;                       (list file)))))
+;;         (magit-invoke-popup 'magit-log-popup nil nil))
+;;     (user-error "Buffer isn't visiting a file")))
 
-(advice-add 'magit-log-buffer-file-popup :override
-            #'yc/magit-log-buffer-file-popup-adv)
+;; (advice-add 'magit-log-buffer-file-popup :override
+;;             #'yc/magit-log-buffer-file-popup-adv)
 
 (use-package magit-git
   :commands (magit-git-string))
@@ -156,6 +149,26 @@ Call FUNC which is 'magit-log-buffer-file-popup with ARGS."
              "/blob/master/"
              (and root (file-relative-name buffer-file-name root))
              ))))
+
+(use-package magit-auto-revert
+  :commands (magit-auto-revert-mode))
+
+(use-package mule :commands (recode-region))
+
+(use-package git-commit
+  :defer t
+  :hook (git-commit-mode . (lambda ()
+                        (setq fill-column 72)
+                        (turn-on-flyspell)
+                        (goto-char (point-min))
+                        (PDEBUG "CURR-POINT: " (point))
+                        ))
+  :config
+  (progn
+    (substitute-key-definition
+     'kill-buffer  'git-commit-abort git-commit-mode-map)
+    (substitute-key-definition
+     'ido-kill-buffer  'git-commit-abort git-commit-mode-map)))
 
  ;; svn
 
