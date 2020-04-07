@@ -74,36 +74,6 @@ Will be passed start and end positions of region to be formatted.")
   (beginning-of-line)
   (point))
 
-;;;###autoload
-(defun emr-c-tidy-includes ()
-  "Collate and reorder include directives in the current buffer.
-Library and project includes are kept separate."
-  (interactive "*")
-  (let (includes)
-    (save-excursion
-      (emr-c:goto-includes-or-buf-start)
-
-      ;; Collect include statements in buffer.
-      (save-excursion
-        (goto-char (point-min))
-        (while (search-forward-regexp emr-c:rx-include nil t)
-          (push (match-string 1) includes)
-          (replace-match "")
-          (when (emr-blank-line?)
-            (ignore-errors
-              (kill-line)))))
-      ;; Partition includes by type, subsort alphabetically and insert into
-      ;; buffer.
-      (->> includes
-           (--separate (s-starts-with? "<" it))
-           (--map (sort it 'string<))
-           (-flatten)
-           (--map (concat "#include " it))
-           (s-join "\n")
-           (s-append "\n")
-           (insert)))))
-
-
 
 ;;; EMR Declarations
 
@@ -141,7 +111,6 @@ Uses either clang-format, if available, or `emr-c-format-fallback-func.'"
       (clang-format-buffer (emr-cc-get-style))
     (funcall emr-c-format-fallback-func (point-min) (point-max))))
 
-(defalias 'emr-cc-tidy-includes 'emr-c-tidy-includes)
 
 (defvar emr-cc-surround-var-hist nil
   "A collection of variables used by if-defs..")
@@ -228,13 +197,6 @@ Uses either clang-format, if available, or `emr-c-format-fallback-func.'"
 ; ------------------
 
 ;;; EMR Declarations
-
-(emr-declare-command 'emr-cc-tidy-includes
-  :title "tidy"
-  :description "includes"
-  :modes '(c++-mode c-mode)
-  :predicate (lambda ()
-               (emr-c:looking-at-include?)))
 
 (emr-declare-command 'emr-cc-format-region
   :title "format region"
