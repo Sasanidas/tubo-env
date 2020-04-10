@@ -24,10 +24,37 @@
   (interactive)
   (save-excursion
     (goto-char (point-min))
+
+    ;; remove costs: (cost=1268995.52..1268995.52 rows=1958 width=40)..
     (while (search-forward-regexp
             (rx "cost=" (+ digit) "." (+ digit)".."(+ digit) "." (+ digit) (* space))
             nil t)
-      (replace-match ""))))
+      (replace-match "")))
+
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp
+            (rx "Foreign Scan") nil t)
+      (replace-match "")))
+
+  ;; calculate time (actual time=14071.851..14373.667 rows=2044 blocks=256 loops=1)
+
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp
+            (rx "(actual time="
+                (group (+ digit) "." (+ digit))
+                ".."
+                (group (+ digit) "." (+ digit))
+                (+ space) "rows=" (+? nonl) ")")
+            nil t)
+      (let ((startup (match-string 1))
+            (total (match-string 2)))
+        (insert (format " -- %.03f ms" (- (string-to-number total) (string-to-number startup)))))
+      )
+    )
+
+  )
 
 (provide 'sql-utils)
 

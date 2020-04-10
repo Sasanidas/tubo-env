@@ -65,10 +65,10 @@
            (cond
             ((equal sql-product 'postgres)
              (let* ((cmd-prefix (format "psql %s %s %s --no-psqlrc postgres -c "
-                                        (if sql-user
+                                        (if (> (length sql-user) 0)
                                             (format "-U %s" sql-user)
                                           "")
-                                        (if sql-server
+                                        (if (> (length sql-server) 0)
                                             (format "-h %s" sql-server)
                                           "")
                                         (if (= sql-port 0) "" (format "-p %d" sql-port))))
