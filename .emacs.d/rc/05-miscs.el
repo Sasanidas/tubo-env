@@ -192,8 +192,7 @@
              yc/http-save-page
              yc/insert-current-date
              yc/insert-current-date-time
-             yc/kill-proc yc/kill-ccls yc/kill-gdb yc/kill-pyls
-             yc/move-snapshot  yc/expand-macro
+             yc/kill-proc yc/move-snapshot  yc/expand-macro
              yc/pack-env yc/unpack-env dos-unix unix-dos
              yc/syntax-color-hex
 

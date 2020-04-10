@@ -83,7 +83,7 @@
 
 
 (use-package magit-log :bind ((;; ,(kbd "C-x g l")
-                               "gl". magit-log-buffer-file-popup)))
+                               "gl". magit-log-buffer-file)))
 (use-package git-timemachine
   :bind ((;; ,(kbd "C-x g t")
           "gt". git-timemachine)))
