@@ -228,7 +228,7 @@ Call FUNC which is 'sql-product-interactive with ARGS."
 (advice-add 'sql-product-interactive :around #'yc/sql-product-interactive-adv)
 
 (use-package sql-utils
-  :commands (eshell/restart_pg))
+  :commands (eshell/restart_pg yc/remove-costs))
 
  ;; protobuf-mode
 (use-package protobuf-mode :mode (rx ".proto" eol))

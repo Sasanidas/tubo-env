@@ -19,6 +19,16 @@
 
     (error "Could not find pg_ctl, current PATH: %s" (getenv "PATH"))))
 
+(defun yc/remove-costs ()
+  "Remove cost info."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp
+            (rx "cost=" (+ digit) "." (+ digit)".."(+ digit) "." (+ digit) (* space))
+            nil t)
+      (replace-match ""))))
+
 (provide 'sql-utils)
 
 ;; Local Variables:
