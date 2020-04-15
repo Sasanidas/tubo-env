@@ -55,7 +55,7 @@
                   (cons (kbd "<f8>") 'gud-finish)
                   (cons (kbd "<f9>") 'gud-break)
                   (cons (kbd "M-S-SPC") 'gdb-toggle-breakpoint)
-                  (cons "\C-c\C-c" 'gdb-io-interrupt)
+                  (cons "\C-c\C-c" 'comint-interrupt-subjob)
                   (cons "\C-c\C-z" 'gdb-io-stop)
                   (cons "\C-c\C-\\" 'gdb-io-quit)
                   (cons "\C-c\C-p" 'gud-print)
