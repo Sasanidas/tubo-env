@@ -52,13 +52,6 @@
    '(font-lock-warning-face  ((t ( :foreground "white" :background "#af0000" :bold t
                                                :underline t))))
 
-
-
-   '(Info-title-1-face ((t (:bold t :weight bold :height 1.728))))
-   '(Info-title-2-face ((t (:bold t :weight bold :height 1.44))))
-   '(Info-title-3-face ((t (:bold t :weight bold :height 1.2))))
-   '(Info-title-4-face ((t (:bold t :weight bold))))
-
    '(align-highlight-change-face  ((t (:background "darkseagreen2" :foreground "blue"))))
    '(align-highlight-nochange-face ((t (:background "SkyBlue4"))))
    '(antlr-font-lock-keyword-face ((t (:foreground "SteelBlue")))) ;%
@@ -72,10 +65,6 @@
    '(bbdb-field-value ((t (:foreground "AntiqueWhite2"))))
    '(bbdb-name ((t (:underline t :foreground "cadet blue"))))
 
-   '(bold ((t (:bold t :weight bold))))
-   '(bold-italic ((t (:bold t :italic t :slant italic :weight bold))))
-   '(border ((t (:background "gold" :foreground "black" ))))
-   '(buffer-menu-buffer ((t (:bold t :weight bold))))
    '(button ((t (:underline t :foreground "#00ffff" :weight bold))))
    '(widget-button ((t (:underline t :foreground "#00ffff" :weight bold))))
    '(calendar-today-face ((t (:underline t :bold t :foreground "cornsilk"))))
@@ -443,20 +432,6 @@
    '(mode-line-80col-face ((t (:inherit 'mode-line-face :foreground "black" :background "#eab700"))))
 
    `(hl-line  ((t (:background ,current-line :underline nil))))
-
-   ;; Helm
-   `(helm-header ((,class (:foreground ,foreground :background ,background))))
-   `(helm-selection ((,class (:background ,current-line :foreground ,yellow))))
-   `(helm-ff-file ((,class (:foreground ,foreground ))))
-   `(helm-ff-directory ((,class (:foreground ,aqua ))))
-   `(helm-ff-executable ((,class (:foreground ,green ))))
-   `(helm-buffer-directory ((,class (:foreground ,aqua))))
-   `(helm-buffer-file ((,class (:foreground ,foreground))))
-   `(helm-grep-file ((,class (:foreground ,aqua :underline t))))
-   `(helm-buffer-process ((,class (:foreground ,red))))
-   `(helm-buffer-not-saved ((,class (:foreground ,orange))))
-   `(helm-candidate-number ((,class (:foreground ,foreground :background ,"#ef6c00"))))
-   `(helm-source-header ((,class (:background ,header-color :foreground ,"#eceff1" :height 1.3 :bold t ))))
 
    ;; Magit
    `(magit-branch ((t (:inherit magit-header :foreground "dodger blue" :underline t :weight bold))))
