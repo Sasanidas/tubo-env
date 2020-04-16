@@ -11,13 +11,9 @@
 
 (custom-set-variables
  '(package-archives
-   '(("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-     ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
-     ("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-
-     ;; ("melpa" . "http://elpa.emacs-china.org/melpa/")
-     ;; ("melpa-stable" . "http://elpa.emacs-china.org/melpa-stable/")
-     ;; ("gnu" . "http://elpa.emacs-china.org/gnu/")
+   '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+     ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+     ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
      ))
  '(package-archive-priorities
    '(("melpa-stable" . 10)

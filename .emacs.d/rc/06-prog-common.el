@@ -508,6 +508,8 @@ Return t if succeeded, or nil otherwise.")
   (lsp-enable-snippet t)
   (lsp-auto-configure t)
   (lsp-log-io t)
+  (lsp-flycheck-live-reporting nil)
+  (flycheck-check-syntax-automatically '(save idle-change))
 
   :hook
   ((lsp-after-open . (lambda ()
