@@ -11,9 +11,9 @@
 
 (custom-set-variables
  '(package-archives
-   '(("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-     ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
-     ("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+   '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+     ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+     ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
      ))
  '(package-archive-priorities
    '(("melpa-stable" . 10)
