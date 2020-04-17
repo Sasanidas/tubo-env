@@ -19,3 +19,4 @@ session.*
 
 *99*-proj-*.el
 /irony
+/transient/
