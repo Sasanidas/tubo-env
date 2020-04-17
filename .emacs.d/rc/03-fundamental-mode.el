@@ -145,18 +145,16 @@
               :keymap counsel-find-file-map
               :caller 'counsel-find-file)))
 
-(defun yc/counsel-grep (&optional prefer-rga)
+(defun yc/counsel-grep (&optional deep)
   "Description."
   (interactive "P")
   (let ((m (point-marker))
         (init (aif (symbol-at-point) (symbol-name it))))
 
     (cond
-
      ;; use rga if specified...
-     ((and prefer-rga (executable-find "rg") (executable-find "rga"))
-      (let ((counsel-rg-base-command
-             "rga -S --no-heading --line-number --color never %s ."))
+     ((and deep (executable-find "rg"))
+      (let ((counsel-rg-base-command (concat counsel-rg-base-command " -uuu ")))
         (counsel-rg init default-directory)))
 
      ;; ;; or, prefer to rg if possible..
