@@ -39,7 +39,10 @@
 (use-package flyspell
   :commands (flyspell-mode flyspell-prog-mode)
   :hook ((prog-mode . flyspell-prog-mode)
-         (markdown-mode . flyspell-mode))
+         (markdown-mode . flyspell-mode)
+         (emacs-startup . (lambda ()
+                            (unless (executable-find "aspell")
+                              (warn "aspell not found, flyspell will not work.")))))
   :config
   (progn
     (substitute-key-definition
@@ -56,7 +59,8 @@
    '(ispell-extra-args '("--reverse"))
    '(ispell-skip-html t)
    '(ispell-dictionary "english")
-   '(ispell-local-dictionary "english")))
+   '(ispell-local-dictionary "english"))
+  )
 
 (use-package log-edit
   :hook ((log-edit-mode . (lambda ()
