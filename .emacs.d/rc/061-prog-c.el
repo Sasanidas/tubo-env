@@ -385,7 +385,7 @@ and is reversed for better performance.")
                                  (if (or (and compiler (string= compiler "clang"))
                                          (eq system-type 'darwin))
                                      (semantic-clang-setup)
-                                   semantic-gcc-setup))
+                                   (semantic-gcc-setup)))
                                (semantic-default-c-setup)
                                (yc/add-common-includes))))))))
 
