@@ -970,6 +970,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   'yc/lsp-load-project-configuration-cc-mode)
 
 (use-package modern-cpp-font-lock
+  :pin melpa
   :commands (modern-c++-font-lock-mode)
   :hook ((c++-mode . modern-c++-font-lock-mode))
 )

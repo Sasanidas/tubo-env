@@ -427,6 +427,7 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
       (error "Can't find target for %s" text))))
 
 (use-package org-bullets
+  :pin melpa
   :commands (org-bullets-mode)
   :hook ((org-mode . (lambda ()
                        (if window-system

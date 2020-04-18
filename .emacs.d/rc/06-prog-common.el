@@ -498,7 +498,7 @@ Return t if succeeded, or nil otherwise.")
   :ensure t
   :pin melpa
   :custom
-  (lsp-diagnostic-package nil)
+  (lsp-diagnostic-package 'auto)
   (lsp-restart 'ignore)
   (lsp-enable-file-watchers nil)
   (lsp-enable-indentation nil)
@@ -699,6 +699,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
 ;; lsp extras
 (use-package lsp-ui
   :defer t
+  :pin melpa
   :ensure t
   :custom
   (lsp-ui-sideline-enable nil)
