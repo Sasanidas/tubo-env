@@ -674,14 +674,6 @@ Call FUNC with ARGS."
   (advice-add 'org-publish-get-base-files :around
               #'yc/org-publish-get-base-files))
 
-(defun yc/org-md-template-adv (func contents info)
-  "Advice for 'org-md-template'.
-Call FUNC which is 'org-md-template with ARGS. Adding GEN-TITLE as mark of title."
-  (aif (plist-get info :title)
-      (concat "<!-- GEN-TITLE: " (org-export-data it info) " -->\n" contents)
-    contents))
-(advice-add 'org-md-template :around #'yc/org-md-template-adv)
-
 (yc/eval-after-load
   "ox-odt"
   ;; org v8 bundled with Emacs 24.4
@@ -800,6 +792,15 @@ Check js/slides.js exist or not, if not exist, re-fetch resource."
   )
 
 (advice-add 'org-reveal-export-to-html :around #'yc/org-reveal-export-to-html-adv)
+
+ ;; org-markdown enhancements.
+(defun yc/org-md-template-adv (func contents info)
+  "Advice for 'org-md-template'.
+Call FUNC which is 'org-md-template with ARGS. Adding GEN-TITLE as mark of title."
+  (aif (plist-get info :title)
+      (concat "<!-- GEN-TITLE: " (org-export-data it info) " -->\n\n[[_TOC_]]\n" contents)
+    contents))
+(advice-add 'org-md-template :around #'yc/org-md-template-adv)
 
 ;;; markdown, adding language tag if possible...
 (defun yc/org-md-example-block-adv (f b c i)
