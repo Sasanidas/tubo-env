@@ -376,11 +376,11 @@ and is reversed for better performance.")
   :commands (semantic-default-c-setup)
   :hook ((c-mode-common .
                         (lambda ()
-                          (run-with-idle-timer
+                          (yc/run-with-idle-timer
                            1 nil
                            (lambda ()
                              (unless (bound-and-true-p lsp-mode)
-                               (message "Layzing hooks for mode %s" major-mode)
+                               (message "Lazy hooks for mode %s" major-mode)
                                (let ((compiler (getenv "CC")))
                                  (if (or (and compiler (string= compiler "clang"))
                                          (eq system-type 'darwin))
@@ -615,7 +615,7 @@ and is reversed for better performance.")
   (ede-turn-on-hook)
   (cwarn-mode 1)
 
-  (run-with-idle-timer
+  (yc/run-with-idle-timer
    0.5 nil
    (lambda ()
      (message "Layzing hooks for mode %s" major-mode)
@@ -631,12 +631,12 @@ and is reversed for better performance.")
        (error nil))
 
      (let ((style (yc/get-c-style (buffer-file-name))) )
-    (c-set-style style)
-    (when (string= style "kernel-coding")
-      (add-to-list
-       'hide-ifdef-define-alist
-       '(kernel __KERNEL__ CONFIG_SMP CONFIG_PCI CONFIG_MMU))
-      (hide-ifdef-use-define-alist 'kernel))))))
+       (c-set-style style)
+       (when (string= style "kernel-coding")
+         (add-to-list
+          'hide-ifdef-define-alist
+          '(kernel __KERNEL__ CONFIG_SMP CONFIG_PCI CONFIG_MMU))
+         (hide-ifdef-use-define-alist 'kernel))))))
 
 
 (use-package cc-mode
@@ -920,8 +920,9 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   "Advice for 'ccls--suggest-project-root'.
 Call FUNC which is 'ccls--suggest-project-root with ARGS."
   (PDEBUG "ENTER: root-" root-file)
-  (let* ((blacklist '("/.ccls-cache/"  "/build/" "/cmake_build_Debug/"
-                     "/cmake_build_Release/" "/cmake_build_RelWithDebInfo/")))
+  (let* ((blacklist '("/.ccls-cache/"  "build/" "build_Debug/"
+                                    "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
+                                    "cmake_build_Release/"  "cmake_build_RelWithDebInfo/")))
 
     (setq ccls-initialization-options nil)
 
@@ -945,7 +946,8 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
         (unless (member :compilationDatabaseDirectory ccls-initialization-options)
           (let ((compile-dir
                  (catch 'p-found
-                   (dolist (build '("."  "build/" "build_release/" "cmake_build_Debug/"
+                   (dolist (build '("."  "build/" "build_Debug/"
+                                    "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
                                     "cmake_build_Release/"  "cmake_build_RelWithDebInfo/"))
                      (when (file-exists-p (format "%s/%s/compile_commands.json" root-dir build))
                        (throw 'p-found build))))))

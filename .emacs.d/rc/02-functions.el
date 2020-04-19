@@ -615,6 +615,20 @@ And install necessary packages if there are errors while executing FUNC."
       x)
   )
 
+(defun yc/run-with-idle-timer (secs repeat function &rest args)
+  "Like `run-with-idle-timer', but always runs in the `current-buffer'.
+
+Cancels itself, if this buffer was killed."
+  (let* (;; Chicken and egg problem.
+         (fns (make-symbol "local-idle-timer"))
+         (timer (apply 'run-with-idle-timer secs repeat fns args))
+         (fn `(lambda (&rest args)
+                (if (not (buffer-live-p ,(current-buffer)))
+                    (cancel-timer ,timer)
+                  (with-current-buffer ,(current-buffer)
+                    (apply (function ,function) args))))))
+    (fset fns fn)
+    fn))
  
 ;; Local Variables:
 ;; coding: utf-8
