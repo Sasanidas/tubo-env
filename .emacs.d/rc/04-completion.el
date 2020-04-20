@@ -168,6 +168,7 @@
 
 (use-package yasnippet
   :commands (yas-global-mode yas-minor-mode)
+  :pin melpa
   :ensure t
   :custom
   (yas-verbosity 2)

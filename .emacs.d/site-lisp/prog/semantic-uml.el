@@ -487,23 +487,32 @@ Possible choices:
 
       (PDEBUG "POS:" l_start l_end)
 
-      (dolist (item symbols)
+      (defun uml/parse-item (item)
+        "Description."
         (let* ((range (gethash "range" item))
                (start (1+ (gethash "line" (gethash "start" range))))
                (end (1+ (gethash "line" (gethash "end" range))))
-               (kind (gethash "kind" item))
+               (kind (alist-get (gethash "kind" item) lsp--symbol-kind))
+               (children (gethash "children" item))
                (yc/debug-log-limit -1))
 
           (when (and (<= start l_start)
                      (>= end l_end))
-            (if (and (alist-get kind lsp--symbol-kind)
+            (if (and (and kind
+                          (or (string= kind "Struct")
+                              (string= kind "Class")))
                      (or (not cand)
                          (and
                           (> start (gethash "line" (gethash "start" (gethash "range" cand))))
                           (< end (gethash "line" (gethash "end" (gethash "range" cand)))))))
-                (setq cand item)))))
+                (setq cand item))
 
-      (let ((yc/debug-log-limit -1))
+            (if children
+                (seq-map 'uml/parse-item children)))))
+
+      (mapc 'uml/parse-item symbols)
+
+      (let ((yc/debug-log-limit 256))
         (PDEBUG "CAND:" cand
           "HASHP: " (hash-table-p cand)
           ;; "CHILDREN:" (gethash "children" cand)
@@ -542,7 +551,7 @@ Possible choices:
           (oset node :parents parent)
           (add-to-list 'nodes node )
           ))
-      nodes)))
+      nodes))) 
 
 
 (defun uml/get-objnode-list (start end)

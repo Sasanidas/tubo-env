@@ -11,9 +11,11 @@
 (defun yc/plantuml-path ()
   "Get path of plantUML."
   (catch 'path-found
-    (dolist (path '("/usr/share/plantuml/lib/plantuml.jar"
+    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
+                    "/usr/share/plantuml/lib/plantuml.jar"
                     "/usr/local/plantuml/lib/plantuml.jar"
                     "/usr/local/opt/plantuml/libexec/plantuml.jar"))
+      (PDEBUG "CHECKING: " path)
       (when (file-exists-p path)
         (throw 'path-found path)))
     ""))
