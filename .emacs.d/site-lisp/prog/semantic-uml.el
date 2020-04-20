@@ -368,6 +368,9 @@ Possible choices:
                        (1 "-")
                        (2 "#"))))
 
+        (if (string-match (rx (+? nonl) "::" (group (+ nonl)) eow) type)
+            (setq type (match-string 1 type)))
+
         (add-to-list 'result (funcall format-func prefix type name) t)))
     (mapconcat 'identity result "\n")))
 
@@ -498,9 +501,8 @@ Possible choices:
 
           (when (and (<= start l_start)
                      (>= end l_end))
-            (if (and (and kind
-                          (or (string= kind "Struct")
-                              (string= kind "Class")))
+            (if (and (member kind
+                              '("Struct" "Class" "Enum"))
                      (or (not cand)
                          (and
                           (> start (gethash "line" (gethash "start" (gethash "range" cand))))
@@ -526,7 +528,6 @@ Possible choices:
           (PDEBUG
             "NAME:" (gethash "name" cand)
             "KIND: " (gethash "kind" cand))
-
 
           (seq-map (lambda (field)
                      (let ((name )
