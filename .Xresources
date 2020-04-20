@@ -15,7 +15,7 @@ Xft.autohint: false
 Xft.rgba: rgb
 
 ! *XTerm
-XTerm*faceName: Monaco:size=11
+XTerm*faceName: Cascadia Code:size=11
 XTerm*saveLines: 5000
 XTerm.termName: xterm-256color
 XTerm*rightScrollBar: true
@@ -56,10 +56,10 @@ URxvt.iconFile: /usr/share/icons/hicolor/scalable/apps/urxvt-terminal.svg
 
 ! URxvt*depth: 0
 
-URxvt*font:   xft:Monaco:size=11:antialias=true
-URxvt*boldFont:   xft:Monaco:size=11:antialias=true
-URxvt*bolditalicFont: xft:Monaco:size=11:antialias=true
-URxvt*italicFont: xft:Monaco:size=11:antialias=true
+URxvt*font:   xft:Cascadia Code:size=11:antialias=true
+URxvt*boldFont:   xft:Cascadia Code:size=11:antialias=true
+URxvt*bolditalicFont: xft:Cascadia Code:size=11:antialias=true
+URxvt*italicFont: xft:Cascadia Code:size=11:antialias=true
 
 URxvt*borderLess: false
 URxvt*buffered: true

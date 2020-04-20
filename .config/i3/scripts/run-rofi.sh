@@ -14,7 +14,7 @@ case $1 in
         rofi  -show window -config ~/.config/rofi/themes/Switch.rasi
     ;;
     search)
-        rofi  -show Search -modi "Search:/home/yyc/.config/i3/scripts/search.sh"
+        rofi  -show Search -modi "Search:${HOME}/.config/i3/scripts/search.sh"
         ;;
     ssh)
         rofi -show ssh
@@ -23,6 +23,6 @@ case $1 in
         ~/.config/rofi/scripts/Powermenu.sh
         ;;
     *)
-        rofi -show combi -combi-modi "Search:/home/yyc/.config/i3/scripts/search.sh,drun,run"
+        rofi -show combi -combi-modi "Search:${HOME}/.config/i3/scripts/search.sh,drun,run"
     ;;
 esac

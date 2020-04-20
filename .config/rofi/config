@@ -1,4 +1,4 @@
 ! === rofi ===
 
-rofi.modi: Search:/home/yyc/.config/i3/scripts/search.sh,ssh,window,drun,run,combi
+rofi.modi: Search:~/.config/i3/scripts/search.sh,ssh,window,drun,run,combi
 rofi.theme: ~/.config/rofi/themes/default.rasi

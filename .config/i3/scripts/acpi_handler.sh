@@ -46,9 +46,9 @@ case "$group" in
                                     # External monitor connected, change to
                                     # external display...
                                     DISPLAY=:0 su -c - yyc \
-                                           "/home/yyc/.config/i3/scripts/setup-display.sh External"
+                                           "${HOME}/.config/i3/scripts/setup-display.sh External"
                                 else
-                                    DISPLAY=:0 su -c - yyc "/home/yyc/.config/i3/scripts/lock-screen.sh"
+                                    DISPLAY=:0 su -c - yyc "${HOME}/.config/i3/scripts/lock-screen.sh"
                                     sleep 3
                                     systemctl suspend
                                 fi
