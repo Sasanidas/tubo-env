@@ -97,9 +97,8 @@ font:
     #   - (macOS) Menlo
     #   - (Linux) monospace
     #   - (Windows) Consolas
-    family: "Menlo"
-    family: "Cascadia Mono"
     family: "Monaco"
+    family: "Menlo"
       # options: {style: Regular}
 
     # # The `style` can be specified to pick a specific face.
@@ -138,8 +137,8 @@ font:
     # The `style` can be specified to pick a specific face.
     #style: Bold Italic
 
-  # Point size
-  size: 11.0
+  # # Point size
+  size: 14.0
 
   # Offset is the extra space around each character. `offset.y` can be thought of
   # as modifying the line spacing, and `offset.x` as modifying the letter spacing.
