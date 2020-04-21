@@ -98,7 +98,8 @@ font:
     #   - (Linux) monospace
     #   - (Windows) Consolas
     family: "Menlo"
-    family: "Cascadia Code"
+    family: "Cascadia Mono"
+    family: "Monaco"
       # options: {style: Regular}
 
     # # The `style` can be specified to pick a specific face.
