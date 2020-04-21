@@ -57,6 +57,7 @@ stty -ixon -ixoff
 which fzf >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     FZF_SHELL=$(dirname $(dirname `which fzf`))/shell
+    [ -d ${FZF_SHELL} ] || FZF_SHELL=/usr/share/fzf
     [ -d ${FZF_SHELL} ] || FZF_SHELL=/usr/local/opt/fzf/shell
     if [ -d ${FZF_SHELL} ]; then
         for fn in ${FZF_SHELL}/*.zsh; do
