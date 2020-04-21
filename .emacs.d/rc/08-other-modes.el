@@ -234,8 +234,22 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 (use-package org-table
   :commands (orgtbl-mode))
 
+(defun yc/translate-markdown-filename (in)
+  "Translate IN into filename.."
+  (let ((out   (catch 'p-found
+    (dolist (ext '("" ".org" ".md"))
+      (aif (yc/file-exists-p (concat in ext))
+          (throw 'p-found it))
+      )
+    (concat in ".md"))))
+
+    (PDEBUG "IN: " in
+      "OUT: " out)
+    out))
+
 (use-package markdown-mode
-  :commands (markdown-mode)
+  :commands (markdown-mode markdown-follow-link-at-point)
+  :pin melpa
   :hook ((markdown-mode . orgtbl-mode)
          (before-save . (lambda ()
                           (when (eq major-mode 'markdown-mode)
@@ -244,14 +258,18 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
                               (while (search-forward "-+-" nil t)
                                 (replace-match "-|-")))))))
   :custom
+  (markdown-translate-filename-function 'yc/translate-markdown-filename)
   (markdown-command "markdown_py")
   (markdown-xhtml-header-content
    "<style type=\"text/css\">html { margin: 0; font: .9em/1.6em \"Droid Serif\", \"Lucida Grande\", \"Lucida Sans Unicode\", \"DejaVu Sans\", Verdana, sans-serif; background-attachment: fixed; background-position: right bottom; background-repeat: no-repeat; background-color: white; }  body { font-size: 12pt; line-height: 18pt; color: black; margin-top: 0; }   pre { font-family: Droid Sans Mono, Monaco, Consolas, \"Lucida Console\", monospace; font-size: 90%; padding: 1.2em; overflow: auto;  line-height: 1.3; font-weight: 100; background-color:#2e3436; box-shadow: 5px 5px 5px #888; border: none; margin-bottom: 10pt; color: white; padding: 1.2em; }  code { font-family: Droid Sans Mono, Monaco, Consolas, \"Lucida Console\", monospace;} </style>")
   :bind (:map markdown-mode-map
               (;(kbd "C-c C-e")
-               "" . markdown-export))
+               "" . markdown-export)
+              (;(kbd "C-c o")
+               "o" . markdown-follow-link-at-point))
   :mode (((rx (or (: bow "README" eow)
                   ) eol) . markdown-mode)))
+
 
  ;; ****************************** Edit Server for Chrome ***************************
 (use-package edit-server
