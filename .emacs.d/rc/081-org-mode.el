@@ -431,6 +431,8 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
 (use-package org-bullets
   :pin melpa
   :commands (org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
   :hook ((org-mode . (lambda ()
                        (if window-system
                            (org-bullets-mode))))))
