@@ -433,7 +433,7 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   :commands (org-bullets-mode)
   :custom
   (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
-  :hook ((org-mode . 'org-bullets-mode)))
+  :hook ((org-mode . org-bullets-mode)))
 
 
 ;; Local Variables:
