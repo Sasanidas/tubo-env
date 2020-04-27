@@ -615,22 +615,6 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
 (use-package stringtemplate-mode  :mode "\\.st\\'")
 
 
-(defun yc/open-eshell ()
-  "DOCSTRING."
-  (interactive)
-  (let ((ebuffer (get-buffer "*eshell*"))
-        (dir (expand-file-name default-directory)))
-    (if ebuffer
-        (progn
-          (set-buffer ebuffer)
-          (eshell/cd dir)
-          (eshell-send-input)
-          (switch-to-buffer ebuffer))
-      (eshell))))
-
-(defun yc/eshell-mode-hook  ()
-  (PDEBUG "ENTER: " 'yc/shell-mode-hook)
-  (setq eshell-path-env (getenv "PATH")))
 
 (use-package eshell
   :commands (eshell-command)
@@ -654,7 +638,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
     (require 'esh-opt)
 
     ;; quick commands
-    (defalias 'eshell/e 'find-file-other-window)
+    (defalias 'eshell/e 'find-file-other-windo w)
     (defalias 'eshell/d 'dired)
     (setenv "PAGER" "cat")
 
@@ -680,6 +664,29 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
     (shell-command-to-string (concat "otool -L " (mapconcat 'identity args " "))))
    (t
     (error "Can't find ldd or otool"))))
+
+(defun yc/open-eshell ()
+  "DOCSTRING."
+  (interactive)
+  (let ((ebuffer (get-buffer "*eshell*"))
+        (dir (expand-file-name default-directory)))
+    (if ebuffer
+        (progn
+          (set-buffer ebuffer)
+          (eshell/cd dir)
+          (eshell-send-input)
+          (switch-to-buffer ebuffer))
+      (eshell))))
+
+(defun yc/eshell-mode-hook  ()
+  (PDEBUG "ENTER: " 'yc/shell-mode-hook)
+  (setq eshell-path-env (getenv "PATH")))
+
+(use-package esh-autosuggest
+  :pin melpa
+  :hook (eshell-mode . esh-autosuggest-mode)
+  )
+
 
 ;; (defun yc/list-attentions ()
 ;;   "List lines that need attentions, such as lines which include XXX or FIXME et.al."
