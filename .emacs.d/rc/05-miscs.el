@@ -614,7 +614,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
     (require 'esh-opt)
 
     ;; quick commands
-    (defalias 'eshell/e 'find-file-other-windo w)
+    (defalias 'eshell/e 'find-file-other-window)
     (defalias 'eshell/d 'dired)
     (setenv "PAGER" "cat")
 
