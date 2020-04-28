@@ -508,7 +508,6 @@ Return t if succeeded, or nil otherwise.")
   (lsp-enable-snippet t)
   (lsp-auto-configure t)
   (lsp-log-io nil)
-  (lsp-print-io nil)
   (lsp-flycheck-live-reporting nil)
   (flycheck-check-syntax-automatically '(save idle-change))
 
