@@ -318,35 +318,10 @@
   (tramp-auto-save-directory "~/.emacs.d/auto-save-list")
   (tramp-remote-path '("~/.local/bin/"
                        "/opt/devtools/bin"
-                       "/opt/rh/rh-nodejs8/root/usr/sbin"
-                       "/opt/rh/rh-nodejs8/root/usr/bin"
-                       "/opt/rh/rh-nodejs8/root/usr/usr/sbin"
-                       "/opt/rh/rh-nodejs8/root/usr/usr/bin"
-                       "/opt/rh/rh-git218/root/usr/sbin"
-                       "/opt/rh/rh-git218/root/usr/bin"
-                       "/opt/rh/rh-git218/root/usr/usr/sbin"
-                       "/opt/rh/rh-git218/root/usr/usr/bin"
-                       "/opt/rh/httpd24/root/usr/sbin"
-                       "/opt/rh/httpd24/root/usr/bin"
-                       "/opt/rh/httpd24/root/usr/usr/sbin"
-                       "/opt/rh/httpd24/root/usr/usr/bin"
-                       "/opt/rh/devtoolset-8/root/usr/sbin"
-                       "/opt/rh/devtoolset-8/root/usr/bin"
-                       "/opt/rh/devtoolset-8/root/usr/usr/sbin"
-                       "/opt/rh/devtoolset-8/root/usr/usr/bin"
                        "/usr/local/bin"
                        "/usr/local/sbin"
                        "/opt/bin" "/opt/sbin" "/opt/local/bin"
                        "/bin" "/usr/bin" "/sbin" "/usr/sbin"
-                       ;; "/opt/devtools/bin"
-                       ;; "/opt/rh/rh-nodejs8/root/usr/sbin"
-                       ;; "/opt/rh/rh-nodejs8/root/usr/bin"
-                       ;; "/opt/rh/rh-nodejs8/root/usr/usr/sbin"
-                       ;; "/opt/rh/rh-nodejs8/root/usr/usr/bin"
-                       ;; "/opt/rh/rh-git218/root/usr/sbin"
-                       ;; "/opt/rh/rh-git218/root/usr/bin"
-                       ;; "/opt/rh/rh-git218/root/usr/usr/sbin"
-                       ;; "/opt/rh/rh-git218/root/usr/usr/bin"
                        ))
 
 
@@ -621,7 +596,8 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   :bind (([f5] . yc/open-eshell)
          (;; ,(kbd "<C-f5>")
           [C-f5]. eshell))
-  :hook ((eshell-mode . yc/eshell-mode-hook))
+  :hook ((eshell-mode . (lambda ()
+                          (setq eshell-path-env (getenv "PATH")))))
   :init
   (progn
     (custom-set-variables
@@ -678,26 +654,6 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
           (switch-to-buffer ebuffer))
       (eshell))))
 
-(defun yc/eshell-mode-hook  ()
-  (PDEBUG "ENTER: " 'yc/shell-mode-hook)
-  (setq eshell-path-env (getenv "PATH")))
-
-(use-package esh-autosuggest
-  :pin melpa
-  :hook (eshell-mode . esh-autosuggest-mode)
-  )
-
-
-;; (defun yc/list-attentions ()
-;;   "List lines that need attentions, such as lines which include XXX or FIXME et.al."
-;;   (interactive)
-;;   (let* (
-;;          (attention-keywords '("fixme" "todo" "bug" "yyc" "xxx" "hack"))
-;;          basedir
-;;         targets)
-
-;;     ;; TODO: search with ivy-ag.
-;;     ))
 
  ;; comint hook
 (use-package comint
@@ -710,7 +666,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
         (set (make-local-variable 'jit-lock-defer-time) 0.25)))
 
     (custom-set-variables
-     '(comint-buffer-maximum-size 8192))
+     '(comint-buffer-maximum-size 32768))
     (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)
     (add-hook 'comint-preoutput-filter-functions
       (lambda (text)
