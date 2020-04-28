@@ -498,8 +498,8 @@ Return t if succeeded, or nil otherwise.")
   :ensure t
   :pin melpa
   :custom
-  (lsp-diagnostic-package 'auto)
-  (lsp-restart 'ignore)
+  (lsp-diagnostic-package :auto)
+  (lsp-restart 'auto-restart)
   (lsp-enable-file-watchers nil)
   (lsp-enable-indentation nil)
   (lsp-enable-imenu nil)
