@@ -246,6 +246,9 @@ Files stored in ~/Work/ are controlled by git or svn."
 (setq-default custom-theme-directory "~/.emacs.d/themes"
               custom-safe-themes t)
 
+
+(put 'narrow-to-region 'disabled nil)
+
 (provide '01-generics)
 
 ;; Local Variables:
