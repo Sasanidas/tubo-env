@@ -92,8 +92,6 @@ and is reversed for better performance.")
 (use-package dash
   :commands (-filter))
 
-
-
 (define-skeleton skeleton-include
   "generate include<>" ""
   > "#include "
@@ -185,36 +183,9 @@ and is reversed for better performance.")
               :caller 'counsel-skeleton
               ))
 
-  (yc/update-inc-marks)
-  )
+  (yc/update-inc-marks))
 
-(defun yc/header-make ()
-  "Make header based on srecode."
-  (interactive)
-  (progn;save-excursion
-    (goto-char (point-min))
-    (while (looking-at (or comment-start-skip comment-start))
-      (forward-line))
-    (condition-case err
-        (progn
-          (srecode-load-tables-for-mode major-mode)
-          (yc/remove-empty-lines (point-min))
 
-          (srecode-insert "file:fileheader")
-          (yc/remove-empty-lines (point-max))
-          (goto-char (point-max))
-          (srecode-insert "file:fileheader_end"))
-      (error (srecode-insert "file:filecomment")))
-    )
-  (delete-trailing-whitespace))
-
-(defun yc/insert-empty-template ()
-  "Make header based on srecode."
-  (interactive)
-  (save-excursion
-    (srecode-load-tables-for-mode major-mode)
-    (srecode-insert "file:empty")
-    (delete-trailing-whitespace)))
 
 
 (use-package member-function
@@ -223,106 +194,14 @@ and is reversed for better performance.")
   :hook ((c++-mode . (lambda ()
                        (local-set-key (kbd "C-c m") 'expand-member-functions)))))
 
-
-;;;; Customized functions to generate code quickly.
-
-(defun yc/enable-disable-c-block (start end)
-  "Enable or disable c blocks(START ~ END) using #if 0/#endif macro."
-  (interactive "rp")
-  (let* ((sep (rx (* space) "//" (+ space)))
-         (if-0-start (concat "#if 0" sep "TODO: Remove this ifdef!\n"))
-         (if-0-end   (concat "#endif" sep "End of #if 0"))
-         (if-0-end-nl (concat "\n" if-0-end))
-         (r-match-if0 (format "%s%s%s" if-0-start(rx (group (+? anything))) if-0-end)))
-    (save-excursion
-      (save-restriction
-        (narrow-to-region start end)
-        (goto-char (point-min))
-
-        (if (and (looking-at r-match-if0)
-                 (search-forward-regexp r-match-if0 end t))
-            (replace-match "\\1")
-          (goto-char end)
-          (insert (if (looking-back "\n" ) if-0-end if-0-end-nl))
-          (goto-char start)
-          (insert if-0-start)
-
-
-          (goto-char (point-min))
-          (while (search-forward sep nil t)
-            (replace-match " // "))))
-
-      (indent-region start end))))
-
  ;; ================================== CPP-H switch ===========================
-(use-package eassist
-  :commands (eassist-switch-h-cpp)
-  :config
-  (progn
-    (setq eassist-header-switches
-          '(("h" . ("cpp" "cc" "c" "cxx" "C" "m" "mm"))
-            ("hh" . ("cpp" "cc" "c" "cxx" "C" "m" "mm"))
-			("hpp" . ("cpp" "cc" "cxx"))
-			("cpp" . ("h" "hpp"))
-            ("cxx" . ("h" "hpp"))
-			("c" . ("h" "hh"))
-			("C" . ("H" "HH"))
-			("H" . ("C" "CPP" "CC"))
-			("cc" . ("h" "hh" "hpp"))))
-    ))
-
-(defun yc/switch-h-cpp ()
-  "Switch between headers and source files."
-  (interactive)
-  (let* ((tag (semantic-stickyfunc-tag-to-stick))
-         (arg-exp "")
-         func args
-         exp-list)
-
-    (defun get-type-name (tag)
-      "Get type name of TAG."
-      (cond
-       ((stringp tag) tag)
-       ((semantic-tag-p tag) (semantic-tag-name tag))
-       (t "")))
-
-    ;; prepare tags
-    (when (and tag (equal (semantic-tag-class tag) 'function))
-      (setq func (semantic-tag-name tag)
-            args (semantic-tag-get-attribute tag :arguments)))
-
-    ;; prepare exp-list which will be used to re-search
-    (when (and func args)
-      (let (arg-list)
-        (dolist (arg args)
-          (setq arg-list (cons (get-type-name (semantic-tag-type arg)) arg-list )))
-        (while arg-list
-          (let ((tmp-list (copy-list arg-list)))
-            (add-to-list
-             'exp-list (format "%s[[:space:]]*([[:space:]]*%s.*?)"
-                               func (s-join ".*?,[[:space:]]*"
-                                            (nreverse tmp-list) )) t))
-          (pop arg-list))))
-
-    (if func (add-to-list 'exp-list (format "%s[[:space:]]*(.*?)" func) t))
-
-    ;; core of switch..
-    (condition-case error
-        (eassist-switch-h-cpp)
-      (error (projectile-find-other-file)))
-
-    ;;TODO: if no other file is found and we are looking at a class implementation, we
-    ;;      can try to go to declaration of this class.
-
-    ;; try to find proper position to goto.
-    (when exp-list
-      (let (pos)
-        (while (and exp-list (not pos))
-          (save-excursion
-            (goto-char (point-min))
-            (setq pos (re-search-forward (pop exp-list) nil t))))
-        (if pos
-            (goto-char (1- pos)))))))
+(use-package prog-utils
+  :commands (
+             yc/asm-post-process
+             yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
+             yc/preprocess-file yc/insert-empty-template yc/header-make
+             uniq-stack gcrash-analyze-buffer c++filt-buffer
+             ))
 
  ;;;; Hide-ifdefs
 (use-package hideif
@@ -567,40 +446,6 @@ and is reversed for better performance.")
     :initialization-options (lambda () ccls-initialization-options)
     :library-folders-fn nil))
   )
-
-(defun yc/preprocess-file ()
-  (interactive)
-  (lsp--cur-workspace-check)
-  (-when-let* ((mode major-mode)
-               (info (ccls-file-info))
-               (args (seq-into (gethash "args" info) 'vector))
-               (working-directory default-directory)
-               (new-args (let ((i 0) ret)
-                           (while (< i (length args))
-                             (let ((arg (elt args i)))
-                               (cond
-                                ((string= arg "-o") (cl-incf i))
-                                ((string-match-p "\\`-o.+" arg))
-                                ((string-match "\\`-working-directory=\\(.+\\)" arg)
-                                 (setq default-directory (match-string 1 arg)))
-                                (t (push arg ret))))
-                             (cl-incf i))
-                           (nreverse ret))))
-
-    (PDEBUG "DIR" (shell-command-to-string "pwd"))
-
-    (with-current-buffer (get-buffer-create
-                          (format "*lsp-ccls preprocess %s*" (buffer-name)))
-      (pop-to-buffer (current-buffer))
-      (with-silent-modifications
-        (erase-buffer)
-        (insert (format "// Generated by: %s"
-                        (combine-and-quote-strings new-args)))
-        (insert (with-output-to-string
-                  (with-current-buffer standard-output
-                    (apply #'process-file (car new-args) nil t nil "-E" (cdr new-args)))))
-        (delay-mode-hooks (funcall mode))
-        (setq buffer-read-only t)))))
 
 (defun yc/c-mode-common-hook ()
   "My hooks to run for c-mode-common-hook."
@@ -976,12 +821,6 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   :commands (modern-c++-font-lock-mode)
   :hook ((c++-mode . modern-c++-font-lock-mode))
 )
-
-(use-package prog-pears
-  :commands (yc/asm-post-process yc/format-files))
-
-(use-package gcrash
-  :commands (uniq-stack gcrash-analyze-buffer c++filt-buffer))
 
 
 (provide '061-prog-c)

@@ -1110,7 +1110,7 @@ If NO-CACHED is true, do not use cached value."
 (yc/set-keys `(,(cons (kbd "M-m") 'yc/show-methods-dwim)) nil)
 
 
-(use-package prog-misc
+(use-package prog-utils
   :commands (yc/doc-at-point yc/insert-single-comment))
 
 (defun yc/show-doc-at-point ()

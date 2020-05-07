@@ -35,13 +35,20 @@
 
  ;; Function used to add fields of struct into a dot file (for Graphviz).
 
-(require 'cl)
 (require 'eieio)
 (require 'semantic/find)
 (require 's)
 
+(defmacro aif (test-form then-form &rest else-forms)
+  "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
+THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
+  (declare (indent 2) (debug t))
+  `(let ((it ,test-form))
+     (if it ,then-form ,@else-forms)))
+
 (defgroup uml nil
-  "group name.")
+  "group name."
+  :group 'tools)
 
 (defcustom uml/extract-type 'all
   "Type of members to be extracted.
@@ -224,115 +231,115 @@ Possible choices:
     (PDEBUG "NODE: " node)
   node))
 
- ;; DIA support
+;;  ;; DIA support
 
-(defvar uml/dia-id nil "Last ID")
+;; (defvar uml/dia-id nil "Last ID")
 
-(defun uml/dia-fmt-attr (name  &optional type &optional val)
-  "Format an attribute of TYPE, with NAME & VAL."
-  (if val
-      (let ((res))
-        (add-to-list 'res (format "<dia:attribute name=\"%s\">" name) t)
-        (add-to-list 'res (case type
-                            (string (format "<dia:%s>#%s#</dia:%s>"
-                                            (symbol-name type) val (symbol-name type)))
-                            (t (format "<dia:%s val=\"%s\" />" (symbol-name type) val))) t)
-        (add-to-list 'res  "</dia:attribute>" t)
-        (mapconcat 'identity res "\n"))
-    (format "<dia:attribute name=\"%s\"/>" name)))
+;; (defun uml/dia-fmt-attr (name  &optional type &optional val)
+;;   "Format an attribute of TYPE, with NAME & VAL."
+;;   (if val
+;;       (let ((res))
+;;         (add-to-list 'res (format "<dia:attribute name=\"%s\">" name) t)
+;;         (add-to-list 'res (case type
+;;                             (string (format "<dia:%s>#%s#</dia:%s>"
+;;                                             (symbol-name type) val (symbol-name type)))
+;;                             (t (format "<dia:%s val=\"%s\" />" (symbol-name type) val))) t)
+;;         (add-to-list 'res  "</dia:attribute>" t)
+;;         (mapconcat 'identity res "\n"))
+;;     (format "<dia:attribute name=\"%s\"/>" name)))
 
-(defun uml/dia-fmt-funcs (funcs)
-  "Format functions (FUNCS)."
-  (let (result )
-    (uml/append-item result "<dia:attribute name=\"operations\">") ;; head
+;; (defun uml/dia-fmt-funcs (funcs)
+;;   "Format functions (FUNCS)."
+;;   (let (result )
+;;     (uml/append-item result "<dia:attribute name=\"operations\">") ;; head
 
-    (dolist (func funcs)
-      (uml/append-item result "<dia:composite type=\"umloperation\">")
+;;     (dolist (func funcs)
+;;       (uml/append-item result "<dia:composite type=\"umloperation\">")
 
-      (uml/append-item result (uml/dia-fmt-attr "name" 'string (oref func :name)))
-      (uml/append-item result (uml/dia-fmt-attr "type" 'string (oref func :type)))
-      (uml/append-item result (uml/dia-fmt-attr "visibility" 'enum (oref func :visibility)))
-      (uml/append-item result (uml/dia-fmt-attr "value" 'string ""))
-      (uml/append-item result (uml/dia-fmt-attr "comment" 'string ""))
-      (uml/append-item result (uml/dia-fmt-attr "abstract" 'boolean "false"))
-      (uml/append-item result (uml/dia-fmt-attr "class_scope" 'boolean "false"))
-      ;; (uml/append-item result (uml/dia-fmt-attr "parameters" 'boolean (oref func :params)))
-      (uml/append-item result "</dia:composite>"))
+;;       (uml/append-item result (uml/dia-fmt-attr "name" 'string (oref func :name)))
+;;       (uml/append-item result (uml/dia-fmt-attr "type" 'string (oref func :type)))
+;;       (uml/append-item result (uml/dia-fmt-attr "visibility" 'enum (oref func :visibility)))
+;;       (uml/append-item result (uml/dia-fmt-attr "value" 'string ""))
+;;       (uml/append-item result (uml/dia-fmt-attr "comment" 'string ""))
+;;       (uml/append-item result (uml/dia-fmt-attr "abstract" 'boolean "false"))
+;;       (uml/append-item result (uml/dia-fmt-attr "class_scope" 'boolean "false"))
+;;       ;; (uml/append-item result (uml/dia-fmt-attr "parameters" 'boolean (oref func :params)))
+;;       (uml/append-item result "</dia:composite>"))
 
-    (uml/append-item result "</dia:attribute>\n") ;; tail
+;;     (uml/append-item result "</dia:attribute>\n") ;; tail
 
-    (mapconcat 'identity result "\n")))
+;;     (mapconcat 'identity result "\n")))
 
-(defun uml/dia-fmt-attrs (attrs)
-  "Format member fields (ATTRS)."
-  (let (result)
-    (uml/append-item result "<dia:attribute name=\"attributes\">");; head
+;; (defun uml/dia-fmt-attrs (attrs)
+;;   "Format member fields (ATTRS)."
+;;   (let (result)
+;;     (uml/append-item result "<dia:attribute name=\"attributes\">");; head
 
-    (dolist (attr attrs)
-      (uml/append-item result "<dia:composite type=\"umlattribute\">")
-      (uml/append-item result (uml/dia-fmt-attr "name" 'string (oref attr :name)))
-      (uml/append-item result (uml/dia-fmt-attr "type" 'string (oref attr :type)))
-      (uml/append-item result (uml/dia-fmt-attr "visibility" 'enum (oref attr :visibility)))
-      (uml/append-item result (uml/dia-fmt-attr "value" 'string ""))
-      (uml/append-item result (uml/dia-fmt-attr "comment" 'string ""))
-      (uml/append-item result (uml/dia-fmt-attr "abstract" 'boolean "false"))
-      (uml/append-item result (uml/dia-fmt-attr "class_scope" 'boolean "false"))
-      (uml/append-item result "</dia:composite>"))
+;;     (dolist (attr attrs)
+;;       (uml/append-item result "<dia:composite type=\"umlattribute\">")
+;;       (uml/append-item result (uml/dia-fmt-attr "name" 'string (oref attr :name)))
+;;       (uml/append-item result (uml/dia-fmt-attr "type" 'string (oref attr :type)))
+;;       (uml/append-item result (uml/dia-fmt-attr "visibility" 'enum (oref attr :visibility)))
+;;       (uml/append-item result (uml/dia-fmt-attr "value" 'string ""))
+;;       (uml/append-item result (uml/dia-fmt-attr "comment" 'string ""))
+;;       (uml/append-item result (uml/dia-fmt-attr "abstract" 'boolean "false"))
+;;       (uml/append-item result (uml/dia-fmt-attr "class_scope" 'boolean "false"))
+;;       (uml/append-item result "</dia:composite>"))
 
-    (uml/append-item result "</dia:attribute>\n") ;; tail
+;;     (uml/append-item result "</dia:attribute>\n") ;; tail
 
-    (PDEBUG "Result:" result)
-    (mapconcat 'identity result "\n")))
+;;     (PDEBUG "Result:" result)
+;;     (mapconcat 'identity result "\n")))
 
-(defun uml/node-to-dia (node)
-  "Convert NODE to xml string which can be displayed with DIA."
-  (setq uml/dia-id (if uml/dia-id (1+ uml/dia-id)
-                     (+ 1000 (% (random 1000000) 111111))))
-  (let ((class-head "<dia:object type=\"UML - Class\" version=\"0\" id=\"%d\">")
-        (name  (or (oref node :name) "Unamed Object"))
-        (funcs (oref node :funcs))
-        (attrs (oref node :attrs))
-        (subnodes (oref node :subnodes))
-        result)
-    (uml/append-item result (format class-head uml/dia-id)) ;; head
+;; (defun uml/node-to-dia (node)
+;;   "Convert NODE to xml string which can be displayed with DIA."
+;;   (setq uml/dia-id (if uml/dia-id (1+ uml/dia-id)
+;;                      (+ 1000 (% (random 1000000) 111111))))
+;;   (let ((class-head "<dia:object type=\"UML - Class\" version=\"0\" id=\"%d\">")
+;;         (name  (or (oref node :name) "Unamed Object"))
+;;         (funcs (oref node :funcs))
+;;         (attrs (oref node :attrs))
+;;         (subnodes (oref node :subnodes))
+;;         result)
+;;     (uml/append-item result (format class-head uml/dia-id)) ;; head
 
-    (uml/append-item result (uml/dia-fmt-attr "name" 'string name))
-    (uml/append-item result (uml/dia-fmt-attr "visible_operations" 'boolean "true"))
-    (uml/append-item result (uml/dia-fmt-attr "visible_attributes" 'boolean "true"))
-    (uml/append-item result (uml/dia-fmt-attr "template" 'boolean "false"))
-    (uml/append-item result (uml/dia-fmt-attr "templates"))
+;;     (uml/append-item result (uml/dia-fmt-attr "name" 'string name))
+;;     (uml/append-item result (uml/dia-fmt-attr "visible_operations" 'boolean "true"))
+;;     (uml/append-item result (uml/dia-fmt-attr "visible_attributes" 'boolean "true"))
+;;     (uml/append-item result (uml/dia-fmt-attr "template" 'boolean "false"))
+;;     (uml/append-item result (uml/dia-fmt-attr "templates"))
 
-    (when funcs
-      (uml/append-item result (uml/dia-fmt-funcs funcs))
-      )
+;;     (when funcs
+;;       (uml/append-item result (uml/dia-fmt-funcs funcs))
+;;       )
 
-    (when attrs
-      (uml/append-item result (uml/dia-fmt-attrs attrs))
-      )
+;;     (when attrs
+;;       (uml/append-item result (uml/dia-fmt-attrs attrs))
+;;       )
 
-    ;; TODO: subnodes...
+;;     ;; TODO: subnodes...
 
-    ;; tail
-    (uml/append-item result "</dia:object>")
-    (mapconcat 'identity result "\n")))
+;;     ;; tail
+;;     (uml/append-item result "</dia:object>")
+;;     (mapconcat 'identity result "\n")))
 
-;;;###autoload
-(defun uml/struct-to-dia (start end)
-  "Generated a UML-like dot graph for tags between START and END."
-  (interactive "rp")
-  (save-excursion
-    (let ((tags (semantic-find-tag-by-overlay start))
-          (strs nil))
-      (if (not tags)
-          (error "No tags found!")
-        (dolist (tag tags)
-          (aif (Tag-To-ObjNode tag)
-              (add-to-list 'strs (uml/node-to-dia it))))
-        (if strs
-            (kill-new (mapconcat 'identity strs "\n"))
-          (error "Failed to format tags!")))))
-  (deactivate-mark)
-  (message "Finished, node copied to killing-ring."))
+;; ;;;###autoload
+;; (defun uml/struct-to-dia (start end)
+;;   "Generated a UML-like dot graph for tags between START and END."
+;;   (interactive "rp")
+;;   (save-excursion
+;;     (let ((tags (semantic-find-tag-by-overlay start))
+;;           (strs nil))
+;;       (if (not tags)
+;;           (error "No tags found!")
+;;         (dolist (tag tags)
+;;           (aif (Tag-To-ObjNode tag)
+;;               (add-to-list 'strs (uml/node-to-dia it))))
+;;         (if strs
+;;             (kill-new (mapconcat 'identity strs "\n"))
+;;           (error "Failed to format tags!")))))
+;;   (deactivate-mark)
+;;   (message "Finished, node copied to killing-ring."))
 
  ;; plantuml support
 
