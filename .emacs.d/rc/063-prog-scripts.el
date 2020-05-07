@@ -47,14 +47,20 @@
 
 (use-package lsp-python-ms
   :commands (lsp-python-ms-setup)
-  :config
-  (progn
-    (setq ;; lsp-python-executable-cmd "python3"
-     lsp-python-ms-dir (concat yc/lsp-server-dir "/ms-python/")
-     lsp-python-ms-executable (concat lsp-python-ms-dir
+  ;; :config
+  ;; (progn
+  ;;   (setq ;; lsp-python-executable-cmd "python3"
+
+
+  ;;    ))
+
+  :custom
+  (lsp-python-ms-python-executable-cmd "python3")
+  (lsp-python-ms-dir (concat yc/lsp-server-dir "/ms-python/"))
+  (lsp-python-ms-executable (concat lsp-python-ms-dir
                                       "Microsoft.Python.LanguageServer"
-                                      (and (eq system-type 'windows-nt) ".exe"))
-     lsp-python-ms-python-executable-cmd "python3")))
+                                      (and (eq system-type 'windows-nt) ".exe")))
+  )
 
 (use-package python
   :custom

@@ -470,7 +470,11 @@ Return t if succeeded, or nil otherwise.")
 
 (defvar yc/lsp-warned-mode-list nil "List of modes already been warn for disabling LSP.")
 
-(defvar yc/lsp-server-dir (expand-file-name "~/.local/lsp/") "Nil.")
+(defcustom yc/lsp-server-dir (expand-file-name "~/.local/lsp/")
+  "Where lsp server should be installed."
+  :type 'string
+  :group 'user
+  )
 
 
 (defun yc/lsp--setup (executable install-tip &optional setup-func)
