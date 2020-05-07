@@ -580,6 +580,394 @@ It will do several things:
 
 
 
+(defvar yc/imenu--overlays nil
+  "Store overlays.")
+
+(defun yc/imenu--cleanup ()
+  "Clean up the overlays."
+  (while yc/imenu--overlays
+    (delete-overlay (pop yc/imenu--overlays))))
+
+(defun yc/imenu--add-overlay ()
+  "Add overlays for RE regexp in visible part of the current buffer.
+BEG and END, when specified, are the point bounds.
+WND, when specified is the window."
+  (let ((ov               (make-overlay
+                           (line-beginning-position)
+                           (1+ (line-end-position)))))
+    (overlay-put ov 'face 'swiper-line-face)
+    (push ov yc/imenu--overlays)
+    ))
+
+(defun yc/counsel-imenu-update-fn()
+  "Called when `ivy' input is updated."
+  (with-ivy-window
+    (yc/imenu--cleanup)
+    (when (> (length (ivy-state-current ivy-last)) 0)
+      (let* ((regexp-or-regexps (funcall ivy--regex-function ivy-text))
+             (regexps
+              (if (listp regexp-or-regexps)
+                  (mapcar #'car (cl-remove-if-not #'cdr regexp-or-regexps))
+                (list regexp-or-regexps))))
+
+        (dolist (re regexps)
+          (let* ((re (replace-regexp-in-string
+                      "    " "\t"
+                      re))
+                 (num (get-text-property 0 'swiper-line-number (ivy-state-current ivy-last))))
+            (unless (memq this-command '(ivy-yank-word
+                                         ivy-yank-symbol
+                                         ivy-yank-char
+                                         scroll-other-window))
+              (when (cl-plusp num)
+                (goto-char num)
+                (isearch-range-invisible (line-beginning-position)
+                                         (line-end-position))
+                (unless (and (>= (point) (window-start))
+                             (<= (point) (window-end (ivy-state-window ivy-last) t)))
+                  (recenter 3))
+                ))
+            (yc/imenu--add-overlay)))))))
+
+
+(defun yc/lsp--imenu-create-hierarchical-index (symbols)
+  "Create imenu index for hierarchical SYMBOLS.
+
+SYMBOLS are a list of DocumentSymbol messages.
+
+Return a nested alist keyed by symbol names. e.g.
+
+   ((\"SomeClass\" (\"(Class)\" . 10)
+                 (\"someField (Field)\" . 20)
+                 (\"someFunction (Function)\" . 25)
+                 (\"SomeSubClass\" (\"(Class)\" . 30)
+                                  (\"someSubField (Field)\" . 35))
+    (\"someFunction (Function)\" . 40))"
+  (let ((symbols (lsp--imenu-filter-symbols symbols)))
+    (seq-filter
+     #'identity
+     (seq-map #'yc/lsp--symbol-to-hierarchical-imenu-elem
+              (seq-sort #'lsp--imenu-symbol-lessp
+                        (lsp--imenu-filter-symbols symbols))))))
+
+(defun yc/counsel-imenu-get-candidates-from (alist &optional prefix)
+  "Create a list of (key . value) from ALIST.
+PREFIX is used to create the key."
+  (progn
+    (cl-mapcan (lambda (elm)
+                 (PDEBUG "ELM:" elm
+                   "PFX: " prefix)
+                 (if (imenu--subalist-p elm)
+                     (progn
+                       (PDEBUG "SUBALIST")
+                       (yc/counsel-imenu-get-candidates-from
+                        (cl-loop for (e . v) in (cdr elm) collect
+                                 (cons e (if (integerp v) (copy-marker v) v)))
+                        ;; pass the prefix to next recursive call
+                        (concat prefix (if prefix ".") (car elm))))
+                   (let ((key (concat
+                               (when prefix
+                                 (if (get-text-property 0 'face prefix)
+                                     (format " (%s) " prefix)
+
+                                   (concat
+                                    (propertize prefix 'face 'ivy-grep-info)
+                                    ": ")))
+                               (let ((name (car elm)))
+                                 (if (get-text-property 0 'face name)
+                                     name
+                                   (propertize name 'face (yc/imenu--get-symbol-face prefix))
+                                   )
+                                 )
+                               )))
+                     (list (cons key
+                                 (put-text-property
+                                  0 1 'swiper-line-number
+                                  (marker-position (cdr elm)) key))))))
+               alist)))
+
+
+(cdsq yc/lsp--symbol-face
+  '(;; (1 . "File")
+    (2 . 'font-lock-constant-face) ;; "Module"
+    (3 . 'font-lock-constant-face) ;; "Namespace"
+    ;; (4 . "Package")
+    (5 . 'font-lock-type-face) ;;"Class"
+    (6 . 'font-lock-function-name-face) ;; "Method"
+    (7 . 'font-lock-variable-name-face) ;; "Property"
+    (8 . 'font-lock-variable-name-face)
+    (9 . 'font-lock-function-name-face) ;; "Constructor"
+    (10 . 'font-lock-constant-face) ;; "Enum"
+    (11 . 'font-lock-function-name-face) ;; "Interface"
+    (12 . 'font-lock-function-name-face) ;; Function
+    (13 . 'font-lock-variable-name-face) ;; Variables
+    (14 . 'font-lock-constant-face)      ;; Constant
+    (15 . 'font-lock-string-face)        ;;
+    ;; (16 . "Number")
+    ;; (17 . "Boolean")
+    ;; (18 . "Array")
+    ;; (19 . "Object")
+    ;; (20 . "Key")
+    ;; (21 . "Null")
+    ;; (22 . "Enum Member")
+    (23 . 'font-lock-type-face) ;; "Struct"
+    ;; (24 . "Event")
+    ;; (25 . "Operator")
+    ;; (26 . "Type Parameter")
+    )
+  "")
+
+(defun yc/lsp--get-symbol-face (sym)
+  "The face for the kind of SYM."
+  (-> (gethash "kind" sym)
+      (assoc yc/lsp--symbol-face)
+      (cdr)
+
+      (or 'default)))
+
+
+(cdsq yc/imenu--symbol-face
+  '(
+    ("Packages" . 'font-lock-constant-face)
+    ("Module" . 'font-lock-constant-face)
+    ("Class" . 'font-lock-type-face) ;;"Class"
+    ("Module" . 'font-lock-constant-face) ;;"Class"
+    (6 . 'font-lock-function-name-face) ;; "Method"
+    ("Variables" . 'font-lock-variable-name-face) ;; "Property"
+    ("Variable" . 'font-lock-variable-name-face) ;; "Property"
+    (8 . 'font-lock-variable-name-face)
+    (9 . 'font-lock-function-name-face) ;; "Constructor"
+    (10 . 'font-lock-constant-face) ;; "Enum"
+    ("Functions" . 'font-lock-function-name-face) ;; "Interface"
+    ("Function" . 'font-lock-function-name-face) ;; "Interface"
+    (12 . 'font-lock-function-name-face) ;; Function
+    (13 . 'font-lock-variable-name-face) ;; Variables
+    (14 . 'font-lock-constant-face)      ;; Constant
+    (15 . 'font-lock-string-face)        ;;
+    ;; (16 . "Number")
+    ;; (17 . "Boolean")
+    ;; (18 . "Array")
+    ;; (19 . "Object")
+    ;; (20 . "Key")
+    ;; (21 . "Null")
+    ;; (22 . "Enum Member")
+    (23 . 'font-lock-type-face) ;; "Struct"
+    ;; (24 . "Event")
+    ;; (25 . "Operator")
+    ;; (26 . "Type Parameter")
+    )
+  "")
+
+(defun yc/imenu--get-symbol-face (sym)
+  "The face for the kind of SYM."
+  (-> sym
+      (assoc yc/imenu--symbol-face)
+      (cdr)
+      (or 'default)))
+
+(define-inline lsp--point-to-marker (p)
+  (inline-quote (save-excursion (goto-char ,p) (point-marker))))
+
+(defun lsp--symbol-get-start-point (sym)
+   "Get the start point of the name of SYM.
+
+ SYM can be either DocumentSymbol or SymbolInformation."
+
+   (let* ((location (gethash "location" sym))
+          (name-range (or (and location (gethash "range" location))
+                          (gethash "selectionRange" sym)))
+          (start-point (lsp--position-to-point
+                        (gethash "start" name-range))))
+     (if imenu-use-markers (lsp--point-to-marker start-point) start-point)))
+
+(defun yc/lsp--symbol-to-hierarchical-imenu-elem (sym)
+  "Convert SYM to hierarchical imenu elements.
+
+SYM is a DocumentSymbol message.
+
+Return cons cell (\"symbol-name (symbol-kind)\" . start-point) if
+SYM doesn't have any children. Otherwise return a cons cell with
+an alist
+
+  (\"symbol-name\" . ((\"(symbol-kind)\" . start-point)
+                    cons-cells-from-children))"
+  (if (string= "Other" (lsp--get-symbol-type sym))
+      nil
+    (let* ((start-point (lsp--symbol-get-start-point sym))
+           (name (gethash "name" sym))
+           (ret (if (seq-empty-p (gethash "children" sym))
+                    (cons (concat
+                           (propertize (lsp--get-symbol-type sym) 'face 'ivy-grep-info)
+                           ": "
+                           (propertize name  'face (yc/lsp--get-symbol-face sym))
+                           )
+                          start-point)
+                  (cons   (propertize name  'face (yc/lsp--get-symbol-face sym))
+                          (cons (cons
+                                 (propertize (lsp--get-symbol-type sym)  'face 'ivy-grep-info)
+                                 start-point)
+                                (yc/lsp--imenu-create-hierarchical-index (gethash "children" sym)))))))
+      (PDEBUG "RET: " ret)
+      ret)))
+
+(defun yc/lsp--symbol-to-imenu-elem (sym)
+  "Convert SYM to imenu element.
+
+SYM is a SymbolInformation message.
+
+Return a cons cell (full-name . start-point)."
+  (PDEBUG "SYM: " sym)
+
+  (let* ((start-point (lsp--symbol-get-start-point sym))
+         (name (gethash "name" sym))
+         (container (gethash "containerName" sym))
+         (ret (cons (if (and lsp-imenu-show-container-name container)
+                        (concat container lsp-imenu-container-name-separator name)
+                      name)
+                    start-point)))
+
+    (PDEBUG "RET2: " ret)
+    ret))
+
+
+(defun yc/counsel-imenu-get-candidates (alist &optional prefix)
+  "Create a list of (key . value) from ALIST.
+PREFIX is used to create the key."
+  (condition-case msg
+      (yc/counsel-imenu-get-candidates-from alist prefix)
+    (error (progn (PDEBUG "FAIL: " msg)    nil))))
+
+
+(defvar-local yc/cached-tags nil "last cached index.")
+(defvar-local yc/document-tags-tick -1 "last tick of modification.")
+
+(defun yc/tags-from-imenu ()
+  "Get tags from imenu.
+If NO-CACHED is true, do not use cached value."
+  (interactive)
+  (unless (featurep 'imenu)
+    (require 'imenu nil t))
+
+  (let* ((imenu-auto-rescan t)
+         (imenu-auto-rescan-maxout (if current-prefix-arg
+                                       (buffer-size)
+                                     imenu-auto-rescan-maxout))
+         (items (imenu--make-index-alist t))
+         (items (delete (assoc "*Rescan*" items) items))
+         (items (counsel-imenu-categorize-functions items))
+         (tags (yc/counsel-imenu-get-candidates items)))
+
+    (if (called-interactively-p 'interface)
+        (let ((yc/debug-log-limit -1))
+          (PDEBUG "IMENU-FUNC: " imenu-create-index-function)
+          (PDEBUG "TAGS: " tags)))
+
+    (if tags
+        (PDEBUG "TAGS from imenu"))
+    tags))
+
+(defun yc/tags-from-semantic ()
+  "Get tags from semantic."
+  (interactive)
+  (if (semantic-active-p)
+      (let ((items
+             (mapcar
+              (lambda (x)
+                (let ((str (counsel-semantic-format-tag x)))
+                  (put-text-property
+                   0 1 'swiper-line-number (semantic-tag-start x) str)
+                  str
+                  ))
+              (counsel-semantic-tags))) )
+
+        (if (called-interactively-p 'interactive)
+            (let ((yc/debug-log-limit -1))
+              (PDEBUG "IMENU-ITEMS: " items)))
+
+        (if items
+            (PDEBUG "TAGS from semantic"))
+
+        items)))
+
+
+(defun yc/tags-from-lsp (&optional no-cached)
+  "Get tags from imenu.
+If NO-CACHED is true, do not use cached value."
+  (interactive "P")
+
+  (when no-cached
+    (setq yc/document-tags-tick -1))
+
+  ;; update tags should happen only when:
+  (when (and (not (= yc/document-tags-tick
+                     (buffer-chars-modified-tick)))        ;; timestamp changes
+             (bound-and-true-p lsp-mode)                   ;; lsp-mode is enabled.
+             (lsp--capability "documentSymbolProvider")    ;; Can provide symbol info.
+             )
+
+    (PDEBUG "Refreshing tags..." )
+    (condition-case var
+        (let* ((symbols (lsp--get-document-symbols))
+               (filted-symbols (lsp--imenu-filter-symbols symbols))
+               (items
+                (if (lsp--imenu-hierarchical-p symbols)
+                    (yc/lsp--imenu-create-hierarchical-index symbols)
+                  (seq-map (lambda (nested-alist)
+                             (cons (car nested-alist)
+                                   (seq-map #'yc/lsp--symbol-to-imenu-elem (cdr nested-alist))))
+                           (seq-group-by #'lsp--get-symbol-type filted-symbols)))))
+
+          (when (called-interactively-p 'interactive)
+              (PDEBUG "SYM: " symbols)
+              (PDEBUG "ITEMS" items))
+
+          (setq yc/document-tags-tick (buffer-chars-modified-tick)
+                yc/cached-tags (yc/counsel-imenu-get-candidates items))
+          )
+      (error (PDEBUG "ERROR: " var)
+             (setq yc/cached-tags nil)))
+
+    (if (called-interactively-p 'interactive)
+        (let ((yc/debug-log-limit 4096))
+          (PDEBUG "IMENU-ITEMS: " yc/cached-tags))))
+
+  (if yc/cached-tags
+      (PDEBUG "TAGS from LSP"))
+
+  yc/cached-tags)
+
+(defun yc/counsel-imenu-or-semantic ()
+  "List functions and go to selected one."
+  (interactive)
+  (let ((position (point))
+        (candidates (or (yc/tags-from-lsp)
+                        (yc/tags-from-semantic)
+                        (yc/tags-from-imenu)
+                        ))
+        res)
+
+    (unwind-protect
+        (setq res
+              (ivy-read "tag: " candidates
+                        :update-fn #'yc/counsel-imenu-update-fn
+                        :action (lambda (x)
+                                  (recenter 3))
+                        :caller 'yc/counsel-imenu))
+
+      (unless res
+        (goto-char position))
+      (yc/imenu--cleanup))))
+
+(defun yc/show-methods-dwim ()
+  "Show methods found in current file, using any possible way.."
+  (interactive)
+  (condition-case error
+      (yc/counsel-imenu-or-semantic)
+    (error
+     (progn
+       (PDEBUG "yc/counsel-imenu-or-semantic failed: " error)
+       (counsel-xgtags-parse-file (buffer-file-name))))))
+
 (provide 'prog-utils)
 
 ;; Local Variables:
