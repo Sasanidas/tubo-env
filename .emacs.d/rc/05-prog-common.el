@@ -500,7 +500,7 @@ Return t if succeeded, or nil otherwise.")
   :pin melpa
   :custom
   (lsp-diagnostic-package :auto)
-  (lsp-restart 'ignore)
+  (lsp-restart 'interactive)
   (lsp-enable-file-watchers nil)
   (lsp-enable-indentation nil)
   (lsp-enable-imenu nil)
@@ -519,17 +519,17 @@ Return t if succeeded, or nil otherwise.")
 
    ;; mode specific hooks.
    )
-  ;; :config
-  ;; (progn
-  ;;   (yc/eval-after-load
-  ;;     "lsp-clients"
-  ;;   (unless (gethash 'clangd2 lsp-clients)
-  ;;     (lsp-register-client
-  ;;      (make-lsp-client :new-connection (lsp-stdio-connection
-  ;;                                        'lsp-clients--clangd-command)
-  ;;                       :major-modes '(c-mode c++-mode objc-mode)
-  ;;                       :priority 1
-  ;;                       :server-id 'clangd2)))))
+  :config
+  (progn
+    (yc/eval-after-load
+      "lsp-clients"
+    (unless (gethash 'clangd2 lsp-clients)
+      (lsp-register-client
+       (make-lsp-client :new-connection (lsp-stdio-connection
+                                         'lsp-clients--clangd-command)
+                        :major-modes '(c-mode c++-mode objc-mode)
+                        :priority 1
+                        :server-id 'clangd2)))))
   )
 
 ;; advice for format-buffer & format-region: save execution before format.
