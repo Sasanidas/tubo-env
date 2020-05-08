@@ -355,4 +355,4 @@ tmp/
 /.annotations
 /.emacs.d/site-lisp/github/
 eln-*/
-wt_native*/
+wt_*/
