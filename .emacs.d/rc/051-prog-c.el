@@ -1,4 +1,4 @@
-;;; 061-prog-c.el -- Brief introduction here.
+;;; 051-prog-c.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -823,11 +823,11 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
 )
 
 
-(provide '061-prog-c)
+(provide '051-prog-c)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 061-prog-c.el ends here
+;;; 051-prog-c.el ends here

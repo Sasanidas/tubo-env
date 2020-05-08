@@ -1,4 +1,4 @@
-;;; 069-prog-others.el -- Brief introduction here.
+;;; 059-prog-others.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -408,7 +408,7 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
   :mode (rx "." (or "ts") buffer-end))
 
 
-(provide '069-prog-others)
+(provide '059-prog-others)
 
 
 ;; Local Variables:
@@ -416,4 +416,4 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 069-prog-others.el ends here
+;;; 059-prog-others.el ends here

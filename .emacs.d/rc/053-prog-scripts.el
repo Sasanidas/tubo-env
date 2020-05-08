@@ -1,4 +1,4 @@
-;;; 063-prog-scripts.el -- Brief introduction here.
+;;; 053-prog-scripts.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -209,11 +209,11 @@
 (add-hook 'after-save-hook 'make-script-executable)
 
 
-(provide '063-prog-scripts)
+(provide '053-prog-scripts)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 063-prog-scripts.el ends here
+;;; 053-prog-scripts.el ends here

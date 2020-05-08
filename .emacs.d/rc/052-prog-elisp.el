@@ -1,4 +1,4 @@
-;;; 062-prog-elisp.el -- Brief introduction here.
+;;; 052-prog-elisp.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -120,11 +120,11 @@ Call FUNC which is 'byte-compile-file with ARGS."
 
 
 
-(provide '062-prog-elisp)
+(provide '052-prog-elisp)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 062-prog-elisp.el ends here
+;;; 052-prog-elisp.el ends here

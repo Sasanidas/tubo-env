@@ -6,36 +6,6 @@
 ;;; Settings for all modes..
 
 ;;; Code:
- ;; Package Management...
-(require 'package)
-
-(custom-set-variables
- '(package-archives
-   '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-     ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
-     ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-     ))
- '(package-archive-priorities
-   '(("melpa-stable" . 10)
-     ("gnu" . 5)
-     ("melpa" . 0))))
-
-(add-hook 'package-menu-mode-hook 'hl-line-mode)
-
-(package-initialize)
-
-(setq-default use-package-always-ensure nil ; Auto-download package if not exists
-              use-package-always-defer t ; Always defer load package to speed up startup
-              use-package-verbose nil ; Report loading details
-              use-package-expand-minimally t  ; make the expanded code as minimal as possible
-              use-package-always-pin nil
-              use-package-enable-imenu-support t)
-
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(require 'use-package)
 
  ;; ivy mode
 (use-package ivy
@@ -457,7 +427,7 @@ With REVERSE is t, switch to previous window."
   (auto-save-default nil)
   )
 
-;; ws-butler-mode
+;; Tabs and spaces
 (use-package ws-butler
   :commands (ws-butler-mode)
   :ensure t
@@ -466,7 +436,13 @@ With REVERSE is t, switch to previous window."
     (custom-set-faces
      '(sp-pair-overlay-face ((t nil)))))
   :hook (
-         (prog-mode .  ws-butler-mode)))
+         (prog-mode .  ws-butler-mode))
+  :custom
+  (tab-always-indent 'complete)
+  (tab-width 4)
+  (c-basic-offset 4)
+  (indent-tabs-mode nil)
+  )
 
 
 (use-package undo-tree

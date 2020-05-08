@@ -8,53 +8,86 @@
 ;;; Code:
 ;;
 
+ ;; Package Management...
+(require 'package)
+
+(custom-set-variables
+ '(package-archives
+   '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+     ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+     ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+     ))
+ '(package-archive-priorities
+   '(("melpa-stable" . 10)
+     ("gnu" . 5)
+     ("melpa" . 0))))
+
+(add-hook 'package-menu-mode-hook 'hl-line-mode)
+
+(package-initialize)
+
+(setq-default use-package-always-ensure nil ; Auto-download package if not exists
+              use-package-always-defer t ; Always defer load package to speed up startup
+              use-package-verbose nil ; Report loading details
+              use-package-expand-minimally t  ; make the expanded code as minimal as possible
+              use-package-always-pin nil
+              use-package-enable-imenu-support t)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
+
 
 ;;;; User Info
+(put (quote setq-default) 'lisp-indent-function 'defun)
+
 (setq-default
- user-full-name			"Yang,Ying-chao"
- user-mail-address 		"yingchao.yang@icloud.com"
+  user-full-name		"Yang,Ying-chao"
+  user-mail-address 		"yingchao.yang@icloud.com"
 
- messages-buffer-max-lines t
- mouse-avoidance-mode 		'animate; 光标碰到鼠标所在位置时，鼠标自动移开
+  messages-buffer-max-lines 	t
+  mouse-avoidance-mode 		'animate; 光标碰到鼠标所在位置时，鼠标自动移开
 
- ; 设置title
- frame-title-format 		'(:eval
-                          (cond
-                           (buffer-file-name buffer-file-name)
-                           (dired-directory dired-directory)
-                           (t (buffer-name))))
+                                        ; 设置title
+  frame-title-format 		'(:eval
+                                  (cond
+                                   (buffer-file-name buffer-file-name)
+                                   (dired-directory dired-directory)
+                                   (t (buffer-name))))
 
- inhibit-startup-message 	t ;  关闭启动界面
- inhibit-default-init 		t
+  inhibit-startup-message 	t ;  关闭启动界面
+  inhibit-default-init 		t
 
- initial-scratch-message 	nil
- initial-major-mode 		'text-mode
- mouse-yank-at-point 		t ; 支持鼠标中键粘贴
- visible-bell 				t; 视觉响铃
- x-select-enable-clipboard t
- use-dialog-box 			nil
- major-mode 'text-mode; 默认模式为文本模式
- indicate-buffer-boundaries 'left
- show-trailing-whitespace nil
- create-lockfiles nil
+  initial-scratch-message 	nil
+  initial-major-mode 		'text-mode
+  mouse-yank-at-point 		t ; 支持鼠标中键粘贴
+  visible-bell 			t; 视觉响铃
+  x-select-enable-clipboard t
+  use-dialog-box 		nil
+  major-mode                    'text-mode; 默认模式为文本模式
+  indicate-buffer-boundaries    'left
+  show-trailing-whitespace      nil
+  create-lockfiles              nil
 
- ;; 防止页面滚动时跳动,scroll-margin 3可以在靠近屏幕边沿3行时就开始滚动,可以很好的看到上下文
- scroll-margin 3
- scroll-conservatively 10000
+  ;; 防止页面滚动时跳动,scroll-margin 3可以在靠近屏幕边沿3行时就开始滚动,可以很好的看到上下文
+  scroll-margin 3
+  scroll-conservatively 10000
 
- ;; 列宽, this got reset by (yc/setup-display) or by 100-private.el
- fill-column 78
- auto-fill-function 'do-auto-fill
- font-lock-maximum-decoration nil
- ;; 语法高亮
- global-font-lock-mode t
- max-specpdl-size 8192
- max-lisp-eval-depth 8192
- large-file-warning-threshold 104857600
+  ;; 列宽, this got reset by (yc/setup-display) or by 100-private.el
+  fill-column 78
+  auto-fill-function 'do-auto-fill
+  font-lock-maximum-decoration nil
+  ;; 语法高亮
+  global-font-lock-mode t
+  max-specpdl-size 8192
+  max-lisp-eval-depth 8192
+  large-file-warning-threshold 104857600
 
- custom-theme-directory "~/.emacs.d/themes"
- custom-safe-themes t
- )
+  custom-theme-directory "~/.emacs.d/themes"
+  custom-safe-themes t
+  )
 
  ;;;; Garbage Collection
 (setq
@@ -69,8 +102,7 @@
 
 (fset 'yes-or-no-p 'y-or-n-p); 用y/n替代yes/no
 
-
-;; Extra mode line faces
+ ;; Extra mode line faces
 (make-face 'mode-line-read-only-face)
 (make-face 'mode-line-modified-face)
 (make-face 'mode-line-80col-face)
@@ -153,9 +185,6 @@ Each ARG should be of form: '(FUNC ARG)"
 
 
 ;; Tab设置
-(setq-default tab-width 4)
-(setq-default c-basic-offset 4)
-(setq-default indent-tabs-mode nil)
 (setq-default show-paren-mode t)
 (setq indent-line-function 'indent-relative-maybe)
 
@@ -193,7 +222,6 @@ Each ARG should be of form: '(FUNC ARG)"
 (setq kill-do-not-save-duplicates t)
 
 ;; 先格式化再补全
-(setq tab-always-indent 'complete)
 (setq font-lock-maximum-decoration t)
 (setq history-delete-duplicates t)
 

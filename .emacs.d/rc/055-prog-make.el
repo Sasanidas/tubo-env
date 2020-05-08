@@ -1,4 +1,4 @@
-;;; 068-prog-make.el -- Brief introduction here.
+;;; 058-prog-make.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -324,11 +324,11 @@ Call FUNC with ARGS."
     (lambda ()"ninja")))
 
 
-(provide '068-prog-make)
+(provide '058-prog-make)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 068-prog-make.el ends here
+;;; 058-prog-make.el ends here

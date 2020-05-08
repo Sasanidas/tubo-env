@@ -1,4 +1,4 @@
-;;; 06-prog-common.el -- Brief introduction here.
+;;; 05-prog-common.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -115,10 +115,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
                             ("AccessModifierOffset". -4)
                             ("IndentCaseLabels" . "false")
                             ("PointerAlignment" . "Left")
-                            ("UseTab" . "Never")))
-  :hook ((emacs-startup . emr-initialize)))
-
-
+                            ("UseTab" . "Never"))))
 
 
  ;; Common Settings for prog-mode.
@@ -783,6 +780,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   (setq show-trailing-whitespace t)
   (setup-prog-keywords)
   (setup-prog-keybindings)
+  (emr-initialize)
 
   (yc/add-company-backends-with-yasnippet
     company-keywords company-dabbrev-code)
@@ -870,11 +868,11 @@ This function returns a string as compile command, or nil if it can't handle
   (get-command-from-list yc/run-commands))
 
 
-(provide '06-prog-common)
+(provide '05-prog-common)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 06-prog-common.el ends here
+;;; 05-prog-common.el ends here

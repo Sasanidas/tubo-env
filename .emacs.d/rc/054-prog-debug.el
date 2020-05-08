@@ -1,4 +1,4 @@
-;;; 067-prog-debug.el -- Brief introduction here.
+;;; 057-prog-debug.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -139,11 +139,11 @@ Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
                             debug-proc attach-proc attach-proc-su))
 
 
-(provide '067-prog-debug)
+(provide '057-prog-debug)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 067-prog-debug.el ends here
+;;; 057-prog-debug.el ends here
