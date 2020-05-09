@@ -1,7 +1,8 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: use-package
-# key: usp
+# name: :config
+# key: :cfg
 # group: use-package
 # --
-(use-package ${1:pkg}
-$0)$>
+:config$>
+$0
+$>

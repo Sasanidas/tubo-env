@@ -1,7 +1,8 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: :config
-# key: :cfg
+# name: :init
+# key: :in
+# group: use-package
 # --
-:config$>
+:init$>
 (progn$>
 $0)$>
