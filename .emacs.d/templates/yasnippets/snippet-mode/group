@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: group
-# key: group
+# key: grp
 # --
-# group : ${1:group}
+# group: ${1:group}

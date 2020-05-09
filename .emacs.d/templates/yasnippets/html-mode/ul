@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-#contributor : Jimmy Wu <frozenthrone88@gmail.com>
-#name : <ul>...</ul>
-#group : list
-# --
-<ul>
-$0$>
-</ul>

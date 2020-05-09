@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-#contributor : Jimmy Wu <frozenthrone88@gmail.com>
-#name : <td>...</td>
-#group : table
-# --
-<td$1>$2</td>

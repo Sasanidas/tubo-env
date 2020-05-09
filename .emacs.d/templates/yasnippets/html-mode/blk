@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# --
-{% block ${1:name} %}
-$0
-{% endblock %}

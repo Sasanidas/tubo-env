@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-#contributor : Jimmy Wu <frozenthrone88@gmail.com>
-#name : <ul class="...">...</ul>
-#group : list
-# --
-<ul class="$1">
-$0$>
-</ul>
