@@ -761,8 +761,7 @@ and is reversed for better performance.")
   "Advice for 'ccls--suggest-project-root'.
 Call FUNC which is 'ccls--suggest-project-root with ARGS."
   (and (memq major-mode '(c-mode c++-mode cuda-mode objc-mode))
-       (when-let (root-file (yc/lsp-get-root-file))
-         (file-name-nondirectory root-file))))
+       (yc/lsp--suggest-project-root-adv)))
 
 (defun yc/lsp-load-project-configuration-cc-mode (root-file)
   "Advice for 'ccls--suggest-project-root'.

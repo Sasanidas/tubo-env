@@ -531,16 +531,6 @@ Return t if succeeded, or nil otherwise.")
     (advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
     (advice-add 'lsp--suggest-project-root :before-until
                 #'yc/lsp--suggest-project-root-adv)
-
-    ;; (yc/eval-after-load
-    ;;   "lsp-clients"
-    ;; (unless (gethash 'clangd2 lsp-clients)
-    ;;   (lsp-register-client
-    ;;    (make-lsp-client :new-connection (lsp-stdio-connection
-    ;;                                      'lsp-clients--clangd-command)
-    ;;                     :major-modes '(c-mode c++-mode objc-mode)
-    ;;                     :priority 1
-    ;;                     :server-id 'clangd2))))
     )
   )
 
