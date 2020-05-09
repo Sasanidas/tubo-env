@@ -270,9 +270,22 @@ Call FUNC with ARGS."
   )
 
 (use-package counsel-projectile
-  :bind (("C-x M-f" . counsel-projectile-find-file)
-         ("C-x M-d" . counsel-projectile-find-dir))
-         )
+  :commands (counsel-projectile-find-file)
+  :bind (("C-x M-f" . (lambda ()
+                        (interactive)
+                        (if current-prefix-arg
+                            (counsel-projectile-find-file)
+                          (ivy-read (projectile-prepend-project-name "Find file: ")
+                                    (magit-revision-files "HEAD")
+                                    :matcher counsel-projectile-find-file-matcher
+                                    :require-match t
+                                    :sort counsel-projectile-sort-files
+                                    :action counsel-projectile-find-file-action
+                                    :caller 'counsel-projectile-find-file)
+                          )
+                        )
+          )
+         ("C-x M-d" . counsel-projectile-find-dir)))
 
 
 (defun sp-lisp-invalid-hyperlink-p (id action context)
