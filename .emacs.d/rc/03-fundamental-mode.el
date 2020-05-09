@@ -162,7 +162,10 @@
 
     (if (executable-find "rg")
         (setq counsel-grep-base-command
-              "rg -S --no-heading --line-number --color never %s %s")))
+              "rg -S --no-heading --line-number --color never %s %s"))
+
+    (advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
+    )
 
   :bind (("M-x" . counsel-M-x)
          ([remap yank-pop] . counsel-yank-pop)
@@ -192,7 +195,6 @@
 Call FUNC which is 'counsel-grep-or-swiper with ARGS."
   (apply func (or args (list (aif (symbol-at-point) (symbol-name it))))))
 
-(advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
 
 (defun yc/get-woman-path (lst)
   "Get list of woman-path from `LST'."
@@ -216,7 +218,10 @@ Call FUNC which is 'counsel-grep-or-swiper with ARGS."
 (use-package bookmark
   :defer t
   :custom
-  (bookmark-default-file (yc/make-cache-path "bookmarks")))
+  (bookmark-default-file (yc/make-cache-path "bookmarks"))
+  :config
+  (progn
+    (advice-add 'bookmark-set :after #'yc/bookmark-set)))
 
 (defun yc/bookmark-set (func &rest args)
   "Save bookmark after `bookmark-set'.
@@ -224,7 +229,6 @@ Call FUNC with ARGS."
   (and (bookmark-time-to-save-p t)
        (bookmark-save)))
 
-(advice-add 'bookmark-set :after #'yc/bookmark-set)
 
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
@@ -341,7 +345,14 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
           (vlf filename)
           (error "File %s opened in VLF mode." filename)))))
 
-(advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
+(use-package files
+  :config
+  ;;Handle file-error and suggest to install missing packages...
+  (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
+  (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
+
+  )
+
 
 
 (use-package server

@@ -223,6 +223,10 @@ unwanted space when exporting org-mode to html."
                             "\\1\\2" orig-contents))
          (apply func args))))
 
+    (advice-add 'org-open-at-point :around #'yc/org-open-at-point-adv)
+    (advice-add 'org-ctrl-c-ctrl-c :after #'yc/org-ctrl-c-ctrl-c-adv)
+    (advice-add 'org-comment-line-break-function :around #'yc/org-comment-line-break-function)
+
     (substitute-key-definition
      'org-cycle-agenda-files  'backward-page org-mode-map)
 
@@ -246,7 +250,7 @@ unwanted space when exporting org-mode to html."
           [134217837] . yc/show-methods-dwim)
          ))
 
-(use-package org-latex
+(use-package ox-latex
   :custom
 
   (org-latex-compiler "xelatex")
@@ -266,20 +270,20 @@ CJKbookmarks={true},
 linkcolor={black},
 urlcolor={blue},
 menucolor={blue}}
-"))
-
+")
+  :config
+  (progn
+    (advice-add 'org-latex-special-block :around #'yc/org-latex-special-block-adv)
+    )
+  )
 
 (defun yc/org-latex-special-block-adv (func &rest args)
   "Advice for 'org-latex-special-block'.
 Call FUNC which is 'org-latex-special-block with ARGS."
   (if (string= (org-element-property :type (car args)) "NOTES")
       (cadr args)
-    (apply func args)
-    )
+    (apply func args)))
 
-  )
-
-(advice-add 'org-latex-special-block :around #'yc/org-latex-special-block-adv)
 
 (defun org-summary-todo (n-done n-not-done)
   "Switch entry to DONE when all subentries are done, to TODO otherwise."
@@ -294,7 +298,6 @@ Call FUNC which is 'org-open-at-point with ARGS."
       (apply func args)
       (yc/push-stack m))))
 
-(advice-add 'org-open-at-point :around #'yc/org-open-at-point-adv)
 
 
 (defun yc/org-comment-line-break-function (func &rest args)
@@ -303,8 +306,6 @@ Ignore error signal in `org-comment-line-break-function'."
   (condition-case var
       (apply func args)
     (error nil)))
-
-(advice-add 'org-comment-line-break-function :around #'yc/org-comment-line-break-function)
 
 (defun open-mylist ()
   "Open my gtd file."
@@ -367,7 +368,6 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (when window-system
     (org-redisplay-inline-images)))
 
-(advice-add 'org-ctrl-c-ctrl-c :after #'yc/org-ctrl-c-ctrl-c-adv)
 
 
  ;; auto-insert for org-mode.

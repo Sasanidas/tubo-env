@@ -85,7 +85,11 @@
     ;; (let ((win3 (split-window nil (/ (* (window-height) 3) 4)))) ;; local/register
     ;;   (gdb-set-window-buffer (gdb-locals-buffer-name) nil win3))
     (select-window win0)))
-(advice-add 'gdb-setup-windows :override #'yc/gdb-setup-windows)
+
+(yc/eval-after-load
+  "gdb-mi"
+  (advice-add 'gdb-setup-windows :override #'yc/gdb-setup-windows))
+
 
 ;; (defun yc/gud-display-line (true-file line)
 ;;   "Advice for `gud-display-line'."
@@ -114,7 +118,9 @@
                                      (add-to-list 'company-backends 'company-gdb))))
   :custom
   (realgud-safe-mode nil)
-  (realgud-file-find-function 'yc/realgud-find-file))
+  (realgud-file-find-function 'yc/realgud-find-file)
+  :config
+  (advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv))
 
 (use-package realgud-lldb
   :pin melpa
@@ -129,7 +135,7 @@
 Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
   (realgud-track-mode-setup 't))
 
-(advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv)
+
 
 
 

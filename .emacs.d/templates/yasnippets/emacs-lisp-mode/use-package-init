@@ -4,5 +4,5 @@
 # group: use-package
 # --
 :init$>
-(progn$>
-$0)$>
+$0
+$>

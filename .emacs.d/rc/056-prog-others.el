@@ -108,16 +108,17 @@
     (setq  bison-rule-enumeration-column 10)))
 
  ;; SQL Mode
+(defun yc/sqlup-comment-p-adv (func &rest args)
+  "Advice for `sqlup-comment-p'.
+FUNC is `sqlup-comment-p', and arguments are stored in ARGS.
+It seems `syntax-pass' does not work properly when the buffer contains # -*- ."
+  (looking-back (rx (or "#" "--") (*? nonl))))
+
 (use-package sqlup-mode  :commands (sqlup-mode)
   :config
   (progn
-    (defun yc/sqlup-comment-p-adv (func &rest args)
-      "Advice for `sqlup-comment-p'.
-FUNC is `sqlup-comment-p', and arguments are stored in ARGS.
-It seems `syntax-pass' does not work properly when the buffer contains # -*- ."
-      (looking-back (rx (or "#" "--") (*? nonl))))
-
-    (advice-add 'sqlup-comment-p :around #'yc/sqlup-comment-p-adv))
+    (advice-add 'sqlup-comment-p :around #'yc/sqlup-comment-p-adv)
+    (advice-add 'sqlup-capitalize-as-you-type :around #'yc/sqlup-capitalize-as-you-type))
   :hook ((sql-mode . sqlup-mode)))
 
 
@@ -127,7 +128,6 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   (if (buffer-modified-p)
       (apply func args)))
 
-(advice-add 'sqlup-capitalize-as-you-type :around #'yc/sqlup-capitalize-as-you-type)
 
 (use-package sql-indent-mode
   :commands (sql-indent-mode)
@@ -183,7 +183,10 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
           sql-mode-postgres-font-lock-keywords)
     (load-library "sql+")
     (if (equal sql-product 'ansi)
-        (sql-set-product 'postgres))))
+        (sql-set-product 'postgres))
+
+    (advice-add 'sql-product-interactive :around #'yc/sql-product-interactive-adv)
+))
 
 (defun yc/sql-product-interactive-adv (func &rest args)
   "Advice for 'sql-product-interactive'.
@@ -225,8 +228,6 @@ Call FUNC which is 'sql-product-interactive with ARGS."
            ))
       (apply func args))))
 
-(advice-add 'sql-product-interactive :around #'yc/sql-product-interactive-adv)
-
 (use-package sql-utils
   :commands (eshell/restart_pg yc/remove-costs))
 
@@ -241,6 +242,7 @@ Call FUNC which is 'sql-product-interactive with ARGS."
   :commands (ensime)
   :config
   (progn
+    (advice-add 'ensime-company-enable :around #'yc/ensime-company-enable)
     (custom-set-variables
      '(ensime-startup-notification nil)
      '(ensime-startup-snapshot-notification nil)
@@ -252,7 +254,6 @@ Call FUNC which is 'sql-product-interactive with ARGS."
 Call FUNC with ARGS."
   (yc/add-company-backends-with-yasnippet ensime-company))
 
-(advice-add 'ensime-company-enable :around #'yc/ensime-company-enable)
 
 (defun yc/ensime-find-definition (pt)
   "Find definition at PT."

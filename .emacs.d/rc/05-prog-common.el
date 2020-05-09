@@ -45,11 +45,12 @@ Update the Which-Function mode display for all windows."
      (when which-function-mode
        (which-func-update-1 w))) nil 'visible))
 
-(advice-add 'which-func-update :override #'yc/which-func-update)
-
 (use-package which-func
   :commands (which-function-mode)
-  :hook ((prog-mode . which-function-mode)))
+  :hook ((prog-mode . which-function-mode))
+  :config
+  (progn
+    (advice-add 'which-func-update :override #'yc/which-func-update)))
 
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
 
@@ -240,7 +241,10 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   :commands (gxref-xref-backend))
 
 (use-package ivy-xref
-  :commands (ivy-xref-show-xrefs))
+  :commands (ivy-xref-show-xrefs)
+  :config
+  (progn
+    (advice-add 'ivy-xref-show-xrefs :after #'yc/ivy-xref-show-xrefs-adv)))
 
 (use-package xref
   :commands (xref-backend-identifier-at-point  xref-find-backend)
@@ -256,8 +260,6 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   "Advice for 'ivy-xref-show-xrefs'.
 Call FUNC which is 'ivy-xref-show-xrefs with ARGS."
   (setq xref-ivy-last ivy-last))
-
-(advice-add 'ivy-xref-show-xrefs :after #'yc/ivy-xref-show-xrefs-adv)
 
 (defun yc/return-reflist ()
   "Return to last reference list."
@@ -521,19 +523,50 @@ Return t if succeeded, or nil otherwise.")
    )
   :config
   (progn
-    (yc/eval-after-load
-      "lsp-clients"
-    (unless (gethash 'clangd2 lsp-clients)
-      (lsp-register-client
-       (make-lsp-client :new-connection (lsp-stdio-connection
-                                         'lsp-clients--clangd-command)
-                        :major-modes '(c-mode c++-mode objc-mode)
-                        :priority 1
-                        :server-id 'clangd2)))))
+
+    (advice-add 'lsp :around #'yc/lsp-adv)
+    (advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
+    (advice-add 'lsp-format-region :around #'yc/lsp-format-adv)
+    (advice-add 'lsp--imenu-create-index :around #'yc/lsp--imenu-create-index-adv)
+    (advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
+    (advice-add 'lsp--suggest-project-root :before-until
+                #'yc/lsp--suggest-project-root-adv)
+
+    ;; (yc/eval-after-load
+    ;;   "lsp-clients"
+    ;; (unless (gethash 'clangd2 lsp-clients)
+    ;;   (lsp-register-client
+    ;;    (make-lsp-client :new-connection (lsp-stdio-connection
+    ;;                                      'lsp-clients--clangd-command)
+    ;;                     :major-modes '(c-mode c++-mode objc-mode)
+    ;;                     :priority 1
+    ;;                     :server-id 'clangd2))))
+    )
   )
 
-;; advice for format-buffer & format-region: save execution before format.
-;; some servers (pyls) will move point to other unexpected place....
+(defun yc/lsp--suggest-project-root-adv (&rest args)
+  "Advice for 'ccls--suggest-project-root': locate .lsp-conf if possible.
+Call FUNC which is 'ccls--suggest-project-root with ARGS."
+  (when-let (root-file (yc/lsp-get-root-file))
+    (expand-file-name (file-name-directory root-file))))
+
+
+;; does nothing but disable lsp--imenu, which is very slow if there are lots of symbols...
+(defun yc/lsp-enable-imenu-adv (&rest args)
+  "Advice for 'lsp-enable-imenu'.
+Call FUNC which is 'lsp-enable-imenu with ARGS."
+  t)
+
+
+(defun yc/lsp--imenu-create-index-adv (func &rest args)
+  "Advice for 'lsp--imenu-create-index'.
+Call FUNC which is 'lsp--imenu-create-index with ARGS."
+  (if (= yc/document-symbols-tick (buffer-chars-modified-tick))
+      yc/cached-symbols
+
+    (PDEBUG "Refreshing tags..." )
+    (setq yc/document-symbols-tick (buffer-chars-modified-tick)
+          yc/cached-symbols (apply func args))))
 
 (defun yc/lsp-format-adv (func &rest args)
   "Advice for 'lsp-format-buffer'.
@@ -543,8 +576,30 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
     (if (= (point-min) (point))
         (goto-char p))))
 
-(advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
-(advice-add 'lsp-format-region :around #'yc/lsp-format-adv)
+
+(defun yc/lsp-adv (func &rest args)
+  "Advice for 'lsp'.
+Call FUNC which is 'lsp with ARGS."
+
+  ;; turn off flycheck mode before turning lsp..
+  (flycheck-mode -1)
+
+  ;; Load project-specific settings...
+  (yc/lsp-load-project-configuration)
+
+  ;; Calls lsp...
+  (apply func args)
+
+  ;; functions to run after lsp...
+  (lsp-ui-flycheck-enable t)
+  (unless (featurep 'company-lsp)
+    (require 'company-lsp))
+
+  (yc/add-company-backends-with-yasnippet company-lsp)
+  (flycheck-mode 1))
+
+;; advice for format-buffer & format-region: save execution before format.
+;; some servers (pyls) will move point to other unexpected place....
 
 (defun yc/modeline-update-lsp (&rest args)
   "Update `lsp-mode' status."
@@ -557,7 +612,7 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
                              (-> it lsp--workspace-client lsp--client-server-id symbol-name (propertize 'face 'bold-italic))
                              (propertize (format "%s" (process-id (lsp--workspace-cmd-proc it))) 'face 'italic))
                      workspaces)))
-          (concat " LSP" (propertize "[Disconnected]" 'face 'warning)))
+         (concat " LSP" (propertize "[Disconnected]" 'face 'warning)))
        )
   )
 
@@ -594,27 +649,6 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
 
 (defvar-local yc/cached-symbols nil "last cached index.")
 (defvar-local yc/document-symbols-tick -1 "last tick of modification.")
-
-(defun yc/lsp--imenu-create-index-adv (func &rest args)
-  "Advice for 'lsp--imenu-create-index'.
-Call FUNC which is 'lsp--imenu-create-index with ARGS."
-  (if (= yc/document-symbols-tick (buffer-chars-modified-tick))
-      yc/cached-symbols
-
-    (PDEBUG "Refreshing tags..." )
-    (setq yc/document-symbols-tick (buffer-chars-modified-tick)
-          yc/cached-symbols (apply func args))))
-
-(advice-add 'lsp--imenu-create-index :around #'yc/lsp--imenu-create-index-adv)
-
-
-;; does nothing but disable lsp--imenu, which is very slow if there are lots of symbols...
-(defun yc/lsp-enable-imenu-adv (&rest args)
-  "Advice for 'lsp-enable-imenu'.
-Call FUNC which is 'lsp-enable-imenu with ARGS."
-  t)
-
-(advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
 
 
 
@@ -676,38 +710,8 @@ Call FUNC which is 'lsp-enable-imenu with ARGS."
 
     (PDEBUG "leave")))
 
-(defun yc/lsp-adv (func &rest args)
-  "Advice for 'lsp'.
-Call FUNC which is 'lsp with ARGS."
-
-  ;; turn off flycheck mode before turning lsp..
-  (flycheck-mode -1)
-
-  ;; Load project-specific settings...
-  (yc/lsp-load-project-configuration)
-
-  ;; Calls lsp...
-  (apply func args)
-
-  ;; functions to run after lsp...
-  (lsp-ui-flycheck-enable t)
-  (unless (featurep 'company-lsp)
-    (require 'company-lsp))
-
-  (yc/add-company-backends-with-yasnippet company-lsp)
-  (flycheck-mode 1))
-
-(advice-add 'lsp :around #'yc/lsp-adv)
 
 
-(defun yc/lsp--suggest-project-root-adv (&rest args)
-  "Advice for 'ccls--suggest-project-root': locate .lsp-conf if possible.
-Call FUNC which is 'ccls--suggest-project-root with ARGS."
-  (when-let (root-file (yc/lsp-get-root-file))
-    (expand-file-name (file-name-directory root-file))))
-
-(advice-add 'lsp--suggest-project-root :before-until
-            #'yc/lsp--suggest-project-root-adv)
 
 ;; lsp extras
 (use-package lsp-ui

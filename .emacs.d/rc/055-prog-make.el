@@ -201,7 +201,9 @@ gen_compile_db
               ("<f9>" . 'next-error))
 
   :config
-  (progn
+    (advice-add 'compile :around #'yc/compile-adv)
+    (advice-add 'recompile :before #'yc/recompile)
+
     (add-hook 'compilation-finish-functions
       (lambda (buf str)
         (if (string-match "exited abnormally" str)
@@ -211,14 +213,12 @@ gen_compile_db
 
           ;;no errors, make the compilation window go away in 0.5 seconds
           ;;        (run-at-time 5.0 nil 'delete-windows-on buf)
-          (message "NO COMPILATION ERRORS!"))))))
+          (message "NO COMPILATION ERRORS!")))))
 
 (defun yc/compile-adv (func command &optional comint)
   "Advice for 'compile'.
 Call FUNC which is 'compile with ARGS."
   (funcall func (format "LANG=C %s" command) comint))
-
-(advice-add 'compile :around #'yc/compile-adv)
 
 (defun do-compile ()
   "Save buffers and start compile with ARG."
@@ -294,7 +294,6 @@ Call FUNC with ARGS."
         compile-command
       (error "Action abort"))))
 
-(advice-add 'recompile :before #'yc/recompile)
 
   ;; *********** Makefile ***************
 

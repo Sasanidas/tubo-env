@@ -325,7 +325,10 @@ If CLICK is t, calculate time cost."
 Call FUNC with ARGS."
   (yc/setup-display))
 
-(advice-add 'server-create-window-system-frame :after #'yc/server-create-window-system-frame)
+(yc/eval-after-load
+  "server"
+  (advice-add 'server-create-window-system-frame :after #'yc/server-create-window-system-frame))
+
 
 
 (defun yc/remove-empty-lines (&optional pos)
@@ -491,14 +494,14 @@ And install necessary packages if there are errors while executing FUNC."
                        (yc/try-install-package package-name)
                        (set-auto-mode))))))))))
 
-;;Handle file-error and suggest to install missing packages...
-(advice-add 'set-auto-mode :around #'yc/install-package-on-error)
-
-(advice-add
- 'command-execute :around #'yc/install-package-on-error)
+(advice-add  'command-execute :around #'yc/install-package-on-error)
 
 (advice-add 'run-hooks :around #'yc/install-package-on-error)
-(advice-add 'timer-event-handler :around #'yc/install-package-on-error)
+
+(yc/eval-after-load
+  "timer"
+  (advice-add 'timer-event-handler :around #'yc/install-package-on-error))
+
 
 
 ;; (advice-remove 'command-execute #'yc/install-package-on-error)

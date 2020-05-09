@@ -94,6 +94,7 @@
   (ediff-ignore-similar-regions t)
 
   :config
+  (advice-add 'ediff-buffers :before #'yc/ediff-buffers)
   (setq ediff-diff-ok-lines-regexp
         (concat
          "^\\("
@@ -155,16 +156,16 @@
   (yc/ediff-prepare buffer-A)
   (yc/ediff-prepare buffer-B))
 
-(advice-add 'ediff-buffers :before #'yc/ediff-buffers)
-
-(use-package smerge-mode :bind ((;; ,(kbd "<S-f12>")
-                                 [S-f12]. smerge-ediff)))
+(use-package smerge-mode
+  :bind ((;; ,(kbd "<S-f12>")
+          [S-f12]. smerge-ediff))
+  :config
+    (advice-add 'smerge-ediff :before #'yc/smerge-ediff))
 
 (defun yc/smerge-ediff (&rest args)
   "Disable some minor-mode before `smerge-eiff', and renable them after that."
   (yc/ediff-prepare))
 
-(advice-add 'smerge-ediff :before #'yc/smerge-ediff)
 
 (defun yc/ediff-startup-hook ()
   "Description."
@@ -524,7 +525,10 @@
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
               ("r" . pdf-history-forward)
-              ("i" . mydb/open-note-file)))
+              ("i" . mydb/open-note-file))
+  :config
+  (advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
+)
 
 (defun yc/pdf-tools-re-install ()
   "Re-install `epdfinfo' even if it is installed.
@@ -560,8 +564,6 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
             (kill-buffer)
             (kill-new image-name))))
     (apply func args)))
-
-(advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
 
 
 ;; https://github.com/rudolfochrist/interleave
@@ -688,15 +690,11 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
 (use-package find-func
   :bind (("\C-cff"  . find-function)
          ( "\C-cfc" . find-function-on-key))
-  :init
-  (progn
-    (defun yc/find-function (&rest args)
-      ""
-      (condition-case error
-          (yc/push-stack)
-        ('error nil)))
-
-    (advice-add 'find-function :before #'yc/find-function)))
+  :config
+  (advice-add 'find-function :before (lambda (&rest args)
+                                         (condition-case error
+                                             (yc/push-stack)
+                                           ('error nil)))))
 
 
 (use-package hexview-mode :bind ((;; ,(kbd "C-x M-F")
@@ -803,6 +801,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   :config
   (progn
     (setq-default dired-listing-switches "-alh")
+    (advice-add 'dired-ediff :around #'yc/dired-ediff-adv)
     (load-library "ls-lisp")))
 
 (use-package dired-x
@@ -813,9 +812,12 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   :config
   (progn
     (load-library "ls-lisp")
-    (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$" 'dired-virtual-mode))))
+    (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$"
+                                        'dired-virtual-mode))))
 
-
+(use-package dired-aux
+  :config
+  (advice-add 'dired-compress :override #'yc/dired-compress-adv))
 
 ;; Overwrite some functions
 (defun yc/dired-ediff-adv (func file &rest args)
@@ -863,7 +865,6 @@ which is options for `diff'."
     (ediff-files file current))
   )
 
-(advice-add 'dired-ediff :around #'yc/dired-ediff-adv)
 
 ;; Use 7z and tar to compress/decompress file if possible.
 (defvar yc/dired-compress-file-suffixes
@@ -969,7 +970,6 @@ Call FUNC which is 'dired-compress with ARGS."
       from-file))
   )
 
-(advice-add 'dired-compress :override #'yc/dired-compress-adv)
 
 
 (use-package hl-line
@@ -1169,8 +1169,10 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
   )
 
-(advice-add 'semantic-html-parse-headings :around #'yc/semantic-html-parse-headings-adv)
-
+(use-package semantic/html
+  :config
+  (advice-add 'semantic-html-parse-headings :around #'yc/semantic-html-parse-headings-adv)
+  )
 
 (use-package sgml-mode
   :mode ("/itsalltext/" . html-mode)

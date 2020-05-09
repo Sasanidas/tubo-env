@@ -107,25 +107,10 @@ Call FUNC with ARGS."
     (funcall func stash)
     (message "Patch save as %s." output)))
 
-(advice-add 'magit-stash-format-patch :around #'yc/magit-stash-format-patch)
+(yc/eval-after-load
+  "magit-stash"
+  (advice-add 'magit-stash-format-patch :around #'yc/magit-stash-format-patch))
 
-;; (defun yc/magit-log-buffer-file-popup-adv (&rest args)
-;;   "Advice for 'magit-log-buffer-file-popup'.
-;; Call FUNC which is 'magit-log-buffer-file-popup with ARGS."
-;;   (if-let ((file (magit-file-relative-name)))
-;;       (let ((magit-log-arguments
-;;              (append magit-log-arguments
-;;                      (magit-popup-import-file-args
-;;                       (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
-;;                           (with-current-buffer buffer
-;;                             (nth 2 magit-refresh-args))
-;;                         (default-value 'magit-log-arguments))
-;;                       (list file)))))
-;;         (magit-invoke-popup 'magit-log-popup nil nil))
-;;     (user-error "Buffer isn't visiting a file")))
-
-;; (advice-add 'magit-log-buffer-file-popup :override
-;;             #'yc/magit-log-buffer-file-popup-adv)
 
 (use-package magit-git
   :commands (magit-git-string))

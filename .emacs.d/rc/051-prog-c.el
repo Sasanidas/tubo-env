@@ -433,18 +433,24 @@ and is reversed for better performance.")
   ;; :custom
   ;; (ccls-sem-highlight-method 'font-lock)
   :config
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection (lsp-tramp-connection (lambda () (cons ccls-executable ccls-args)))
-    :major-modes '(c-mode c++-mode cuda-mode objc-mode)
-    :server-id 'ccls-remote
-    :multi-root nil
-    :remote? t
-    :notification-handlers
-    (lsp-ht ("$ccls/publishSkippedRanges" #'ccls--publish-skipped-ranges)
-            ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
-    :initialization-options (lambda () ccls-initialization-options)
-    :library-folders-fn nil))
+  (progn
+    (advice-add 'ccls--suggest-project-root :before-until
+                #'yc/ccls--suggest-project-root-adv)
+
+
+    (lsp-register-client
+     (make-lsp-client
+      :new-connection (lsp-tramp-connection (lambda () (cons ccls-executable ccls-args)))
+      :major-modes '(c-mode c++-mode cuda-mode objc-mode)
+      :server-id 'ccls-remote
+      :multi-root nil
+      :remote? t
+      :notification-handlers
+      (lsp-ht ("$ccls/publishSkippedRanges" #'ccls--publish-skipped-ranges)
+              ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
+      :initialization-options (lambda () ccls-initialization-options)
+      :library-folders-fn nil)))
+
   )
 
 (defun yc/c-mode-common-hook ()
@@ -757,9 +763,6 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   (and (memq major-mode '(c-mode c++-mode cuda-mode objc-mode))
        (when-let (root-file (yc/lsp-get-root-file))
          (file-name-nondirectory root-file))))
-
-(advice-add 'ccls--suggest-project-root :before-until
-            #'yc/ccls--suggest-project-root-adv)
 
 (defun yc/lsp-load-project-configuration-cc-mode (root-file)
   "Advice for 'ccls--suggest-project-root'.
