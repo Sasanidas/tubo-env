@@ -1,4 +1,4 @@
-personal_ws-1.1 en 113 
+personal_ws-1.1 en 114 
 whitespace
 Readme
 defun
@@ -6,8 +6,8 @@ Deconstructor
 gbase
 Recency
 filesystems
-Failover
 FailOver
+Failover
 Dentry
 GUID
 ITC
@@ -57,11 +57,12 @@ NFS
 logviewer
 nbservices
 FIP
-SVN
 VFS
+SVN
 px
 wxwidget
 gentoo
+LSP
 han
 HCI
 HAWQ

@@ -460,13 +460,6 @@ Return t if succeeded, or nil otherwise.")
 (use-package lsp-ui-imenu
   :commands (lsp-ui-imenu-enable))
 
-(use-package lsp-ui-flycheck
-  :commands (lsp-ui-flycheck-enable)
-  :init
-  (progn
-    (custom-set-variables
-     '(lsp-ui-flycheck-live-reporting t))))
-
 (defvar yc/lsp-warned-mode-list nil "List of modes already been warn for disabling LSP.")
 
 (defcustom yc/lsp-server-dir (expand-file-name "~/.local/lsp/")
@@ -477,16 +470,17 @@ Return t if succeeded, or nil otherwise.")
 
 
 (defun yc/lsp--setup (executable install-tip &optional setup-func)
-  "Enable LSP if EXECUTABLE is t."
+  "Setup LSP.
+Enable LSP if EXECUTABLE is t, and if `SETUP-FUNC' is not nil,
+call this function to setup LSP.  Or show INSTALL-TIP."
+
   (if (or (executable-find executable)
           (file-executable-p executable))
       (progn
         (when setup-func
           (PDEBUG "setting up: " setup-func)
           (funcall setup-func))
-
-        (lsp)
-        )
+        (lsp))
 
     (unless (member major-mode yc/lsp-warned-mode-list)
       (add-to-list 'yc/lsp-warned-mode-list major-mode)
@@ -497,7 +491,8 @@ Return t if succeeded, or nil otherwise.")
                executable install-tip)))))
 
 (use-package lsp-mode
-  :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region lsp-format-buffer)
+  :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
+                 lsp-format-buffer lsp-flycheck-enable)
   :ensure t
   :pin melpa
   :custom
@@ -581,7 +576,7 @@ Call FUNC which is 'lsp with ARGS."
   (apply func args)
 
   ;; functions to run after lsp...
-  (lsp-ui-flycheck-enable t)
+  (lsp-flycheck-enable t)
   (unless (featurep 'company-lsp)
     (require 'company-lsp))
 
