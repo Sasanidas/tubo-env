@@ -270,11 +270,20 @@ Call FUNC with ARGS."
   )
 
 (use-package counsel-projectile
+  :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files)
+  :functions (counsel-projectile-find-file-action)
   :commands (counsel-projectile-find-file)
   :bind (("C-x M-f" . (lambda ()
                         (interactive)
-                        (if current-prefix-arg
+
+                        (unless (featurep 'counsel-projectile)
+                          (load "counsel-projectile"))
+
+                        (if (or current-prefix-arg
+                                (not (file-exists-p (concat (projectile-project-root) ".git"))))
                             (counsel-projectile-find-file)
+
+                          ;; find file, exclude files in submodules.
                           (ivy-read (projectile-prepend-project-name "Find file: ")
                                     (magit-revision-files "HEAD")
                                     :matcher counsel-projectile-find-file-matcher
@@ -282,8 +291,7 @@ Call FUNC with ARGS."
                                     :sort counsel-projectile-sort-files
                                     :action counsel-projectile-find-file-action
                                     :caller 'counsel-projectile-find-file)
-                          )
-                        )
+                          ))
           )
          ("C-x M-d" . counsel-projectile-find-dir)))
 
