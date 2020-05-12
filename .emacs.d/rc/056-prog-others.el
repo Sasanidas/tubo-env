@@ -96,11 +96,19 @@
       (message "you didn't specify a function")
     (progn
       (start-process "powershell-help" nil "devhelp" "-s" function))))
+
+(use-package yaml-mode
+  :mode (rx (or ".clang-format" (: ".y" (? "a" ) "ml")) eol)
+  :hook ((yaml-mode .           (lambda ()
+            (unless (buffer-file-name)
+              (flycheck-mode -1))
+
+            (yc/lsp--setup "yaml-language-server"
+                           "https://github.com/redhat-developer/yaml-language-server")))))
 
 
 (use-package qml-mode :mode "\\.qml$")
 (use-package swig-mode :mode (rx (or ".i" ".swig") eol))
-(use-package yaml-mode :mode (rx (or ".clang-format" (: ".y" (? "a" ) "ml")) eol))
 (use-package bison-mode
   :mode (rx "." (or "yy" "y" "jison") eol)
   :config
