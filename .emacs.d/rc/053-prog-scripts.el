@@ -46,16 +46,13 @@
 
 
 (use-package lsp-python-ms
-  :commands (lsp-python-ms-setup)
+  :commands (lsp-python-ms-update-server)
   ;; :config
   ;; (progn
-  ;;   (setq ;; lsp-python-executable-cmd "python3"
-
-
+  ;;   (setq ;; lsp-python-executable-cmd "python3" ;;; should be set by project.
   ;;    ))
 
   :custom
-  (lsp-python-ms-python-executable-cmd "python3")
   (lsp-python-ms-dir (concat yc/lsp-server-dir "/ms-python/"))
   (lsp-python-ms-executable (concat lsp-python-ms-dir
                                       "Microsoft.Python.LanguageServer"
@@ -74,10 +71,12 @@
               (flycheck-mode -1))
 
             (yc/lsp--setup (concat yc/lsp-server-dir "/ms-python/" "Microsoft.Python.LanguageServer")
-                           "M-x: lsp-python-ms-setup"
+                           "M-x: lsp-python-ms-update-server"
                            (lambda ()
                              (unless (featurep 'lsp-python-ms)
-                               (require 'lsp-python-ms))))
+                               (require 'lsp-python-ms)
+                               (unless (member 'pyls lsp-disabled-clients)
+                                 (push 'pyls lsp-disabled-clients)))))
 
             ;; (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'"
             ;;                (lambda ()
