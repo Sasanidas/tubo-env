@@ -113,7 +113,7 @@ Call FUNC with ARGS."
 
 
 (use-package magit-git
-  :commands (magit-git-string))
+  :commands (magit-git-string magit-revision-files))
 
 (use-package magit-process
   :commands (magit-process-file))
