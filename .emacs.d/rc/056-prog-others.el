@@ -414,7 +414,8 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
   )
 
 (use-package typescript-mode
-  :mode (rx "." (or "ts") buffer-end))
+  :mode (rx "." (or "ts") buffer-end)
+  :hook ((typescript-mode . lsp)))
 
 
 (provide '059-prog-others)
