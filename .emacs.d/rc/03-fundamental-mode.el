@@ -153,6 +153,7 @@
                                             (: (or "#" "~")  buffer-end)
                                             (: buffer-start ".ccls-cache" buffer-end)
                                             )))
+  (counsel-rg-base-command "rg -u --with-filename --no-heading --line-number --color never %s")
   :config
   (progn
     (defalias 'git-grep 'counsel-git-grep)
