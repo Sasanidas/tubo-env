@@ -35,6 +35,7 @@
 ;;; Code:
 
 (require 'hl-line)
+(require 'outline)
 
 (defcustom logviewer-log-pattern (rx "." (or "LOG" "log" "Log"))
   "Pattern to decide if a file is a log file."
@@ -82,7 +83,7 @@
     map)
   "Keymap for logviewer mode.")
 
-(dsq logviewer-font-lock-keywords
+(defvar logviewer-font-lock-keywords
   `(
     ;; Date & time.
     (,(rx bol (** 0 256 not-newline) symbol-start
@@ -111,7 +112,7 @@
           (group (+ (*? not-newline))))
      (1 font-lock-keyword-face) (2 font-lock-doc-face))
     )
-  "")
+  "Keywords of logviewer..")
 
 (defvar-local logviewer--current-file nil
   "Log file current viewed by logviewer.")
@@ -126,21 +127,6 @@
   0
   "Current slice.")
 (put 'logviewer--current-slice 'permanent-local t)
-
-(defun logviewer-process-sentinel (process event)
-  "description"
-  (when (memq (process-status process) '(signal exit))
-    (let* ((exit-status       (process-exit-status process))
-           (command           (process-command process))
-           (source-buffer     (process-buffer process))
-           )
-
-      (condition-case err
-          (delete-process process)
-        (error
-         (let ((err-str (format "Error in process sentinel: %s"
-                                 (error-message-string err))))
-           (message err-str)))))))
 
 (defun split-and-view-log (filename)
   "Split file specified by FILENAME and view the splits."
@@ -158,7 +144,6 @@
                            (expand-file-name filename)
                            (format "%s/" cache-dir))))
 
-      (set-process-sentinel process  'logviewer-process-sentinel)
       (while (not (file-exists-p first-slice))
         (sleep-for 0.5))
       (setq logviewer--current-slice 0)
@@ -336,7 +321,7 @@ NUM: prefix."
   )
 
 (defun logviewer-set-filter ()
-  "Set and show result of filter lvl"
+  "Set and show result of filter lvl."
   (interactive)
   (setq logviewer-filter-list nil)
   (let ((lvl nil)
