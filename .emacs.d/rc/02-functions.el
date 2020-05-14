@@ -56,7 +56,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
 
 (defvar yc/debug-log-limit 1024 "Nil.")
 
-(defun yc/debug-log (file line &rest msgs)
+(defun yc/debug-log (&rest msgs)
   "Output MSGS with FILE and LINE."
   (let ((buf (get-buffer-create YC-DEBUG-BUF))
         (last  (if msgs
@@ -68,9 +68,8 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
       (with-current-buffer buf
         (goto-char (point-max))
         (princ "\n" buf)
-        (princ (format-time-string current-date-time-format (current-time)) buf)
-        (princ " ======>" buf)
-        (princ (format "%s:%d ======>\n" file line) buf)
+        (princ (format-time-string  "%a %b %d %H:%M:%S %Z %Y" (current-time)) buf)
+        (princ " ======>\n" buf)
         (setq pos-start (point))
         (princ (pop msgs) buf)
 
@@ -92,15 +91,8 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
         ))
     last))
 
+(defalias 'PDEBUG 'yc/debug-log)
 
-(yc/defmacro PDEBUG (&rest msg)
-  "Output MSGS with file and line..."
-  `(when YC-DEBUG
-     (yc/debug-log
-      ,(if buffer-file-name
-           (file-name-nondirectory buffer-file-name) "Unknown")
-      ,(line-number-at-pos)
-      ,@msg)))
 
 (yc/defmacro yc/eval-after-load (name &rest args)
   "Macro to set expressions in `arg` to be executed after `name` is loaded."

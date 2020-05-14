@@ -6,6 +6,13 @@
 
 ;;; Code:
 
+(defmacro aif (test-form then-form &rest else-forms)
+  "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
+THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
+  (declare (indent 2) (debug t))
+  `(let ((it ,test-form))
+     (if it ,then-form ,@else-forms)))
+
 (defun yc/move-snapshot ()
   "Choose snapshot, rename it, and move into specified directory."
   (interactive)
