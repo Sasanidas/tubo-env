@@ -1,4 +1,4 @@
-;;; tdict.el -- Brief introduction here.
+;;; tdict.el -- Brief introduction here.    -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -90,9 +90,7 @@
          (web          (assoc-default 'web         json)) ; array
          (basic        (assoc-default 'basic       json)) ; alist
          (phonetic     (assoc-default 'phonetic basic))
-
-         (basic-explains-str )
-         (web-str ))
+         )
 
     (if (and
          (= errorCode 0)
@@ -151,8 +149,9 @@ Otherwise return word around point."
                        (error
                         (progn
                           (PDEBUG "ERR: " var)
-                          (add-to-list 'errmsg (concat (symbol-name func)
-                                                       (s-join " "(cdr var)))))))))))
+                          (push (concat (symbol-name func)
+                                        (s-join " "(cdr var)))
+                                errmsg))))))))
 
 
     (if result

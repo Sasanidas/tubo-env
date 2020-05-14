@@ -1,4 +1,4 @@
-;;; (>>FILE<<) -- Brief introduction here.
+;;; (>>FILE<<) -- Brief introduction here.  -*- lexical-binding: t; -*-
 
 ;; Author: (>>USER<<) <(>>EMAIL<<)>
 

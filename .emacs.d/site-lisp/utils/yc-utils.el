@@ -1,4 +1,4 @@
-;;; yc-utils.el -- Brief introduction here.
+;;; yc-utils.el -- Brief introduction here.   -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yingchao.yang@icloud.com>
 

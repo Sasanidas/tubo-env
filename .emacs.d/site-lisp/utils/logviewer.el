@@ -1,4 +1,4 @@
-;;; logviewer.el -- Simple log viewer.
+;;; logviewer.el -- Simple log viewer.  -*- lexical-binding: t; -*-
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 ;; This file is NOT part of GNU Emacs.
@@ -261,20 +261,6 @@ NUM: prefix."
 
 (defvar logviewer--overlays nil "Folded overlays.")
 
-
-(defun get-lvl-str (num)
-  "description"
-  (let ((x (/ num 2))
-        (lst nil))
-    (while (>= x 0 )
-      (setq x (1- x))
-      (add-to-list  'lst (nth x logviewer-levels))
-      )
-    lst
-    )
-  )
-
-
 (defun logviewer-get-filter (lvl)
   "Get filter beyond LVL."
   (if (string= lvl "FATAL")
@@ -423,6 +409,7 @@ Key definitions:
 
 ;; Local Variables:
 ;; coding: utf-8
+;; lexical-binding: t
 ;; indent-tabs-mode: nil
 ;; End:
 
