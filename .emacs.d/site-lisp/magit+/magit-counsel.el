@@ -1,4 +1,4 @@
-;;; magit-counsel.el -- Brief introduction here.
+;;; magit-counsel.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

@@ -1,4 +1,4 @@
-;;; company-plantuml.el --- company-mode completion backend for plantuml
+;;; company-plantuml.el --- company-mode completion backend for plantuml -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2014  Free Software Foundation, Inc.
 
@@ -28,6 +28,7 @@
 (require 'company)
 (require 'cl-lib)
 (require 'plantuml-mode)
+(require 'ivy)
 
 
 (defun company-plantuml--candidates (prefix)
@@ -51,7 +52,7 @@ plantuml is a cross-platform, open-source make system."
 
 (defvar plantuml-indent-offset 4)
 
-(cdsq plantuml-indent-regexp-start
+(defvar plantuml-indent-regexp-start
   (rx bol (* space)
       (or
        (: (? (: (or "abstract" "interface") (+ space)))
@@ -62,7 +63,7 @@ plantuml is a cross-platform, open-source make system."
        )
       ))
 
-(cdsq plantuml-indent-regexp-end
+(defvar plantuml-indent-regexp-end
   (rx bol (* space)
       (or
        "}" "endif" "endwhile" "end note" "else"
@@ -73,12 +74,12 @@ plantuml is a cross-platform, open-source make system."
 
 ;;;###autoload
 (defun plantuml-indent-line ()
-  "Indent current line as plantuml code"
+  "Indent current line as plantuml code."
   (interactive)
   (beginning-of-line)
   (if (bobp)
       (indent-line-to 0)
-    (let ((not-indented t) cur-indent var-indent)
+    (let ((not-indented t) cur-indent)
       (if (looking-at plantuml-indent-regexp-end)
           (progn
             (save-excursion
@@ -107,4 +108,4 @@ plantuml is a cross-platform, open-source make system."
 
 
 (provide 'plantuml-+)
-;;; plantuml-+.el ends here
+;;; plantuml+.el ends here

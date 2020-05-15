@@ -1,4 +1,4 @@
-;;; semantic-uml.el -- Brief introduction here.
+;;; semantic-uml.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 ;;
@@ -632,7 +632,7 @@ Possible choices:
 
     (dolist (subnode subnodes)
       (aif subnode
-          (add-to-list 'result (uml/node-to-dot it))))
+          (push (uml/node-to-dot it) result)))
 
     (PDEBUG "XNODE:" node "Result: " result)
 
@@ -651,7 +651,7 @@ Possible choices:
           (error "No tags found!")
         (dolist (tag tags)
           (aif (Tag-To-ObjNode tag)
-              (add-to-list 'strs (uml/node-to-dot it))))
+              (push (uml/node-to-dot it) strs)))
         (if strs
             (kill-new (mapconcat 'identity strs "\n"))
           (error "Failed to format tags!")))))

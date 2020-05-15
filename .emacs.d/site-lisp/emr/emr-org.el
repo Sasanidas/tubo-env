@@ -1,4 +1,4 @@
-;;; emr-org.el -- Brief introduction here.
+;;; emr-org.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 

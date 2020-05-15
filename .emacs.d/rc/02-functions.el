@@ -490,14 +490,9 @@ And install necessary packages if there are errors while executing FUNC."
 
 (advice-add 'run-hooks :around #'yc/install-package-on-error)
 
-(yc/eval-after-load
+(eval-after-load
   "timer"
   (advice-add 'timer-event-handler :around #'yc/install-package-on-error))
-
-
-
-;; (advice-remove 'command-execute #'yc/install-package-on-error)
-;; (advice-remove 'set-auto-mode #'yc/install-package-on-error)
 
 (defun yc/in-comments-p ()
   "Check if current point is in comment."

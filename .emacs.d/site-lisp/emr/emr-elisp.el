@@ -663,36 +663,6 @@ Order autoloads alphabetically by their file, then by their function name."
           (s-append "\n")
           (insert))))))
 
-;;;###autoload
-(defun emr-el-extract-autoload (function file)
-  "Create an autoload for FUNCTION and insert it into the buffer.
-FILE is the file that declares FUNCTION.  See `autoload' for
-details.
-
-* If there are no autoloads in the buffer, the new autoload will
-  be inserted above the current toplevel form.
-
-* If other autoloads exist in the buffer, the new autoload will
-  be inserted near them."
-  (interactive
-   (let* ((sym  (intern (or (thing-at-point 'symbol) (read-string "Function: "))))
-          (file (or (emr-el:symbol-file-name sym)
-                    (read-string "File: "))))
-     (list sym file)))
-
-  (let ((form `(autoload ',function ,file)))
-    (save-excursion
-      (emr-reporting-buffer-changes "Extracted to"
-        ;; Put the extraction next to existing autoloads if any, otherwise
-        ;; insert above top-level form.
-        (if (emr-el:goto-first-match "^(autoload ")
-            (progn (forward-line 1) (end-of-line) (newline)
-                   (insert (emr-el:print form)))
-          (emr-lisp-insert-above-defun
-           (emr-el:print form)))))
-
-    (emr-el-tidy-autoloads)))
-
 ; ------------------
 
 (defun emr-el:first-atom (form)
@@ -1354,66 +1324,6 @@ The result is a list of `emr-el-ref'."
                acc)))))
       (nreverse acc))))
 
-(define-compilation-mode emr-buffer-report-mode "EMR Report"
-  "EMR buffer report compilation mode."
-  (set (make-local-variable 'truncate-lines) t)
-  (set (make-local-variable 'compilation-disable-input) t)
-  (set (make-local-variable 'compilation-error-face) compilation-info-face))
-
-;; TODO: This is fooled by recursive functions.
-;;;###autoload
-(defun emr-el-find-unused-definitions ()
-  "Search the buffer for functions and variables that have no usages.
-Definitions with export directives are ignored.  If any unused
-definitions are found, they will be collated and displayed in a
-popup window."
-  (interactive)
-
-  (let ((defs-buf (get-buffer-create "*Unused Definitions*")))
-    ;; Find unused refs. If there are none, delete any windows showing `defs-buf'.
-    (-if-let (defs (emr-el:find-unused-defs))
-
-      ;; Show results window.
-      ;;
-      ;; The results buffer uses a custom compilation mode so the user can
-      ;; navigate to unused declarations.
-      (with-help-window defs-buf
-        (let ((header (format "Unused definitions in %s:\n\n" (buffer-file-name))))
-          (with-current-buffer defs-buf
-            (atomic-change-group
-              (emr-buffer-report-mode)
-              ;; Prepare buffer.
-              (read-only-mode -1)
-              (delete-region (point-min) (point-max))
-              (insert header)
-              ;; Insert usages.
-              (->> defs
-                (--map (format
-                        "%s:%s:%s:%s: %s"
-                        (file-name-nondirectory (emr-el-ref-file it))
-                        (emr-el-ref-line it)
-                        (emr-el-ref-col  it)
-                        (emr-el-ref-type it)
-                        (format "%s" (emr-el-ref-identifier it))))
-                (s-join "\n\n")
-                (insert))
-
-              ;; Insert summary.
-              (newline 2)
-              (insert (format
-                       "Finished. %s item%s found."
-                       (length defs)
-                       (if (equal 1 (length defs)) "" "s")))
-              (read-only-mode +1)))))
-
-      ;; No results to show. Clean results window.
-      (progn
-        (message "No unused definitions found")
-        (-when-let (win (get-window-with-predicate
-                         (lambda (w) (equal defs-buf (window-buffer w)))))
-          (delete-window win)
-          (kill-buffer defs-buf))))))
-
 ; ------------------
 
 ;;;; EMR declarations
@@ -1498,23 +1408,6 @@ popup window."
   :predicate (lambda ()
                (and (emr-el:looking-at-let-binding-symbol?)
                     (emr-el:let-bound-var-at-point-has-usages?))))
-
-(emr-declare-command 'emr-el-extract-autoload
-  :title "add autoload"
-  :description "autoload"
-  :modes 'emacs-lisp-mode
-  :predicate (lambda ()
-               (let ((sym (symbol-at-point)))
-                 (and (not (emr-el:autoload-exists? sym (buffer-string)))
-                      (not (emr-el:looking-at-definition?))
-                      (not (emr-el:variable-definition? (list-at-point)))
-                      (or (functionp sym)
-                          (macrop sym))
-                      ;; Don't offer autoload if this function is
-                      ;; defined in the current file.
-                      (not (equal
-                            (cdr-safe (find-function-library sym))
-                            (buffer-file-name)))))))
 
 (emr-declare-command 'emr-el-insert-autoload-directive
   :title "autoload cookie"

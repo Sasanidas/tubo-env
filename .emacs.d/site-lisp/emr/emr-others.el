@@ -1,4 +1,4 @@
-;;; emr-others.el -- Brief introduction here.
+;;; emr-others.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@gmail.com>
 
@@ -9,6 +9,7 @@
 (require 'emr)
 (require 's)
 (require 'dash)
+(require 'use-package)
 
 (use-package sgml-mode
   :commands (sgml-pretty-print))
@@ -21,14 +22,17 @@
 (defun emr-xml-format ()
   "Fill region (START/END)."
   (interactive)
-  (aif (and (buffer-file-name)
-            (executable-find "xmllint"))
-    (let ((formated (shell-command-to-string (format "%s --format %s" it (buffer-file-name)))))
-      (save-excursion
-        (erase-buffer)
-        (insert formated)
-        (save-buffer)))
-      (emr-xml-format (point-min) (point-max))))
+  (let ((it (and (buffer-file-name)
+                 (executable-find "xmllint"))))
+
+    (if it
+        (let ((formated (shell-command-to-string (format "%s --format %s" it (buffer-file-name)))))
+          (save-excursion
+            (erase-buffer)
+            (insert formated)
+            (save-buffer)))
+      (emr-xml-format-region (point-min) (point-max)))    )
+  )
 
 
 (emr-declare-command 'emr-xml-format-region

@@ -62,6 +62,15 @@
 (put 'add-hook 'lisp-indent-function 'defun)
 
 
+(defun yc/byte-compile-current-elisp ()
+  "Byte compile Lisp file."
+  (interactive)
+  (when (eq major-mode 'emacs-lisp-mode)
+    (if (string-match-p (rx ".emacs.d/rc/" (+ nonl) ".el")
+                      buffer-file-name)
+      (PDEBUG "Byte compile ignored for file: " buffer-file-name)
+    (byte-compile-file buffer-file-name))))
+
 (use-package
   elisp-mode
   :mode (((rx "." (or "el" "sexp") eol) . emacs-lisp-mode))
@@ -69,7 +78,9 @@
               (;; (kbd "C-c M-k")
                [3 134217835]. yc/insert-key-sequence))
   :hook ((emacs-lisp-mode . my-lisp-hook)
-         (lisp-mode my-lisp-hook)))
+         (lisp-mode my-lisp-hook))
+  :config
+  (add-hook 'after-save-hook 'yc/byte-compile-current-elisp))
 
  ;; native compile..
 
