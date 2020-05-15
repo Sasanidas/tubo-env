@@ -409,6 +409,7 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
 
 
 (use-package lua-mode
+  :pin melpa
   :commands (lua-mode)
   :mode (rx "." (or "lua") eow)
   )
