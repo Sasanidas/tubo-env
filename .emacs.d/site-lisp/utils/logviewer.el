@@ -22,12 +22,12 @@
 ;;   This is a simple log viewer, with syntax highlight.
 ;;
 ;;   To use logviewer, you should put logviewer.el into the top of load-path
-;; of emacs, the add following lines into your .emacs:
+;; of Emacs, the add following lines into your .emacs:
 ;; (require 'logviewer)
 ;;
 ;;   When log files are huge, it will try to split huge logs into small ones
-;; to speed up loading. In that case, you can press "n" & "p" to go to next
-;; part (or previous part) to the log file. You can custom variable
+;; to speed up loading.  In that case, you can press "n" & "p" to go to next
+;; part (or previous part) to the log file.  You can custom variable
 ;; logviewer-split-line to proper number to control the size of the slice of
 ;; huge file.
 ;;
@@ -55,7 +55,7 @@
   :group 'logviewer
   )
 
-(defcustom logviewer-fold-long-lines 1024
+(defcustom logviewer-fold-long-lines nil
   "Fold a line if it is too long."
   :type '(radio (const :tag "Show all lines." nil)
                 (integer :tag "Fold if longer than:" ))
@@ -83,12 +83,17 @@
     map)
   "Keymap for logviewer mode.")
 
-(defvar logviewer-font-lock-keywords
-  `(
+
+(defvar logviewer-font-lock-keywords nil
+  "Keywords of logviewer..")
+
+(setq logviewer-font-lock-keywords
+   `(
     ;; Date & time.
     (,(rx bol (** 0 256 not-newline) symbol-start
           (group (or "ERROR" "FATAL" "WARNING" "WARN"
                      "error" "fatal" "warning" "warn"
+                     "Error" "Fatal" "Warning" "Warn"
                      )) (or ":" "]")
           (group (** 0 256 not-newline)))
      (1 font-lock-warning-face) (2 font-lock-comment-face))
@@ -104,15 +109,15 @@
      (1 font-lock-builtin-face) (2 font-lock-variable-name-face))
 
     (,(rx bol (** 0 256 not-newline) symbol-start
-          (group (or "info" "INFO" )) ":"
+          (group (or "info" "INFO" "Info")) ":"
           (group (+ (*? not-newline))))
      (1 font-lock-function-name-face))
     (,(rx bol (** 0 256 not-newline) symbol-start
-          (group (or "DEBUG" "debug" )) ":"
+          (group (or "DEBUG" "debug" "Debug"
+                     "TRACE" "trace" "Trace")) ":"
           (group (+ (*? not-newline))))
      (1 font-lock-keyword-face) (2 font-lock-doc-face))
-    )
-  "Keywords of logviewer..")
+    ))
 
 (defvar-local logviewer--current-file nil
   "Log file current viewed by logviewer.")
@@ -336,14 +341,14 @@ NUM: prefix."
                   (outline-flag-region (car frange) (1+ (cdr frange)) nil)
                   (setq i (1+ i))))))))))
 
-(defvar-local logviewer--long-line-hidden t "Nil.")
+(defvar-local logviewer--long-line-hidden nil "Nil.")
 (add-to-invisibility-spec '(invs . t))
 
 (defun logviewer-toggle-long-lines ()
   "Hide or show long lines."
   (interactive)
   (unless logviewer--overlays
-    (error "No lines are folded."))
+    (error "No lines are folded"))
   (mapc (lambda (ov)
           (overlay-put ov 'invisible
                        (if logviewer--long-line-hidden

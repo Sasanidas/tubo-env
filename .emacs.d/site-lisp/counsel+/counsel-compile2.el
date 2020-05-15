@@ -1,4 +1,4 @@
-;;; counsel-compile.el --- Select a Makefile target with counsel
+;;; counsel-compile.el --- Select a Makefile target with counsel -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014 Oleh Krehel
 

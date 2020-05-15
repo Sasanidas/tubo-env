@@ -1,4 +1,4 @@
-;;; counsel-info.el -- Brief introduction here.
+;;; counsel-info.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yingchao.yang@icloud.com>
 
@@ -15,12 +15,6 @@
   "Info with counsel.
 If `REINIT' is not nil, re-initialize info-node-list."
   (interactive "P")
-
-  (defun gether-info-nodes (directory &optional with-dir)
-    "Gather nodes from given DIRECTORY, "
-    (interactive)
-
-    )
 
   (when (or reinit (not counsel/info-node-list))
     (setq counsel/info-node-list (list nil))
