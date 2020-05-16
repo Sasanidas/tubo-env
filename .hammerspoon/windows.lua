@@ -59,7 +59,7 @@ hotkey.bind(hyperAlt, "Down", function()
 end)
 
 -- full screen
-hotkey.bind(hyper, 'F', function() 
+hotkey.bind({"cmd", "ctrl"}, 'F', function()
   window.focusedWindow():toggleFullScreen()
 end)
 
