@@ -1,4 +1,4 @@
 hyper = {"cmd", "ctrl", "alt"}
-hyperShift = {"alt", "shift"}
+hyperShift = {"cmd", "shift"}
 hyperCtrl = {"alt", "ctrl"}
 hyperAlt = {"ctrl", "alt", "shift"}
