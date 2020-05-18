@@ -1,4 +1,4 @@
-;;; member-functions.el --- Expand C++ member functions into implementation
+;;; member-functions.el --- Expand C++ member functions into implementation -*- lexical-binding: t; -*-
 ;;; file
 
 ;; Copyright (c) 1998 1999 2000  Ron Lawrence
@@ -221,7 +221,7 @@ Put your preferred extension at the beginning of this list, and don't include th
         start end content namespace-list)
 
     (while (re-search-forward r-match-namespace nil t)
-      (add-to-list 'namespace-list (match-string 1))
+      (push (match-string 1) namespace-list)
       (setq start (point))
       (beginning-of-line 0)
       (forward-list)
@@ -388,31 +388,33 @@ for template arguments lists."
                (push el (car sub-expr-stack))))
             (t (push el (car sub-expr-stack)))))))
 
-(let ((current-template-spec nil))
-  (defun mf--next-class (blockified-list)
-    "Find the next occurance of \"class\" in a blockified token list.
-The returned list is the start of a complete class declaration."
-    (let ((position (position-if (lambda (el)
-                                   (and (eq (car el) 'keyword)
-                                        (string-equal (cadr el) "class")))
-                                 blockified-list))
-          (result blockified-list))
-      (if position
-          (progn
-            (if (eq (car (nth position blockified-list)) 'template-spec)
-                (setq current-template-spec (nth position blockified-list))
-              (setq current-template-spec nil))
-            (setq result (subseq blockified-list position))
-            (if (mf--complete-class-decl-p result)
-                result
-              (mf--next-class (cdr result))))
-        nil)))
+(defvar-local current-template-spec nil "Nil.")
 
-  (defun mf--attach-template-spec (decl)
-    "Hook the current-template-spec onto the given decl, if there is one."
-    (if current-template-spec
-        (cons current-template-spec decl)
-      decl)))
+
+(defun mf--next-class (blockified-list)
+  "Find the next occurance of \"class\" in a blockified token list.
+The returned list is the start of a complete class declaration."
+  (let ((position (position-if (lambda (el)
+                                 (and (eq (car el) 'keyword)
+                                      (string-equal (cadr el) "class")))
+                               blockified-list))
+        (result blockified-list))
+    (if position
+        (progn
+          (if (eq (car (nth position blockified-list)) 'template-spec)
+              (setq current-template-spec (nth position blockified-list))
+            (setq current-template-spec nil))
+          (setq result (subseq blockified-list position))
+          (if (mf--complete-class-decl-p result)
+              result
+            (mf--next-class (cdr result))))
+      nil)))
+
+(defun mf--attach-template-spec (decl)
+  "Hook the current-template-spec onto the given decl, if there is one."
+  (if current-template-spec
+      (cons current-template-spec decl)
+    decl))
 
 (defun mf--complete-class-decl-p (blockified-list)
   "Does the blockified-list point at a full class declaration?

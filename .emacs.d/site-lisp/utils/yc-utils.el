@@ -756,18 +756,17 @@ inserts comment at the end of the line."
 
 (defun counsel-list-directory (dir &optional pattern action-func)
   "List files in DIR with `counsel' that look like PATTERN."
+  (let ((default-directory dir) )
   (ivy-set-actions
    'counsel-list-directory
    '(("g" (lambda (x)
             (interactive)
-            (let ((default-directory dir))
-              (yc/counsel-grep)))
+            (yc/counsel-grep))
       "grep")
      ("n" (lambda (x)
             (interactive)
-            (let ((default-directory dir))
-              (let ((file (concat (expand-file-name dir) "/" x)) )
-                (counsel-find-file file))))
+                          (let ((file (concat (expand-file-name dir) "/" x)) )
+                (counsel-find-file file)))
       "create")
 
      ))
@@ -797,7 +796,7 @@ inserts comment at the end of the line."
                             (funcall action-func cand)
                           (find-file cand))))
 
-            :caller 'counsel-list-directory))
+            :caller 'counsel-list-directory)))
 
 (defun edit-project ()
   "Edit project configurations."
@@ -1358,23 +1357,6 @@ inserts comment at the end of the line."
         (when (funcall func var)
           (throw 'p-found var)))
       nil)))
-
-(defun yc/delete-current-wallpaper ()
-  "Description."
-  (interactive)
-  (let* ((content (s-trim (shell-command-to-string "cat /tmp/CURRENT_WALLPAPERS")))
-         (lst (s-split " " content)))
-    (PDEBUG "CONTENT:" content)
-    (if (> (length lst) 1)
-        (let ((file
-               (ivy-read "Multiple files, choose one:" lst
-                         :action (lambda (x)
-                                   (interactive)
-                                   (delete-file x))))))
-        (message "Multiple files: %s.." content)
-      (delete-file (car lst))
-      (message "File deleted: %s" (car lst))))
-  )
 
 (defun yc/kill-file-ln ()
   "Copy filename and line number."
