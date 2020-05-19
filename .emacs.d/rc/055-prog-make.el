@@ -305,13 +305,13 @@ Call FUNC with ARGS."
   :hook ((makefile-mode . (lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))))
 
 (use-package counsel-compile2
-  :commands (counsel-compile2 counsel-make-projectile)
+  :commands (counsel-compile2 counsel-compile-projectile)
   :bind ((;; ,(kbd "<M-f6>")
           [M-f6]. counsel-compile2)
          ;; (kbd "ESC <f6>")
          ([27 f6] . counsel-compile2)
          (;; ,(kbd "<M-S-f6>")
-          [M-S-f6]. counsel-make-projectile)))
+          [M-S-f6]. counsel-compile-projectile)))
 
 
 

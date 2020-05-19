@@ -497,7 +497,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   :pin melpa
   :custom
   (lsp-diagnostic-package :auto)
-  (lsp-restart 'interactive)
+  (lsp-restart 'auto-restart)
   (lsp-enable-file-watchers nil)
   (lsp-enable-indentation nil)
   (lsp-enable-imenu nil)

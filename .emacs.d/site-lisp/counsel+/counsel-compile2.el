@@ -33,6 +33,11 @@
 
 (require 'counsel)
 
+(autoload 'yc/get-cpu-number "yc-utils" ""  t)
+(autoload 'PDEBUG "02-functions" ""  nil)
+(autoload 'projectile-project-root "projectile" ""  nil)
+(autoload 's-split "s" ""  nil)
+
 (defgroup counsel-compile nil
   "Select a Makefile target with counsel."
   :group 'convenience)
@@ -75,7 +80,7 @@
     targets))
 
 (defun counsel-make (&optional makefile)
-  "Use `counsel' to select a Makefile target and `compile'.
+  "Use `counsel' to select a MAKEFILE target and `compile'.
 If makefile is specified use it as path to Makefile"
   (interactive)
   (PDEBUG "MK: " makefile
@@ -150,12 +155,10 @@ If makefile is specified use it as path to Makefile"
               :caller 'counsel-ninja)))
 
 ;;;###autoload
-(defun counsel-compile2 (arg)
+(defun counsel-compile2 ()
   "Use `counsel' to select a Makefile target and `compile'.
 If makefile is specified use it as path to Makefile"
-  (interactive "P")
-  (PDEBUG "PFX: " arg)
-
+  (interactive)
   (cond
    ((or (file-exists-p "Makefile")
         (file-exists-p "makefile")
@@ -172,12 +175,26 @@ If makefile is specified use it as path to Makefile"
   "Call `counsel-compile' for `projectile-project-root'."
   (interactive)
   (require 'projectile)
-  (let ((makefile (expand-file-name
-                   "Makefile"
-                   (projectile-project-root))))
-    (counsel-make
-     (and (file-exists-p makefile) makefile))))
+  (let* ((proj-root (projectile-project-root))
+         (cands (mapcar
+                 (lambda (x)
+                   (if (file-exists-p (expand-file-name "Makefile" x))
+                       x nil))
+                 (directory-files proj-root t "build.*" t))))
+
+    (if (file-exists-p (expand-file-name "Makefile" proj-root))
+        (push proj-root cands))
+
+    (unless cands
+      (error "Could not find proper makefile"))
+
+    (PDEBUG "CANDS: " cands)
+    (let ((dir (ivy-read "Choose Compile Root: " (sort cands 'string-lessp))))
+      (if dir
+        (let ((default-directory dir))
+          (counsel-make))
+        (error "Failed to get compile directory")))))
 
 (provide 'counsel-compile2)
 
-;;; counsel-compile.el ends here
+;;; counsel-compile2.el ends here

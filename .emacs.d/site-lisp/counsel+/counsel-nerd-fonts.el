@@ -1,4 +1,4 @@
-;;; nerd-fonts.el --- nerd-fonts utility
+;;; nerd-fonts.el --- nerd-fonts utility -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 

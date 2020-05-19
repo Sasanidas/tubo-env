@@ -15,6 +15,7 @@
       (debug-on-error t))
   (message "Start loading configurations...\n")
 
+  (push (expand-file-name "~/.emacs.d/rc") load-path)
   ;; Add customized paths to the front of load-path
   (normal-top-level-add-subdirs-to-load-path)
 

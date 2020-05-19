@@ -6,19 +6,26 @@
 
 ;;; Code:
 
+(require '01-generics)
+(require '02-functions)
 (autoload 'yc/file-exists-p "yc-utils" ""  t)
-
 
 (defcustom my-link-home  "http://localhost"  "Link to homepage."
   :type 'string
   :group 'ox-plus)
 
 (defcustom www-base-dir (expand-file-name "~/Work/yangyingchao.github.io/")
-  "Base directory to hold both org files and htdocs.")
+  "Base directory to hold both org files and htdocs."
+  :type 'string
+  :group 'ox-plus)
 
-(defcustom org-dir (format "%s/org/" www-base-dir) "")
+(defcustom org-dir (format "%s/org/" www-base-dir) "."
+  :type 'string
+  :group 'ox-plus)
 
-(defcustom htdoc-dir (format "%s/_posts/" www-base-dir) "")
+(defcustom htdoc-dir (format "%s/_posts/" www-base-dir) "."
+  :type 'string
+  :group 'ox-plus)
 
 (defconst my-html-head-extra
   "
@@ -35,28 +42,6 @@
 <script src=\"/assets/js/jquery-2.1.3.min.js\" type=\"text/javascript\"></script>
 <script src=\"/assets/js/org-exported.js\" type=\"text/javascript\"></script>"
   "Extra strings to put into html head.")
-
-
-(defun org-slides-publish-to-html (plist filename pub-dir)
-  "Publish an org file to HTML.
-
-FILENAME is the filename of the Org file to be published.  PLIST
-is the property list for the given project.  PUB-DIR is the
-publishing directory.
-
-Return output file name."
-  (if (string-match "sitemap.org" filename)
-      (let ((new-plist (plist-put
-                        (plist-put plist :html-head-extra my-html-head-extra)
-                        :html-link-home my-link-home
-                        )))
-        (PDEBUG "plist:" plist)
-        (PDEBUG "publishing file: " filename "with `org-html-publish-to-html'")
-        (org-html-publish-to-html new-plist filename pub-dir))
-
-    (PDEBUG "publishing file: " filename "with `org-ioslide-export-to-html'")
-    (with-current-buffer (find-file-noselect filename)
-      (org-ioslide-export-to-html))))
 
 
 (defun org-compressed-publish-to-html (plist filename pub-dir)
@@ -167,6 +152,28 @@ Return output file name."
 
 
 (defvar yc/org-html--embed-img nil "Nil.")
+
+(defun yc/org-html--format-image (func source attributes info)
+  ""
+  (if yc/org-html--embed-img
+      (let* ((fn_ext_name (file-name-extension source))
+             (b64_cmd (format "base64 %s | tr -d '\n'" source))
+             (b64_content (shell-command-to-string b64_cmd)))
+
+        (unless (file-exists-p source) (error "File %s does not exist!" source))
+        (org-html-close-tag
+         "img"
+         (org-html--make-attribute-string
+          (org-combine-plists
+           (list :src (format "data:image/%s;base64, %s"fn_ext_name b64_content)
+                 :alt (if (string-match-p "^ltxpng/" source)
+                          (org-html-encode-plain-text
+                           (org-find-text-property-in-string 'org-latex-src source))
+                        (file-name-nondirectory source)))
+           attributes))
+         info))
+    (funcall func source attributes info)))
+
 (use-package ox-html
   :defer t
   :init
@@ -177,27 +184,6 @@ Return output file name."
          ("http" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
          ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")))))
 
-  (defun yc/org-html--format-image (func source attributes info)
-    ""
-    (if yc/org-html--embed-img
-        (let* ((fn_ext_name (file-name-extension source))
-               (fn_base_name (file-name-sans-extension (file-name-nondirectory source)))
-               (b64_cmd (format "base64 %s | tr -d '\n'" source))
-               (b64_content (shell-command-to-string b64_cmd)))
-
-          (unless (file-exists-p source) (error "File %s does not exist!" source))
-          (org-html-close-tag
-           "img"
-           (org-html--make-attribute-string
-            (org-combine-plists
-             (list :src (format "data:image/%s;base64, %s"fn_ext_name b64_content)
-                   :alt (if (string-match-p "^ltxpng/" source)
-                            (org-html-encode-plain-text
-                             (org-find-text-property-in-string 'org-latex-src source))
-                          (file-name-nondirectory source)))
-             attributes))
-           info))
-      (funcall func source attributes info)))
 
   (advice-add 'org-html--format-image :around #'yc/org-html--format-image)
 
@@ -354,44 +340,46 @@ Finally, title will be removed."
                   (member item '(".git" "slides" "images" "assets" "references" "." "..")))
         (add-to-project-list item t)))))
 
-(yc/eval-after-load
-  "ox-publish"
+(defun yc/org-publish-get-base-files (func &rest args)
+  "Advice for `org-publish-get-base-files'.
+Call FUNC with ARGS."
+  (remove-if (lambda (x)
+               (string-match-p "sitemap" x))
+             (apply func args)))
+
+(use-package ox-publish
+  :config
+
   (require 'ox-html)
   (require 'ox-odt)
   (require 'ox-md)
   (org-export-define-derived-backend
-   'mail 'html
-   ;; :export-block '("MW" "MEDIAWIKI")
-   ;; :filters-alist '((:filter-parse-tree . org-mw-separate-elements))
-   :menu-entry
-   '(?h "Export to HTML"
-        ((?m "As HTML buffer (for email)" org-html-export-to-html-mail))))
+      'mail 'html
+    ;; :export-block '("MW" "MEDIAWIKI")
+    ;; :filters-alist '((:filter-parse-tree . org-mw-separate-elements))
+    :menu-entry
+    '(?h "Export to HTML"
+         ((?m "As HTML buffer (for email)" org-html-export-to-html-mail))))
 
   (yc/org-reload-projects)
 
-  (defun yc/org-publish-get-base-files (func &rest args)
-    "Advice for `org-publish-get-base-files'.
-Call FUNC with ARGS."
-    (remove-if (lambda (x)
-                 (string-match-p "sitemap" x))
-               (apply func args)))
-
   (advice-add 'org-publish-get-base-files :around
-              #'yc/org-publish-get-base-files))
+              #'yc/org-publish-get-base-files)
+  )
 
-(yc/eval-after-load
-  "ox-odt"
+(use-package ox-odt
   ;; org v8 bundled with Emacs 24.4
-  (setq org-odt-preferred-output-format "doc")
-
-  (let ((soffice   (aif (executable-find "soffice")
-                       it
-                     (yc/file-exists-p
-                      "/Applications/LibreOffice.app/Contents/MacOS/soffice"))))
+  :custom
+  (org-odt-preferred-output-format "doc")
+  :config
+  (let ((soffice
+         (aif (executable-find "soffice")
+             it
+           (yc/file-exists-p
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice"))))
     (when soffice
       (setq org-odt-convert-processes `(("LibreOffice"
-                                         ,(concat  soffice " --headless --convert-to %f%x --outdir %d %i" )))))
-    ))
+                                         ,(concat  soffice " --headless --convert-to %f%x --outdir %d %i" )))))))
 
 
 (defun org-publish-get-projects-from-filename (filename &optional up)
@@ -442,7 +430,13 @@ Call FUNC with ARGS."
 
 
 ;; ox-reveal
-(require 'ox-reveal)
+(require 'ox-html)
+
+(use-package ox-reveal
+  :config
+  (advice-add 'org-reveal-export-to-html :around #'yc/org-reveal-export-to-html-adv)
+  )
+
 
 (defun yc/org-reveal-export-to-html-adv (func &rest args)
   "Advice for 'org-reveal-export-to-html'.
@@ -467,7 +461,7 @@ Check js/slides.js exist or not, if not exist, re-fetch resource."
 
     (when (or (not (file-exists-p final-target-file)) ;; target does not exists
               (with-temp-buffer
-                (insert-file final-target-file)
+                (insert-file-contents final-target-file)
                 (goto-char (point-min))
 
                 (if (search-forward-regexp
@@ -493,10 +487,8 @@ Check js/slides.js exist or not, if not exist, re-fetch resource."
   ;; rename to "FILE-slide.html"
 
   ;; revert backuped file (if exists...)
-
   )
 
-(advice-add 'org-reveal-export-to-html :around #'yc/org-reveal-export-to-html-adv)
 
  ;; org-markdown enhancements.
 (defun yc/org-md-template-adv (func contents info)
@@ -520,6 +512,7 @@ Call FUNC which is 'org-md-example-block with ARGS."
                (org-export-format-code-default b i))
               "\n```")
     (funcall f b c i)))
+
 
 (advice-add 'org-md-example-block :around #'yc/org-md-example-block-adv)
 
