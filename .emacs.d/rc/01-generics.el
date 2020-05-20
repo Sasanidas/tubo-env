@@ -83,7 +83,6 @@
   global-font-lock-mode t
   max-specpdl-size 8192
   max-lisp-eval-depth 8192
-  large-file-warning-threshold (* 1024 1024 10)
 
   custom-theme-directory "~/.emacs.d/themes"
   custom-safe-themes t
