@@ -1,4 +1,4 @@
-;;; hexview-mode.el --- A simple & fast hexadecimal file viewer
+;;; hexview-mode.el --- A simple & fast hexadecimal file viewer -*- lexical-binding: t; -*-
 
 
 ;; Copyright (C) 2010 Joyer Huang

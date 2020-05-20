@@ -1,4 +1,4 @@
-;;; t-report.el -- Brief introduction here.
+;;; t-report.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -67,17 +67,16 @@
     (goto-char (point-max))))
 
 
+(defun escape-title (title)
+  "Replace characters in `TITLE'."
+  (let ((maps '((" " . "-")
+                ))
+        (result (s-trim title)))
+    (s-replace-all maps result)))
 
 (defun yc/new-mail ()
   "Create new mail."
   (interactive)
-
-  (defun escape-title (title)
-    "Replace characters in `TITLE'."
-    (let ((maps '((" " . "-")
-                  ))
-          (result (s-trim title)))
-      (s-replace-all maps result)))
 
   (let* ((mail-dir (expand-file-name (format "%s/../Mails/" yc/wp-path)))
          (fn (expand-file-name

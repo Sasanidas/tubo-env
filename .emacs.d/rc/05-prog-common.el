@@ -68,6 +68,7 @@ Update the Which-Function mode display for all windows."
                              flycheck-gcc-language-standard "c++11"))))
   :custom
   (flycheck-checker-error-threshold nil)
+  (flycheck-emacs-lisp-load-path (expand-file-name "~/.emacs.d/rc"))
   (flycheck-flake8-maximum-line-length 120)
   (flycheck-c/c++-gcc-executable "g++")
   (flycheck-c/c++-clang-executable "clang++")

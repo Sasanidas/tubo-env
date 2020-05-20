@@ -25,35 +25,14 @@
 ;; of Emacs, the add following lines into your .emacs:
 ;; (require 'logviewer)
 ;;
-;;   When log files are huge, it will try to split huge logs into small ones
-;; to speed up loading.  In that case, you can press "n" & "p" to go to next
-;; part (or previous part) to the log file.  You can custom variable
-;; logviewer-split-line to proper number to control the size of the slice of
-;; huge file.
+;;  If log file is too large, suggest to use VLF together with logviewer.
 ;;
 
 ;;; Code:
 
+(require '02-functions)
 (require 'hl-line)
 (require 'outline)
-
-(defcustom logviewer-log-pattern (rx "." (or "LOG" "log" "Log"))
-  "Pattern to decide if a file is a log file."
-  :type 'string
-  :group 'logviewer
-  )
-
-(defcustom logviewer-tmp-dir "/tmp/emacs-logviewer/"
-  "Temporary directory to hold splited files."
-  :type 'string
-  :group 'logviewer
-  )
-
-(defcustom  logviewer-split-line 50000
-  "Lines when trying to split files."
-  :type 'integer
-  :group 'logviewer
-  )
 
 (defcustom logviewer-fold-long-lines nil
   "Fold a line if it is too long."
@@ -63,23 +42,13 @@
   )
 
 ;; default mode map, really simple
-(defvar logviewer-mode-map
-  (let ((map (make-sparse-keymap)))
-    (let ((prefix-map (make-sparse-keymap)))
-      (define-key prefix-map "p"
-        (lambda (&optional arg)
-          (interactive "^p")
-          (logviewer-next-part t (or arg 1))))
-      (define-key prefix-map "p"
-        (lambda (&optional arg)
-          (interactive "^p")
-          (logviewer-next-part nil (or arg 1))))
-      (define-key prefix-map "R" 'logviewer-reload-file)
-      (define-key prefix-map "F" 'logviewer-set-filter)
-      (define-key prefix-map "C" 'logviewer-calibrate)
-      (define-key prefix-map "L" 'logviewer-toggle-long-lines)
-      (define-key prefix-map "q" 'logviewer-quit)
-      )
+(cdsq logviewer-mode-map
+  (let* ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-x lr") 'logviewer-reload-file)
+    (define-key map (kbd "C-x lf") 'logviewer-set-filter)
+    (define-key map (kbd "C-x lc") 'logviewer-calibrate)
+    (define-key map (kbd "C-x lt") 'logviewer-toggle-long-lines)
+    (define-key map (kbd "C-x lq") 'logviewer-quit)
     map)
   "Keymap for logviewer mode.")
 
@@ -118,74 +87,6 @@
           (group (+ (*? not-newline))))
      (1 font-lock-keyword-face) (2 font-lock-doc-face))
     ))
-
-(defvar-local logviewer--current-file nil
-  "Log file current viewed by logviewer.")
-
-(put 'logviewer--current-file 'permanent-local t)
-
-(defvar-local logviewer--current-cache-dir nil
-  "Cached dir for current log viewed by logviewer.")
-(put 'logviewer--current-cache-dir 'permanent-local t)
-
-(defvar-local logviewer--current-slice
-  0
-  "Current slice.")
-(put 'logviewer--current-slice 'permanent-local t)
-
-(defun split-and-view-log (filename)
-  "Split file specified by FILENAME and view the splits."
-  (let* ((bname (file-name-nondirectory filename))
-         (cache-dir (format "%s/%s" logviewer-tmp-dir bname)))
-    (unless (file-exists-p cache-dir)
-      (mkdir cache-dir t))
-    (let* ((first-slice (format "%s/%04d" cache-dir 0))
-           (process
-            (start-process "Split-process" "*logviewer*"
-                           (executable-find "split")
-                           "--suffix-length=4"
-                           "-d" "-l"
-                           (format "%d" logviewer-split-line)
-                           (expand-file-name filename)
-                           (format "%s/" cache-dir))))
-
-      (while (not (file-exists-p first-slice))
-        (sleep-for 0.5))
-      (setq logviewer--current-slice 0)
-      (set-buffer (get-buffer-create bname))
-      (setq logviewer--current-file filename
-            logviewer--current-cache-dir cache-dir)
-      (erase-buffer)
-      (insert-file-contents first-slice nil)
-      (switch-to-buffer bname)
-      (logviewer-mode)
-      (switch-to-buffer bname)
-      (error "See this instead"))))
-
-(advice-add
- 'abort-if-file-too-large :around
- (lambda (func &rest args)
-   (let ((size (car args))
-         (op-type (cadr args))
-         (filename (nth 2 args)))
-     (if (string-match logviewer-log-pattern filename)
-         (if (and (string= op-type "open")
-                  (executable-find "split")
-                  large-file-warning-threshold size
-                  (> size large-file-warning-threshold))
-             (if (y-or-n-p
-                  (format "LogFile %s is large (%dMB), really %s? "
-                          (file-name-nondirectory filename)
-                          (/ size 1048576) op-type))
-                 (split-and-view-log filename)
-               (error "Abort")))
-         (apply func args)))))
-
-(defun logviewer-is-tmpfile ()
-  "See whether current file is a temporary file or not."
-  (if (string-match "log_cache" logviewer--current-file)
-      t
-    nil))
 
 (defun logviewer-calibrate ()
   "Calibrate data-time of logs."
@@ -227,37 +128,9 @@
 (defun logviewer-reload-file ()
   "Reload current file."
   (interactive)
-  (let ((pt (point)))
-    (read-only-mode -1)
-    (erase-buffer)
-    (insert-file-contents logviewer--current-file nil)
-    (read-only-mode 1)
-    (goto-char pt)
-    (message "Readload finished.")))
-
-(defun logviewer-next-part (next &optional num)
-  "View next/previous file.
-If NEXT = t, it returns next file, or it returns previous file.
-NUM: prefix."
-  (interactive "^p")
-  (unless logviewer--current-cache-dir
-    (error "Not a slice!"))
-
-  (let* ((bname (file-name-nondirectory logviewer--current-file))
-         (func (if next '+ '-))
-         (index (funcall func logviewer--current-slice (or num 1)))
-         (slice (format "%s/%04d" logviewer--current-cache-dir index)))
-    (unless (file-exists-p slice)
-      (error "%s dost not exist: %s of file reached.." slice
-             (if next "Tail"  "Head")))
-
-    (setq logviewer--current-slice index)
-    (read-only-mode -1)
-    (erase-buffer)
-    (insert-file-contents slice nil nil nil t)
-    (read-only-mode 1)
-    (message (format "Now viewing: %s -- %d" logviewer--current-file index))))
-
+    (save-excursion
+      (find-file (buffer-file-name)))
+      (message "Readload finished."))
 
 (defconst logviewer-levels
   '("FATAL" "ERROR" "WARRNING" "INFO" "DEBUG"))
@@ -414,7 +287,6 @@ Key definitions:
 
 ;; Local Variables:
 ;; coding: utf-8
-;; lexical-binding: t
 ;; indent-tabs-mode: nil
 ;; End:
 

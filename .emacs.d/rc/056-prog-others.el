@@ -137,13 +137,22 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
       (apply func args)))
 
 
-(use-package sql-indent-mode
-  :commands (sql-indent-mode)
-  :hook ((sql-mode . sql-indent-mode)))
+(use-package sql-indent
+  :commands (sqlind-minor-mode)
+  :config
+  (setq sqlind-indentation-offsets-alist
+        `((select-clause 0)
+          (insert-clause 0)
+          (delete-clause 0)
+          (update-clause 0)
+          ,@sqlind-default-indentation-offsets-alist))
+
+  :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
   :commands (yc/eval-sql yc/choose-dbms yc/choose-database company-sql
-                         company-sql-update-candidates))
+                         company-sql-update-candidates
+                         eshell/restart_pg yc/remove-costs))
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
@@ -235,9 +244,6 @@ Call FUNC which is 'sql-product-interactive with ARGS."
              )
            ))
       (apply func args))))
-
-(use-package sql-utils
-  :commands (eshell/restart_pg yc/remove-costs))
 
  ;; protobuf-mode
 (use-package protobuf-mode :mode (rx ".proto" eol))

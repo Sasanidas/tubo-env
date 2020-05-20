@@ -1,11 +1,11 @@
-;;; console-mode.el -- Brief introduction here.
+;;; console-mode.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
 ;;; Commentary:
 ;;  Mode to highlight console logs.
 ;;; Code:
-
+(require '02-functions)
 (dsq console-font-lock-keywords
   `(
     (,(rx bol (group (+? nonl) (or "$" "#")) (+ space))

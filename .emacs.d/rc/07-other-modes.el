@@ -251,12 +251,6 @@
 
  ;; diff-mode
 
-(use-package layout-restore
-  :commands (layout-restore layout-save-current)
-  :config
-  (progn
-    (setq layout-verbose nil)))
-
 (use-package diff-mode
   :mode (rx (or ".rej"  "patch") eol)
 

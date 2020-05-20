@@ -336,36 +336,27 @@ ID, ACTION, CONTEXT."
     ;; c-mode config in smartparens-config is not valid...
     (yc/eval-after-load
       "cc-mode"
-      (require 'smartparens-c))
-
-
-    ))
-
-;; (use-package elec-pair
-;;   :commands (electric-pair-mode)
-;;   :hook (after-init . electric-pair-mode)
-;;   :custom  (electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
-
+      (require 'smartparens-c))))
 
  ; VLF: view large file.
-(use-package vlf
-  :defines (vlf)
-  :commands (vlf))
+;; (use-package vlf
+;;   :defines (vlf)
+;;   :commands (vlf))
 
-(defun yc/abort-if-file-too-large (size op-type filename  &optional OFFER-RAW)
-  "Advice for `abort-if-file-too-large'.
-If file SIZE larger than `large-file-warning-threshold', allow user to use
-`vlf' to view part of this file, or call original FUNC which is
-`abort-if-file-too-large' with OP-TYPE, FILENAME."
-  (when (and (string= op-type "open")
-           large-file-warning-threshold size
-           (> size large-file-warning-threshold))
-    (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
-                          (file-name-nondirectory filename)
-                          (file-size-human-readable size)))
-        (progn
-          (vlf filename)
-          (error "File %s opened in VLF mode." filename)))))
+;; (defun yc/abort-if-file-too-large (size op-type filename  &optional OFFER-RAW)
+;;   "Advice for `abort-if-file-too-large'.
+;; If file SIZE larger than `large-file-warning-threshold', allow user to use
+;; `vlf' to view part of this file, or call original FUNC which is
+;; `abort-if-file-too-large' with OP-TYPE, FILENAME."
+;;   (when (and (string= op-type "open")
+;;            large-file-warning-threshold size
+;;            (> size large-file-warning-threshold))
+;;     (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
+;;                           (file-name-nondirectory filename)
+;;                           (file-size-human-readable size)))
+;;         (progn
+;;           (vlf filename)
+;;           (error "File %s opened in VLF mode." filename)))))
 
 (use-package files
   :config
