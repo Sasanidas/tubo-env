@@ -150,9 +150,14 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
-  :commands (yc/eval-sql yc/choose-dbms yc/choose-database company-sql
+  :commands (sql/eval-sql sql/choose-dbms sql/choose-database company-sql
                          company-sql-update-candidates
-                         eshell/restart_pg yc/remove-costs))
+                         eshell/restart_pg sql/remove-costs))
+
+(defun yc/sql-mode-hook ()
+  "My hook to run for sql mode."
+  (ws-butler-mode -1)
+  (yc/add-company-backends-with-yasnippet company-sql))
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
@@ -163,25 +168,20 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
                     (+? nonl) ".out")
                  ) eol)  . sql-mode)
   :hook (
-         (sql-mode . (lambda ()
-                       (interactive)
-                       (ws-butler-mode -1)
-                       (yc/add-company-backends-with-yasnippet company-sql)))
-
-
+         (sql-mode . yc/sql-mode-hook)
          (sql-interactive-mode
           .
           (lambda ()
+            (yc/sql-mode-hook)
             (let ((yc/debug-log-limit -1))
               (PDEBUG "PRODUCT:"
-                sql-product))
+                      sql-product))
 
-            (yc/add-company-backends-with-yasnippet company-sql)
             (if (equal sql-product 'postgres)
                 (setq sql-prompt-regexp (rx bol (* (or alnum "_" ".")) "=" (or "#" ">") " "))))))
 
   :bind ((;; ,(kbd "C-c C-b")
-          "". yc/eval-sql))
+          "". sql/eval-sql))
   :config
   (progn
 
@@ -198,7 +198,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
            "copy" "create" "analyze"
            )
           sql-mode-postgres-font-lock-keywords)
-    (load-library "sql+")
+    (require 'sql+)
     (if (equal sql-product 'ansi)
         (sql-set-product 'postgres))
 

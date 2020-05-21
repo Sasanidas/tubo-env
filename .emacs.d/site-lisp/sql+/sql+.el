@@ -3,53 +3,87 @@
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
 ;;; Commentary:
-(require '02-functions)
 
 ;;; Code:
+
+(require '02-functions)
+(require 'sql)
+(require 'company-keywords)
+(require 's)
+(require 'ivy)
+(require 'cl)
+
+ ;; vars
+(defgroup sql+ nil
+  "Description"
+    :group 'tools)
+
+(defcustom sql/env-path nil
+  "Path containing environment variables."
+  :type 'string
+  :group 'sql+)
+
+(defun sql/wrap-command (cmd)
+  "Wrap CMD by sourcing env file first."
+  (if sql/env-path
+      (if (file-exists-p sql/env-path)
+          (format "source %s; %s" sql/env-path cmd)
+        (error "Env File %s not accessible" sql/env-path))
+    cmd))
+
+(defun sql/command-to-string (cmd)
+  "Execute CMD and return result as a string."
+  (interactive)
+  (shell-command-to-string (sql/wrap-command cmd)))
+
  ;; company for sql.
-(yc/eval-after-load
-  "company-keywords"
-  (add-to-list
-   'company-keywords-alist
-   '(sql-mode
-     "accessible" "add" "all" "alter" "analyze" "and" "as" "asc" "asensitive"
-     "before" "between" "bigint" "binary" "bit_and" "bit_or" "bit_xor" "blob"
-     "both" "by" "call" "cascade" "case" "cast" "change" "char" "character"
-     "check" "cluster" "collate" "column" "compress" "condition" "connect"
-     "constraint" "continue" "convert" "count" "create" "cross" "curdate"
-     "decimal" "declare" "default" "delayed" "delete" "dense_rank" "desc"
-     "describe" "deterministic" "distinct" "distinctrow" "distribute"
-     "distributed" "div" "double" "drop" "dual" "each" "else" "elseif" "enclosed"
-     "escaped" "exists" "exit" "explain" "extract" "false" "fetch" "float"
-     "for" "force" "foreign" "from" "full" "fulltext" "gcexport"
-     "gcimport" "gclocal" "gcluster" "gcluster_local" "get" "grant" "group"
-     "grouped" "group_concat" "having" "high_priority" "hour_microsecond"
-     "hour_minute" "hour_second" "if" "ignore" "in" "index" "infile"
-     "initnodedatamap" "inner" "inout" "inpath" "insensitive" "insert" "int"
-     "integer" "intersect" "interval" "into"
-     "is" "iterate" "join" "key" "keys" "kill" "lag" "lead" "leading" "leave"
-     "left" "level" "like" "limit" "limit_storage_size" "linear" "lines" "link"
-     "load" "localtime" "localtimestamp" "lock" "long" "longblob" "longtext"
-     "loop" "low_priority" "match" "max"
-     "mediumblob" "mediumint" "mediumtext" "merge" "mid" "middleint" "min" "minus"
-     "minute_microsecond" "minute_second" "mod" "modifies" "natural" "nocopies"
-     "nocycle" "not" "now" "no_write_to_binlog" "null" "numeric" "on" "optimize"
-     "option" "optionally" "or" "order" "ordered" "out" "outer" "outfile" "over"
-     "percent_rank" "position" "precision" "primary" "prior" "procedure" "purge"
-     "range" "rank" "read" "reads" "read_write" "real" "references" "refresh"
-     "refreshnodedatamap" "regexp" "release" "rename" "repeat" "replace" "require"
-     "restrict" "return" "revert" "revoke" "right" "rlike" "row_number" "schema"
-     "schemas" "scn_number" "second_microsecond" "select" "self" "sensitive"
-     "separator" "set" "show" "smallint" "sort" "spatial" "specific" "sql"
-     "sqlexception" "sqlstate" "sqlwarning" "sql_big_result" "sql_calc_found_rows"
-     "sql_small_result" "ssl" "start" "starting" "std" "stddev" "stddev_pop"
-     "stddev_samp" "straight_join" "substr" "substring" "sum" "sysdate" "table"
-     "target" "terminated" "then" "tinyblob" "tinyint" "tinytext" "to" "trailing"
-     "trigger" "trim" "true" "undo" "union" "unique" "unlock" "unsigned" "update"
-     "usage" "use" "using" "utc_date" "utc_datetime" "utc_time" "utc_timestamp"
-     "values" "varbinary" "varchar" "varcharacter" "variance" "varying" "var_pop"
-     "var_samp" "when" "where" "while" "with" "write" "xor" "year_month"
-     "zerofill" "delimiter")))
+(eval-after-load
+    'company-keywords
+  (progn
+    (unless (assoc 'sql-modef company-keywords-alist)
+      (push
+       '(sql-mode
+         "accessible" "add" "all" "alter" "analyze" "and" "as" "asc" "asensitive"
+         "before" "between" "bigint" "binary" "bit_and" "bit_or" "bit_xor" "blob"
+         "both" "by" "call" "cascade" "case" "cast" "change" "char" "character"
+         "check" "cluster" "collate" "column" "compress" "condition" "connect"
+         "constraint" "continue" "convert" "count" "create" "cross" "curdate"
+         "decimal" "declare" "default" "delayed" "delete" "dense_rank" "desc"
+         "describe" "deterministic" "distinct" "distinctrow" "distribute"
+         "distributed" "div" "double" "drop" "dual" "each" "else" "elseif" "enclosed"
+         "escaped" "exists" "exit" "explain" "extract" "false" "fetch" "float"
+         "for" "force" "foreign" "from" "full" "fulltext" "gcexport"
+         "gcimport" "gclocal" "gcluster" "gcluster_local" "get" "grant" "group"
+         "grouped" "group_concat" "having" "high_priority" "hour_microsecond"
+         "hour_minute" "hour_second" "if" "ignore" "in" "index" "infile"
+         "initnodedatamap" "inner" "inout" "inpath" "insensitive" "insert" "int"
+         "integer" "intersect" "interval" "into"
+         "is" "iterate" "join" "key" "keys" "kill" "lag" "lead" "leading" "leave"
+         "left" "level" "like" "limit" "limit_storage_size" "linear" "lines" "link"
+         "load" "localtime" "localtimestamp" "lock" "long" "longblob" "longtext"
+         "loop" "low_priority" "match" "max"
+         "mediumblob" "mediumint" "mediumtext" "merge" "mid" "middleint" "min" "minus"
+         "minute_microsecond" "minute_second" "mod" "modifies" "natural" "nocopies"
+         "nocycle" "not" "now" "no_write_to_binlog" "null" "numeric" "on" "optimize"
+         "option" "optionally" "or" "order" "ordered" "out" "outer" "outfile" "over"
+         "percent_rank" "position" "precision" "primary" "prior" "procedure" "purge"
+         "range" "rank" "read" "reads" "read_write" "real" "references" "refresh"
+         "refreshnodedatamap" "regexp" "release" "rename" "repeat" "replace" "require"
+         "restrict" "return" "revert" "revoke" "right" "rlike" "row_number" "schema"
+         "schemas" "scn_number" "second_microsecond" "select" "self" "sensitive"
+         "separator" "set" "show" "smallint" "sort" "spatial" "specific" "sql"
+         "sqlexception" "sqlstate" "sqlwarning" "sql_big_result" "sql_calc_found_rows"
+         "sql_small_result" "ssl" "start" "starting" "std" "stddev" "stddev_pop"
+         "stddev_samp" "straight_join" "substr" "substring" "sum" "sysdate" "table"
+         "target" "terminated" "then" "tinyblob" "tinyint" "tinytext" "to" "trailing"
+         "trigger" "trim" "true" "undo" "union" "unique" "unlock" "unsigned" "update"
+         "usage" "use" "using" "utc_date" "utc_datetime" "utc_time" "utc_timestamp"
+         "values" "varbinary" "varchar" "varcharacter" "variance" "varying" "var_pop"
+         "var_samp" "when" "where" "while" "with" "write" "xor" "year_month"
+         "zerofill" "delimiter")
+       company-keywords-alist)
+      nil
+      )))
 
 (defvar eval-sql/command nil "Command to evaluate sql file.")
 (defvar eval-sql/command-verbose-arg nil "Command to evaluate sql file.")
@@ -80,7 +114,7 @@
                 (mapcar 's-trim (s-split "\n"
                                          (mapconcat
                                           (lambda (X)
-                                            (shell-command-to-string (concat cmd-prefix X)))
+                                            (sql/command-to-string (concat cmd-prefix X)))
                                           cmd-list "\n"))))))
 
             (t
@@ -117,7 +151,7 @@ Sql is a cross-platform, open-source make system."
 
 
 ;;;###autoload
-(defun yc/eval-sql ()
+(defun sql/eval-sql ()
   "Evaluate this file."
   (interactive)
 
@@ -138,7 +172,7 @@ Sql is a cross-platform, open-source make system."
   (aif (buffer-file-name)
       (progn
         (unless eval-sql/command
-          (yc/choose-database)
+          (sql/choose-database)
           (unless eval-sql/command
             (error "Command is not set")))
         (when (buffer-modified-p)
@@ -160,18 +194,19 @@ Sql is a cross-platform, open-source make system."
     (sql-send-buffer)))
 
 
-(defun yc/choose-dbms ()
+(defun sql/choose-dbms ()
   "Choose dbms..."
   (interactive)
   (let ((target (ivy-read "Choose DBMS: " '("postgres" "mysql"))))
-    (case (intern target)
-      ('postgres
-       (progn
-         (setq db/product 'postgres)
-         (sql-set-product 'postgres))
-       )
-      ;; todo: others....
-      )))
+    (cond
+     ((string= target "postgres")
+      (progn
+        (setq db/product 'postgres)
+        (sql-set-product 'postgres)))
+
+     (t (error "Not implemented"))
+     )
+    ))
 
 (defun eval-sql/command ()
   "Get command to execute a query.."
@@ -180,7 +215,7 @@ Sql is a cross-platform, open-source make system."
               ""
             eval-sql/command-verbose-arg)))
 
-(defun yc/choose-database ()
+(defun sql/choose-database ()
   "Choose database.."
   (interactive)
 
@@ -188,39 +223,38 @@ Sql is a cross-platform, open-source make system."
     (require 'sql))
 
   (unless db/product
-    (yc/choose-dbms))
+    (sql/choose-dbms))
 
   (let* ((cmd
-          (case db/product
-            ('postgres (format
-                        "psql %s --no-psqlrc -lx | grep Name | awk -F '|' '{print $2}'"
-                        (if (= sql-port 0)
-                            ""
-                          (format "-p %d" sql-port)))))
-          ;; todo: others....
-          ))
+          (cond
+           ((eq db/product 'postgres)
+            (format
+             "psql %s --no-psqlrc -lx | grep Name | awk -F '|' '{print $2}'"
+             (if (= sql-port 0)
+                 ""
+               (format "-p %d" sql-port))))
+           (t (error "not implemented %s" (symbol-name db/product))))))
     (setq db/target-database
           (ivy-read "Choose database: "
                     (remove-if (lambda (x)
                                  (= (len x) 0) )
-                               (mapcar 's-trim (s-split "\n" (shell-command-to-string cmd)))))))
+                               (mapcar 's-trim (s-split "\n" (sql/command-to-string cmd)))))))
 
-  (case db/product
-    ('postgres (setq eval-sql/command
-                     (mapconcat 'identity
-                                (list "TERM=xterm"
-                                      "psql"
-                                      (if (= sql-port 0) "" (format "-p %d" sql-port)) ;; port
-                                      "%s" ;; template, left for verbose arg.
-                                      "-d" db/target-database        ;; database
-                                      "-f"                           ;; file
-                                      ) " ")
-                     eval-sql/command-verbose-arg "-a"))))
+  (cond
+   ((eq db/product 'postgres)
+    (setq eval-sql/command
+          (mapconcat 'identity
+                     (list "TERM=xterm"
+                           (sql/wrap-command "")
+                           "psql"
+                           (if (= sql-port 0) "" (format "-p %d" sql-port)) ;; port
+                           "%s" ;; template, left for verbose arg.
+                           "-d" db/target-database        ;; database
+                           "-f"                           ;; file
+                           ) " ")
+          eval-sql/command-verbose-arg "-a"))
+   (t (error "Not implemented for type: %s" (symbol-name db/product)))))
 
-
-(yc/eval-after-load
-  "sql"
-  (define-key sql-mode-map (kbd "C-c C-b") 'yc/eval-sql))
 
 (defun eshell/restart_pg (&optional datadir)
   "Restart PG."
@@ -237,7 +271,7 @@ Sql is a cross-platform, open-source make system."
 
     (error "Could not find pg_ctl, current PATH: %s" (getenv "PATH"))))
 
-(defun yc/remove-costs ()
+(defun sql/remove-costs ()
   "Remove cost info."
   (interactive)
   (save-excursion
@@ -268,10 +302,7 @@ Sql is a cross-platform, open-source make system."
             nil t)
       (let ((startup (match-string 1))
             (total (match-string 2)))
-        (insert (format " -- %.03f ms" (- (string-to-number total) (string-to-number startup)))))
-      )
-    )
-  )
+        (insert (format " -- %.03f ms" (- (string-to-number total) (string-to-number startup))))))))
 
 (provide 'sql+)
 

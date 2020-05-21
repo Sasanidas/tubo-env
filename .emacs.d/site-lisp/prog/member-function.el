@@ -119,6 +119,7 @@
 
 (require 'cl)
 (require 'projectile)
+(require '02-functions)
 
 ;;;; Customization
 (defgroup member-functions nil

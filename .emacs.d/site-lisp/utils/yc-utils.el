@@ -1312,7 +1312,7 @@ inserts comment at the end of the line."
            (if backward
                (1- (cdar item))
                (1+ (caar item))))
-          (layout-save-current)
+          ;; (layout-save-current)
           (ws-butler-global-mode -1 )
           (add-hook 'ediff-quit-hook 'yc/ediff-cleanup-and-restore)
           (ediff-files  file-B file-A))
