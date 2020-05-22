@@ -323,20 +323,6 @@ Call FUNC with ARGS."
 
 
 
-(defun yc/remove-empty-lines (&optional pos)
-  "Remove empty lines around this position..."
-  (interactive)
-  (save-excursion
-    (if pos
-        (goto-char pos))
-
-    ;; Find next non new-line and non-empty character
-    (skip-chars-forward " 	\n")
-    (setq pos (point))
-    (when
-        (<= (skip-chars-backward " 	\n") -2)
-      (delete-region (1+ (point)) pos))))
-
 
 (defun s-join (separator strings)
   "Join all the strings in STRINGS with SEPARATOR in between."
