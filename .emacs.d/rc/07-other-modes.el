@@ -453,68 +453,20 @@
              )
 (jka-compr-update)
 
- ;; PDF
-
-;;; ### Doc-view ###
-(use-package doc-view
-  :defer t
-  :init
-  (progn
-    (custom-set-variables
-     '(doc-view-cache-directory (yc/make-cache-path "docview"))
-     '(doc-view-continuous t)
-     '(doc-view-resolution 120)))
-  :hook ((doc-view-mode . auto-revert-mode))
-  :config
-  (progn
-    (yc/unset-keys
-     '("." "x" "M-<" "M->")
-     doc-view-mode-map)                     ;卸载按键
-
-    (yc/set-keys
-     '(
-       ("N" . doc-view-next-page)                      ;下一页
-       ("P" . doc-view-previous-page)                  ;上一页
-       ("." . doc-view-first-page)                     ;第一页
-       ("," . doc-view-last-page)                      ;最后一页
-       ("g" . doc-view-goto-page)                      ;跳到第几页
-       ("e" . doc-view-scroll-down-or-previous-page)   ;向上滚动一屏
-       ("SPC" . doc-view-scroll-up-or-next-page)       ;向下滚动一屏
-       ("j" . doc-view-next-line-or-next-page)         ;下一行或下一屏
-       ("k" . doc-view-previous-line-or-previous-page) ;上一行或上一屏
-       ("t" . doc-view-show-tooltip)                   ;当前页提示
-       ("q" . bury-buffer)                             ;隐藏buffer
-       ("Q" . doc-view-kill-proc-and-buffer)           ;退出并结束进程
-       ("C-s" . doc-view-search)                       ;搜索
-       ("C-S-n" . doc-view-search-next-match)          ;下一个匹配
-       ("C-S-p" . doc-view-search-previous-match)      ;上一个匹配
-       ("+" . doc-view-enlarge)                        ;放大页面
-       ("-" . doc-view-shrink)                         ;缩小页面
-       ("C-c C-c" . doc-view-toggle-display)           ;在文本和图像间切换
-       ("C-c C-t" . doc-view-open-text)                ;打开文本
-       ("r" . revert-buffer)                           ;刷新
-       ("s" . auto-scroll-mode)                        ;自动滚屏
-       ("<" . auto-scroll-faster)                      ;加快滚屏速度
-       (">" . auto-scroll-slower)                      ;减慢滚屏速度
-       ("C-M-j" . doc-view-scroll-up-or-next-page+)       ;翻另一个窗口中图书的下一页
-       ("C-M-k" . doc-view-scroll-down-or-previous-page+) ;翻另一个窗口中图书的上一页
-       ([remap scroll-up] . doc-view-next-line-or-next-page) ;重新定向按键, 支持 auto-scroll
-       )
-     doc-view-mode-map)))
-
 ;; in org file: [[pdfview:/path/to/myfile.pdf::42][My file Description]]
 
 (use-package MyDb
   :commands (mydb/dispatch-file mydb/dispatch-directory mydb/open-note-file
                                 mydb/get-note-file))
 
+ ;; PDF
 (use-package pdf-tools
   :commands (pdf-tools-install pdf-tools-enable-minor-modes)
   :mode (("\\.pdf\\'" . pdf-view-mode))
   :hook ((pdf-view-mode . pdf-tools-enable-minor-modes))
   :custom
   (pdf-info-epdfinfo-program (expand-file-name "~/.local/bin/epdfinfo"))
-  (pdf-view-display-size 'fit-page)
+  (pdf-view-display-size 'fit-width)
   (pdf-view-resize-factor 1.10)
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
@@ -522,7 +474,9 @@
               ("i" . mydb/open-note-file))
   :config
   (advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
-)
+  (unless (file-executable-p pdf-info-epdfinfo-program)
+    (message "Tool %s does not exist, compiling ...")
+    (pdf-tools-install)))
 
 (defun yc/pdf-tools-re-install ()
   "Re-install `epdfinfo' even if it is installed.
