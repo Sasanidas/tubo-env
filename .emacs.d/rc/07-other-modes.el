@@ -461,6 +461,7 @@
 
  ;; PDF
 (use-package pdf-tools
+  :pin melpa
   :commands (pdf-tools-install pdf-tools-enable-minor-modes)
   :mode (("\\.pdf\\'" . pdf-view-mode))
   :hook ((pdf-view-mode . pdf-tools-enable-minor-modes))
@@ -484,6 +485,8 @@ The re-installation is forced by deleting the existing `epdfinfo'
 binary.
 Useful to run after `pdf-tools' updates."
   (interactive)
+  (unless (featurep 'pdf-tools)
+    (require 'pdf-tools))
   (when (pdf-info-running-p)
     (pdf-info-kill))
   (delete-file pdf-info-epdfinfo-program)
