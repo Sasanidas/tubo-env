@@ -13,7 +13,7 @@ function die ()
     local i=0
     while [ $i -lt $n ]; do
         local line=${BASH_LINENO[i]}
-        local func=${FUNCNAME[i]}
+        local func=${FUNCNAME[i+1]}
 
         i=$((i+1))
 

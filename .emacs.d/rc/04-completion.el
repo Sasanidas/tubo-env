@@ -103,22 +103,24 @@
   )
 
 ;; ******************** Yasnippet ****************************
-(defun yas-with-comment (str)
+(defun yas-with-comment (&rest strings)
   "Insert string STR as comment."
-  (let ((c-start comment-start)
+  (let* ((c-start comment-start)
         (c-end comment-end)
-        (c-add comment-add))
+        (c-add comment-add)
+        (str (s-join (concat "\n" (comment-padright c-start c-add ))
+                     strings)))
+    (PDEBUG "STR" str)
     (with-temp-buffer
       (if (yc/in-comments-p)
           (insert str)
-        (insert (comment-padright c-start c-add ) str c-end))
+        (insert (comment-padright c-start c-add ) str comment-end))
 
       (PDEBUG "CONTENT-BEFORE:" (buffer-string))
       (auto-update-defaults)
       (PDEBUG "CONTENT-AFTER:" (buffer-string))
 
-      (buffer-substring-no-properties (point-min) (point-max)))
-    ))
+      (buffer-substring-no-properties (point-min) (point-max)))))
 
 
 (defun yc/new-snippet (name)
