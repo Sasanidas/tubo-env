@@ -2,13 +2,23 @@
 # name: defdie
 # key: dfdie
 # --
-die() {
-    set +x
-    local IFS=$' \t\n'
-    set +e
+function die ()
+{
+    set +xe
+    echo ""
+    echo "================================ DIE ==============================="
+    echo "$@"
+    echo "Call stack:"
+    local n=$((${#BASH_LINENO[@]}-1))
+    local i=0
+    while [ $i -lt $n ]; do
+        local line=${BASH_LINENO[i]}
+        local func=${FUNCNAME[i]}
 
-    echo -e "$@" | while read -r ; do
-        echo " $BAD*$NORMAL $RC_INDENTATION$REPLY" >&2
+        i=$((i+1))
+
+        echo "    [$i] -- line $line -- $func"
     done
+    echo "================================ END ==============================="
     exit 1
 }

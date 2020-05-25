@@ -31,6 +31,7 @@
 (require 'thingatpt)
 (require 'which-func)
 (require 'emr-elisp)
+(require 'emr-prog)
 
 (require 'iedit)
 
@@ -57,7 +58,7 @@
   :modes '(prog-mode)
   :predicate (lambda ()
                (and (not (iedit-region-active))
-                    (not emr--lsp-support-rename)
+                    (not (emr--lsp-support-rename))
                     (if (eq major-mode 'emacs-lisp-mode)
                         (emr-el:looking-at-local-var-p)
                       (and
@@ -70,7 +71,7 @@
   :modes '(prog-mode)
   :predicate (lambda ()
                (and (not (iedit-region-active))
-                    (not emr--lsp-support-rename)
+                    (not (emr--lsp-support-rename))
                     (if (eq major-mode 'emacs-lisp-mode)
                         (and
                          (emr-el:looking-at-symbol-p)
