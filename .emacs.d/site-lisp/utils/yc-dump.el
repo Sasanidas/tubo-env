@@ -44,6 +44,16 @@
     )
   )
 
+(defun yc/config-emacs ()
+  "Configure emacs with current system-configuration-options"
+  (interactive)
+  (with-current-buffer (eshell)
+    (insert "./autogen.sh && ./configure ")
+    (insert system-configuration-options)
+    (eshell-send-input)
+    )
+  )
+
 (provide 'yc-dump)
 
 ;; Local Variables:
