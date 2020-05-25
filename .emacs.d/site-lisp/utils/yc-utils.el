@@ -24,8 +24,10 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                                           nil
                                           t))
          (target-name (ivy-read "Input new name: "
-                                (list (file-name-nondirectory in-file)))))
-    (shell-command (format  "mv \"%s\" %s/%s" in-file target-dir target-name))
+                                (list (file-name-nondirectory in-file))))
+         (command (format  "mv \"%s\" \"%s/%s\"" in-file target-dir target-name)))
+    (PDEBUG "COMMAND: " command)
+    (shell-command command)
     )
   )
 
