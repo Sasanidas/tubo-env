@@ -15,6 +15,7 @@
 ;;   (require package))
 
 ;; dump image
+(require 'yc-utils)
 
 (defun yc/do-dump ()
   "Do dump."
@@ -47,12 +48,17 @@
 (defun yc/config-emacs ()
   "Configure emacs with current system-configuration-options"
   (interactive)
-  (with-current-buffer (eshell)
-    (insert "./autogen.sh && ./configure ")
-    (insert system-configuration-options)
-    (eshell-send-input)
-    )
-  )
+  (let ((source-directory
+         (if (and (file-exists-p ".git")
+                  (file-exists-p "autogen.sh"))
+             default-directory
+           (yc/choose-directory) )))
+
+    (with-current-buffer (eshell)
+      (insert (format "cd %s; " source-directory))
+      (insert "./autogen.sh && ./configure ")
+      (insert system-configuration-options)
+      (eshell-send-input))))
 
 (provide 'yc-dump)
 

@@ -1,4 +1,4 @@
-;;; -*- emacs-lisp -*- -*- coding: utf-8; -*-
+;;; -*- emacs-lisp -*- -*- coding: utf-8; -*- -*- lexical-binding: t; -*-
 ;;;
 ;;; File: tb-dark-theme.el
 ;;; Author: YangYingchao <yangyingchao@gmail.com>

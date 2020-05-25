@@ -800,6 +800,31 @@ inserts comment at the end of the line."
 
             :caller 'counsel-list-directory)))
 
+(defun yc/choose-directory (&optional dir)
+  "Choose directory (with DIR as default one)."
+  (interactive)
+  (let* ( (suggestion (or dir default-directory))
+          (choices (list
+                    (format "Choose directory %s" suggestion)
+                    "Choose by selecting directory interactively."))
+          (action-index (cl-position
+                         (completing-read (format "%s is not part of any project. Select action: "
+                                                  (buffer-name))
+                                          choices
+                                          nil
+                                          t)
+                         choices
+                         :test 'equal))
+          (project-root (case action-index
+                          (0 suggestion)
+                          (1 (read-directory-name "Select workspace folder to add: "
+                                                  (or suggestion default-directory)
+                                                  nil
+                                                  t))
+                          (t nil))))
+    project-root)
+  )
+
 (defun edit-project ()
   "Edit project configurations."
   (interactive)
