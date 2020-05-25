@@ -249,6 +249,10 @@
           [134217815] . yc/kill-file-ln))
   )
 
+(use-package yc-dump
+  :commands (yc/dump-emacs yc/config-emacs))
+
+
  ;; diff-mode
 
 (use-package diff-mode
