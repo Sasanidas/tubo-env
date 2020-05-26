@@ -525,10 +525,27 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
 (use-package interleave
   :commands (interleave-mode)
   :pin melpa
+  :hook ((interleave-mode . yc/interleave-mode-hook))
+  :custom
+  (interleave-disable-narrowing t)
   :config
   (progn
     (defalias 'interleave-open-notes-file-for-pdf 'mydb/open-note-file))
   :defer t)
+
+(defun yc/interleave-mode-hook ()
+  "Description."
+  (unless (layout-restore)
+    (PDEBUG "BUF" (current-buffer))
+    (PDEBUG "FILE:" buffer-file-name)
+    (when (s-ends-with? ".pdf" buffer-file-name)
+      (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
+    (dolist (win (window-list))
+      (select-window win)
+      (layout-save-current))
+    )
+
+  (interleave-sync-pdf-page-next))
 
 (use-package org-pdfview
   :commands (org-pdfview-open)

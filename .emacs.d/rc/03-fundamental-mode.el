@@ -497,7 +497,10 @@ With REVERSE is t, switch to previous window."
 ;; Preview when `goto-line`
 (use-package goto-line-preview
   :bind ([remap goto-line] . goto-line-preview))
+
 
+(use-package layout-restore
+  :commands (layout-save-current layout-restore))
 
 ;; Local Variables:
 ;; coding: utf-8

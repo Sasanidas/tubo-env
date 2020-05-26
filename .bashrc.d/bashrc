@@ -9,3 +9,12 @@ if [ -d ~/.bashrc.d ]; then
 fi
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# finally, export things...
+if [ ${#LOCAL_PATH[@]} -ne 0 ]; then
+    for p in $(echo ${LOCAL_PATH[@]}); do
+        PATH="$p:$PATH"
+    done
+
+    export PATH
+fi

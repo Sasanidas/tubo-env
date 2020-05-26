@@ -38,8 +38,12 @@ export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 collect_env_from "${HOME}/.local"
 collect_env_from "${HOME}/.cargo"
 
-if [ -d "${HOME}/.local/texlive/2019/bin/x86_64-linux/" ]; then
-    LOCAL_PATH+=("${HOME}/.local/texlive/2019/bin/x86_64-linux")
+if [ -d "${HOME}/.local/texlive/2020/bin/x86_64-linux/" ]; then
+    LOCAL_PATH+=("${HOME}/.local/texlive/2020/bin/x86_64-linux")
+fi
+
+if [ -d "/usr/local/texlive/2020/bin/x86_64-darwin" ]; then
+    LOCAL_PATH+=("/usr/local/texlive/2020/bin/x86_64-darwin")
 fi
 
 # Utilities.

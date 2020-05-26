@@ -189,8 +189,8 @@ If `silent' is nil, print collected nodes before exit."
   (org-todo-keywords (quote ((sequence "TODO(t)" "WAITING(w)" "DOING(g)"
                                        "DONE(d)" "CANCELED(c)" "PENDING(p)" ))))
   (org-tag-faces
-        '(("HIGH" . (:foreground "red" :weight bold)) ("MEDIUM" . org-warning)
-          ("LOW" . (:foreground "blue" :weight bold))))
+   '(("HIGH" . (:foreground "red" :weight bold)) ("MEDIUM" . org-warning)
+     ("LOW" . (:foreground "blue" :weight bold))))
 
   :hook ((org-after-todo-statistics . org-summary-todo)
          (org-mode . yc/org-mode-hook))
@@ -211,20 +211,11 @@ If `silent' is nil, print collected nodes before exit."
        (,(rx bow (group "DOING "))
         (1 font-lock-function-name-face))))
 
-    (advice-add
-     'org-html-paragraph :around
-     (lambda (func &rest args)
-       "Join consecutive Chinese lines into a single long line without
-unwanted space when exporting org-mode to html."
-       (let ((orig-contents (cadr args))
-             (reg-han "[[:multibyte:]]"))
-         (setf (cadr args) (replace-regexp-in-string
-                            (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
-                            "\\1\\2" orig-contents))
-         (apply func args))))
-
+    (advice-add 'org-html-paragraph :around 'yc/org-html-paragraph-adv)
     (advice-add 'org-open-at-point :around #'yc/org-open-at-point-adv)
     (advice-add 'org-ctrl-c-ctrl-c :after #'yc/org-ctrl-c-ctrl-c-adv)
+    (advice-add 'org-edit-special :before #'layout-save-current)
+    (advice-add 'org-edit-src-exit :after #'layout-restore)
     (advice-add 'org-comment-line-break-function :around #'yc/org-comment-line-break-function)
 
     (substitute-key-definition
@@ -236,19 +227,36 @@ unwanted space when exporting org-mode to html."
        (ditaa . t)
        (dot . t)
        (plantuml . t)
-       (gnuplot . t))))
+       (gnuplot . t)))
+    )
 
   :bind (:map org-mode-map
-         (;; ,(kbd "")
-          [138]. org-meta-return)
-         (;; ,(kbd "C-c j")
-          "j". org-meta-return)
-         ("\C-cl" . org-store-link)
-         ("\C-ca" . org-agenda    )
-         ("\C-cb" . org-iswitchb  )
-         (;;(kbd "M-m")
-          [134217837] . yc/show-methods-dwim)
-         ))
+              (;; ,(kbd "")
+               [138]. org-meta-return)
+              (;; ,(kbd "C-c j")
+               "j". org-meta-return)
+              ("\C-cl" . org-store-link)
+              ("\C-ca" . org-agenda    )
+              ("\C-cb" . org-iswitchb  )
+              (;;(kbd "M-m")
+               [134217837] . yc/show-methods-dwim)
+              )
+  )
+
+(defun yc/org-html-paragraph-adv (func &rest args)
+  "Advice for 'org-html-paragraph'.
+Call FUNC which is 'org-html-paragraph with ARGS."
+       "Join consecutive Chinese lines into a single long line without
+unwanted space when exporting org-mode to html."
+       (let ((orig-contents (cadr args))
+             (reg-han "[[:multibyte:]]"))
+         (setf (cadr args) (replace-regexp-in-string
+                            (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
+                            "\\1\\2" orig-contents))
+         (apply func args)))
+
+
+
 
 (use-package ox-latex
   :custom
