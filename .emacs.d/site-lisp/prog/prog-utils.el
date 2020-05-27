@@ -703,8 +703,10 @@ Return a nested alist keyed by symbol names. e.g.
     (seq-filter
      #'identity
      (seq-map #'yc/lsp--symbol-to-hierarchical-imenu-elem
-              (seq-sort #'lsp--imenu-symbol-lessp
-                        (lsp--imenu-filter-symbols symbols))))))
+              (lsp--imenu-filter-symbols symbols)
+              ;; (seq-sort #'lsp--imenu-symbol-lessp
+              ;;           (lsp--imenu-filter-symbols symbols))
+              ))))
 
 (defun yc/counsel-imenu-get-candidates-from (alist &optional prefix)
   "Create a list of (key . value) from ALIST.
@@ -913,7 +915,7 @@ If NO-CACHED is true, do not use cached value."
          (items (counsel-imenu-categorize-functions items))
          (tags (yc/counsel-imenu-get-candidates items)))
 
-    (if (called-interactively-p 'interface)
+    (if (called-interactively-p 'interactive)
         (let ((yc/debug-log-limit -1))
           (PDEBUG "IMENU-FUNC: " imenu-create-index-function)
           (PDEBUG "TAGS: " tags)))
@@ -985,7 +987,7 @@ If NO-CACHED is true, do not use cached value."
 
     (if (called-interactively-p 'interactive)
         (let ((yc/debug-log-limit 4096))
-          (PDEBUG "IMENU-ITEMS: " yc/cached-tags))))
+          (PDEBUG "LSP-ITEMS: " yc/cached-tags))))
 
   (if yc/cached-tags
       (PDEBUG "TAGS from LSP"))
@@ -995,24 +997,34 @@ If NO-CACHED is true, do not use cached value."
 (defun yc/counsel-imenu-or-semantic ()
   "List functions and go to selected one."
   (interactive)
+
   (let ((position (point))
-        (candidates (or (yc/tags-from-lsp)
-                        (yc/tags-from-semantic)
-                        (yc/tags-from-imenu)
-                        ))
+        (candidates (if (member major-mode '(pdf-view-mode))
+                        nil
+                      (or (yc/tags-from-lsp)
+                          (yc/tags-from-semantic)
+                          (yc/tags-from-imenu)
+                          )))
         res)
 
-    (unwind-protect
-        (setq res
-              (ivy-read "tag: " candidates
-                        :update-fn #'yc/counsel-imenu-update-fn
-                        :action (lambda (x)
-                                  (recenter 3))
-                        :caller 'yc/counsel-imenu))
+    (if candidates
+        (unwind-protect
+            (let ((yc/debug-log-limit -1))
+              (PDEBUG "CANDS" candidates))
 
-      (unless res
-        (goto-char position))
-      (yc/imenu--cleanup))))
+            (setq res
+                  (ivy-read "tag: " candidates
+                            :update-fn #'yc/counsel-imenu-update-fn
+                            :action (lambda (x)
+                                      (recenter 3))
+                            :caller 'yc/counsel-imenu))
+
+          (unless res
+            (goto-char position))
+          (yc/imenu--cleanup))
+
+      ;; oops, failed to get candidates, simply call imenu...
+      (imenu-choose-buffer-index))))
 
 (defun yc/show-methods-dwim ()
   "Show methods found in current file, using any possible way.."
