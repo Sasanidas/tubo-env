@@ -891,6 +891,9 @@ Return a cons cell (full-name . start-point)."
 (defun yc/counsel-imenu-get-candidates (alist &optional prefix)
   "Create a list of (key . value) from ALIST.
 PREFIX is used to create the key."
+  (let ((yc/debug-log-limit -1))
+    (PDEBUG "ALIST:" alist))
+
   (condition-case msg
       (yc/counsel-imenu-get-candidates-from alist prefix)
     (error (progn (PDEBUG "FAIL: " msg)    nil))))
@@ -948,90 +951,101 @@ If NO-CACHED is true, do not use cached value."
         items)))
 
 
-(defun yc/tags-from-lsp (&optional no-cached)
+(defun yc/tags-from-lsp ()
   "Get tags from imenu.
 If NO-CACHED is true, do not use cached value."
-  (interactive "P")
+  (interactive)
+  (let (tags)
+    (when (and (bound-and-true-p lsp-mode)
+               (lsp--capability "documentSymbolProvider"))
 
-  (when no-cached
-    (setq yc/document-tags-tick -1))
+      (PDEBUG "Refreshing tags from LSP..." )
+      (condition-case var
+          (let* ((symbols (lsp--get-document-symbols))
+                 (filted-symbols (lsp--imenu-filter-symbols symbols))
+                 (items
+                  (if (lsp--imenu-hierarchical-p symbols)
+                      (yc/lsp--imenu-create-hierarchical-index symbols)
+                    (seq-map (lambda (nested-alist)
+                               (cons (car nested-alist)
+                                     (seq-map #'yc/lsp--symbol-to-imenu-elem (cdr nested-alist))))
+                             (seq-group-by #'lsp--get-symbol-type filted-symbols)))))
 
-  ;; update tags should happen only when:
-  (when (and (not (= yc/document-tags-tick
-                     (buffer-chars-modified-tick)))        ;; timestamp changes
-             (bound-and-true-p lsp-mode)                   ;; lsp-mode is enabled.
-             (lsp--capability "documentSymbolProvider")    ;; Can provide symbol info.
-             )
-
-    (PDEBUG "Refreshing tags..." )
-    (condition-case var
-        (let* ((symbols (lsp--get-document-symbols))
-               (filted-symbols (lsp--imenu-filter-symbols symbols))
-               (items
-                (if (lsp--imenu-hierarchical-p symbols)
-                    (yc/lsp--imenu-create-hierarchical-index symbols)
-                  (seq-map (lambda (nested-alist)
-                             (cons (car nested-alist)
-                                   (seq-map #'yc/lsp--symbol-to-imenu-elem (cdr nested-alist))))
-                           (seq-group-by #'lsp--get-symbol-type filted-symbols)))))
-
-          (when (called-interactively-p 'interactive)
+            (when (called-interactively-p 'interactive)
               (PDEBUG "SYM: " symbols)
               (PDEBUG "ITEMS" items))
 
-          (setq yc/document-tags-tick (buffer-chars-modified-tick)
-                yc/cached-tags (yc/counsel-imenu-get-candidates items))
-          )
-      (error (PDEBUG "ERROR: " var)
-             (setq yc/cached-tags nil)))
+            (setq tags (yc/counsel-imenu-get-candidates items)))
 
-    (if (called-interactively-p 'interactive)
-        (let ((yc/debug-log-limit 4096))
-          (PDEBUG "LSP-ITEMS: " yc/cached-tags))))
+        (error (PDEBUG "ERROR: " var)))
 
-  (if yc/cached-tags
-      (PDEBUG "TAGS from LSP"))
+      (if (called-interactively-p 'interactive)
+          (let ((yc/debug-log-limit 4096))
+            (PDEBUG "LSP-ITEMS: " tags))))
 
-  yc/cached-tags)
+    (if tags
+        (PDEBUG "TAGS from LSP"))
 
-(defun yc/counsel-imenu-or-semantic ()
-  "List functions and go to selected one."
-  (interactive)
-
-  (let ((position (point))
-        (candidates (if (member major-mode '(pdf-view-mode))
-                        nil
-                      (or (yc/tags-from-lsp)
-                          (yc/tags-from-semantic)
-                          (yc/tags-from-imenu)
-                          )))
-        res)
-
-    (if candidates
-        (unwind-protect
-            (setq res
-                  (ivy-read "tag: " candidates
-                            :update-fn #'yc/counsel-imenu-update-fn
-                            :action (lambda (x)
-                                      (recenter 3))
-                            :caller 'yc/counsel-imenu))
-
-          (unless res
-            (goto-char position))
-          (yc/imenu--cleanup))
-
-      ;; oops, failed to get candidates, simply call imenu...
-      (imenu-choose-buffer-index))))
+    tags))
 
 (defun yc/show-methods-dwim ()
   "Show methods found in current file, using any possible way.."
   (interactive)
-  (condition-case error
-      (yc/counsel-imenu-or-semantic)
-    (error
-     (progn
-       (PDEBUG "yc/counsel-imenu-or-semantic failed: " error)
-       (counsel-xgtags-parse-file (buffer-file-name))))))
+
+  ;; for unsupported modes, simply use imenu.
+  (if (member major-mode '(pdf-view-mode))
+      (imenu-choose-buffer-index)
+
+    ;; other modes, try to handle it via ivy.
+
+    ;; reset tags-tick to force refresh tags.
+    (if current-prefix-arg
+        (setq yc/document-tags-tick -1))
+
+    ;; update tags should happen only when timestamp changes
+    (when (or (not yc/cached-tags)
+              (not (= yc/document-tags-tick
+                  (buffer-chars-modified-tick))))
+
+      (PDEBUG "Refreshing tags..." )
+      (setq yc/document-tags-tick (buffer-chars-modified-tick)
+            yc/cached-tags
+            ;;;; For now, tags are sorted by their position..
+            ;;;
+            ;; (or (yc/tags-from-lsp)
+            ;; (yc/tags-from-semantic)
+            ;; (yc/tags-from-imenu))
+            (sort (or (yc/tags-from-lsp)
+                      (yc/tags-from-semantic)
+                      (yc/tags-from-imenu))
+                  (lambda (x y)
+                    (PDEBUG "X" x)
+                    (PDEBUG "Y" x)
+                    (<
+                     (get-text-property 0 'swiper-line-number (car x))
+                     (get-text-property 0 'swiper-line-number (car y))))))
+
+      (if (called-interactively-p 'interactive)
+          (let ((yc/debug-log-limit 4096))
+            (PDEBUG "TAG ITEMS: " yc/cached-tags))))
+
+    (unless yc/cached-tags
+      (error "Failed to get tags"))
+
+    (let ((position (point))
+          res)
+      (unwind-protect
+              (setq res
+                    (ivy-read "tag: " yc/cached-tags
+                              :update-fn #'yc/counsel-imenu-update-fn
+                              :action (lambda (x)
+                                        (recenter 3))
+                              :caller 'yc/counsel-imenu))
+
+            (unless res
+              (goto-char position))
+            (yc/imenu--cleanup)))))
+
 
 (provide 'prog-utils)
 
