@@ -91,8 +91,10 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
         ))
     last))
 
-(defalias 'PDEBUG 'yc/debug-log)
-
+(defun PDEBUG (&rest args)
+  "Write log, if YC-DEBUG is non-nil."
+  (when YC-DEBUG
+    (apply 'yc/debug-log args)))
 
 (yc/defmacro yc/eval-after-load (name &rest args)
   "Macro to set expressions in `arg` to be executed after `name` is loaded."
