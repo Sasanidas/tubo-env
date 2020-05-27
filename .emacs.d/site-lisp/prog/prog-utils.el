@@ -1009,9 +1009,6 @@ If NO-CACHED is true, do not use cached value."
 
     (if candidates
         (unwind-protect
-            (let ((yc/debug-log-limit -1))
-              (PDEBUG "CANDS" candidates))
-
             (setq res
                   (ivy-read "tag: " candidates
                             :update-fn #'yc/counsel-imenu-update-fn
