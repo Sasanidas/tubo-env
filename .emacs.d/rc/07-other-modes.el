@@ -210,6 +210,7 @@
              yc/get-compiling-threads
              yc/get-env
              yc/uef
+             yc/touch-file
              )
 
   :bind ((;(kbd "C-x J")

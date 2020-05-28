@@ -1392,6 +1392,15 @@ inserts comment at the end of the line."
       (kill-new (format "%s:%d" (file-name-nondirectory it)
                         (line-number-at-pos)))))
 
+(defun yc/touch-file ()
+  "Execute touch command to selected file."
+  (interactive)
+  (counsel-list-directory
+   default-directory nil
+   (lambda (x)
+     (interactive)
+     (shell-command (format "touch \"%s\"" x)))))
+
 
 (provide 'yc-utils)
 
