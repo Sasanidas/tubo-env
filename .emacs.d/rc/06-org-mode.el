@@ -128,6 +128,8 @@ If `silent' is nil, print collected nodes before exit."
   (if window-system
       (org-display-inline-images))
 
+  (setq show-trailing-whitespace t)
+
   (flyspell-mode)
 
   (individual-visibility-source-blocks)
