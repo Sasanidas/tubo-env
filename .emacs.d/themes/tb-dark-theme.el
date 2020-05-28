@@ -455,7 +455,11 @@
    `(magit-hash ((,class (:foreground ,yellow))))
    `(magit-blame-heading ((,class (:foreground "#a9a9a9"))))
    `(magit-section-title ((,class (:foreground ,blue :weight bold))))
-   `(magit-section-highlight  ((t (:background ,current-line))))))
+   `(magit-section-highlight  ((t (:background ,current-line))))
+
+   ;; flycheck
+   `(flycheck-error-list-filename  ((t (:foreground "#f8f8f8"))))
+   ))
 
 
 

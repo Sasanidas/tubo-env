@@ -31,70 +31,18 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
     )
   )
 
-(defun yc/update-key-binds ()
-  "Update keybinds."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (search-forward-regexp (rx ",(kbd" (+? nonl) ")") nil t)
-      (PDEBUG "STR:" (match-string 0))
-
-      (unless (yc/in-comments-p)
-        (let* ((beg (match-beginning 0))
-               (end (match-end 0))
-               (orig (buffer-substring-no-properties beg end))
-               (key (eval (eval-sexp-add-defvars (preceding-sexp))))
-               (val (with-temp-buffer
-                      (print key
-                             (current-buffer))
-                      (s-trim (buffer-substring-no-properties (point-min) (point-max)))))
-               )
-          (PDEBUG "aa: " val)
-          (kill-region beg end)
-          (insert (concat ";; " orig) "\n")
-          (indent-for-tab-command)
-          (insert val)
-          )
-        )
-      )
-    )
-
-  (save-excursion
-    (goto-char (point-min))
-    (while (search-forward-regexp (rx "," (group "("  (*? nonl) "rx" ))
-                                  nil t)
-      (replace-match "\\1")
-      )
-    )
-
-  (indent-region (point-min) (point-max))
-  )
-
-
-(defun yc/compile-rc-files ()
-  "Description."
-  (interactive)
-  (let ((target "~/.emacs.d/rc/compiled.el") )
-    (with-temp-file target
-      (dolist (fn (directory-files "~/.emacs.d/rc" t (rx buffer-start (+ digit) "-" (+ nonl) ".el")))
-        (insert-file-contents fn)))
-
-    (byte-compile-file target)
-    )
-  )
-
 (defun yc/expand-macro (beg end)
-  "Expand macro and put to kill-ring."
+  "Expand macro (from BEG to END) and put to `kill-ring'."
   (interactive "rp")
   (let ((str (buffer-substring-no-properties beg end)) )
     (with-temp-buffer
       (insert (format "(print (macroexpand '%s))"
                       str))
-      (kill-new (format "%S" (eval (eval-sexp-add-defvars (preceding-sexp))))))))
+      (kill-new (format "%S" (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))))))
 
 
 (defun yc/kill-proc (SIG &optional app)
-  "kill process with `SIG', or 9 if SIG not provide."
+  "Kill process (default APP) with `SIG', or 9 if SIG not provide."
   (interactive "P")
   (PDEBUG "SIG" SIG)
 
@@ -112,7 +60,6 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                           (group (+ digit)) (+ space)
                           (group (+? ascii)) (+ space)
                           (+? ascii) eol))
-          (user (getenv "USER"))
           (ps_cmd
            (format "ps -u %s -o pid -o user -o command | grep -v 'ps\\|grep\\|PID'" user-login-name))
           pid-list)
@@ -121,7 +68,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
         (insert (shell-command-to-string ps_cmd))
         (goto-char (point-min))
         (while (search-forward-regexp ".+?$" nil t)
-          (add-to-list 'pid-list (match-string 0) t)))
+          (push (match-string 0) pid-list)))
 
       (let ((choosen (ivy-read "Choose process: " pid-list :initial-input app)) )
         (if (string-match r-match-entry choosen)
@@ -249,7 +196,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
           (match-beginning 0)
           (match-end 0)
           'face (list :background (yc/expand-color (match-string-no-properties 0))))))))
-  (font-lock-fontify-buffer))
+  (font-lock-flush))
 
 (defun yc/binary-form ()
   "Show binary format of current symbol."
@@ -281,7 +228,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
 (defun yc/eval-and-insert ()
   "Evaluate last form and copy result to kill-ring."
   (interactive)
-  (let* ((val (eval (eval-sexp-add-defvars (preceding-sexp))))
+  (let* ((val (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))
          (pos (save-excursion (backward-list) (point)))
          (val-str
           (with-temp-buffer
@@ -303,7 +250,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
 (defun yc/eval-and-insert-comment ()
   "Evaluate last form and copy result to kill-ring."
   (interactive)
-  (let* ((val (eval (eval-sexp-add-defvars (preceding-sexp))))
+  (let* ((val (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))
          (pos (save-excursion (backward-list) (point)))
          (val-str
           (with-temp-buffer
@@ -354,8 +301,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                                ((file-exists-p "~/emacs_packed.tar")  "~/emacs_packed.tar")
                                ((file-exists-p "~/tmp/emacs_packed.tar")  "~/tmp/emacs_packed.tar")
                                (t "~/emacs_packed.tar"))))
-         (default-directory temporary-file-directory)
-         (process nil))
+         (default-directory temporary-file-directory))
 
     (defun unpack-filter (process output)
       (message "UNPACKENV: %s" output))
@@ -453,7 +399,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
       (when (search-backward-regexp (rx bol (* blank) (group (+ digit)) ".") nil t)
         (setq number (1+ (string-to-number (match-string 1))))))
     (if (and (looking-at "$")
-             (not (looking-back "^")))
+             (not (looking-back "^" nil)))
         (insert  "\n"))
     (insert (format "%d. " number))))
 
@@ -675,16 +621,6 @@ inserts comment at the end of the line."
                       (floor (* 0.9
                                 (face-attribute 'default :height)))))
 
-(defun yc/compile-rc-files ()
-  "Compile all init files."
-  (interactive)
-  (let ((init-dir (expand-file-name "~/.emacs.d/rc"))
-        (file-name nil))
-    (when init-dir
-      (dolist (file-name (directory-files init-dir t ".*el"))
-        (if file-name
-            (byte-compile-file file-name))))))
-
 (defun yc/decode-hex-color ()
   "Decode hex color"
   (interactive)
@@ -700,7 +636,7 @@ inserts comment at the end of the line."
         ))))
 
 (defun yc/encode-hex-color ()
-  "Encode hex color"
+  "Encode hex color."
   (interactive)
   (save-excursion
     (let ((r-match-hex-color (rx (group (+ digit)) (? (: (* whitespace) "," (* whitespace)))
@@ -714,9 +650,9 @@ inserts comment at the end of the line."
                (b (match-string 3))
                (a (match-string 4))
                (hexcolor (format (concat "#%02X%02X%02X" (if a "%02X" "%s"))
-                                 (string-to-number (match-string 1))
-                                 (string-to-number (match-string 2))
-                                 (string-to-number (match-string 3))
+                                 (string-to-number r)
+                                 (string-to-number g)
+                                 (string-to-number b)
                                  (if (not a) ""
                                    (/ (* 255 (string-to-number a)) 100)))))
           (kill-new hexcolor)
@@ -977,7 +913,7 @@ inserts comment at the end of the line."
  ;; http
 
 (defun http/get-body (url)
-  "Return http body from url"
+  "Return http body from URL."
   (let* ((buffer (url-retrieve-synchronously url))
          (r-match-header
           (rx "HTTP/" digit "." digit (+ space)          ;; HTTP/1.1
@@ -989,13 +925,12 @@ inserts comment at the end of the line."
       (goto-char (point-min))
       (if (search-forward-regexp r-match-header)
           (let* ((code (string-to-number (match-string 1)))
-                 (fields-str (match-string 2))
                  (body-begin (+ (match-end 2) 2)))
             (unless (= code 200)
               (error "Http code is not 200, but: %d!, url: %s" code url))
 
             (buffer-substring-no-properties body-begin (point-max)))
-        (error "Failed to parse from contents: "
+        (error "Failed to parse from contents: %s"
                (buffer-substring (point-min) (min 512 (point-max))))))))
 
 (defun http/parse-kvps (content)
@@ -1069,7 +1004,7 @@ inserts comment at the end of the line."
         (PDEBUG "PT: " (point))
         (let* ((begin (match-beginning 0))
                (end (match-end 0))
-               (f (PDEBUG "KKK " (buffer-substring-no-properties begin end)))
+               ;; (f (PDEBUG "KKK " (buffer-substring-no-properties begin end)))
                (type (match-string 1))
                (content (match-string 2))
                (ht (http/parse-kvps content))
@@ -1102,7 +1037,7 @@ inserts comment at the end of the line."
            ;; download and embedded it.
            ((string= type "img")
             (let* ((img-url (gethash "src" ht))
-                   (ff (PDEBUG "IMG" img-url))
+                   ;; (ff (PDEBUG "IMG" img-url))
                    (ext (file-name-extension img-url)))
 
               (unless (or (string-match-p "data:image/.*?;base64" img-url)
@@ -1301,7 +1236,6 @@ inserts comment at the end of the line."
 
         (while (search-forward-regexp r-match-file nil t)
           (let ((start (match-beginning 0))
-                (end (match-end 0))
                 (file-A (match-string-no-properties 1))
                 (file-B (match-string-no-properties 2)))
             (PDEBUG "FILES: " file-A " " file-B)
@@ -1314,10 +1248,9 @@ inserts comment at the end of the line."
         (setf (caaar diff-file-regions) (1- (point-max)))))
 
     (unless diff-file-regions
-      (error "Failed to parse regions ..."))
+      (error "Failed to parse regions"))
 
-    (PDEBUG "DIFF-FILE-REGIONS:" diff-file-regions)
-    )
+    (PDEBUG "DIFF-FILE-REGIONS:" diff-file-regions))
 
   (let* ((ediff-ignore-similar-regions nil)
          (pt (point))
@@ -1399,7 +1332,29 @@ inserts comment at the end of the line."
    default-directory nil
    (lambda (x)
      (interactive)
-     (shell-command (format "touch \"%s\"" x)))))
+     (shell-command (format "touch \"%s\"" x))
+     (message "File %s touched." x))))
+
+
+
+(defun yc/open-with-external-app (&optional file)
+  "Open FILE with external app."
+  (interactive)
+  (let ((flist
+         (cl-case major-mode
+           ('dired-mode (dired-get-marked-files))
+           (t (list (or file (buffer-file-name))))))
+        (app (case system-type
+               ('darwin "open")
+               ('gnu/linux "xdg-open")
+               (t nil))))
+    (unless flist
+      (error "Not file to operate"))
+    (if app
+        (dolist (fn flist)
+          (PDEBUG "Open with cmd: " app fn)
+          (start-process "xdg-open" nil app fn))
+      (error "Can't find proper app to open file %s" file))))
 
 
 (provide 'yc-utils)

@@ -330,27 +330,6 @@ Call FUNC with ARGS."
   "Join all the strings in STRINGS with SEPARATOR in between."
   (mapconcat 'identity strings separator))
 
-
-
-(defun yc/open-with-external-app (&optional file)
-  "Open FILE with external app."
-  (interactive)
-  (let ((flist
-         (cl-case major-mode
-           ('dired-mode (dired-get-marked-files))
-           (t (list (or file (buffer-file-name))))))
-        (app (case system-type
-               ('darwin "open")
-               ('gnu/linux "xdg-open")
-               (t nil))))
-    (unless flist
-      (error "Not file to operate..."))
-    (if app
-        (dolist (fn flist)
-          (PDEBUG "Open with cmd: " app fn)
-          (start-process "xdg-open" nil app fn))
-      (error "Can't find proper app to open file %s." fn))))
-
 (defun s-trim-left (s)
   "Remove whitespace at the beginning of S."
   (save-match-data
