@@ -711,7 +711,12 @@ and is reversed for better performance.")
              (group (+? (or alnum "_"))) eow)
         (1 font-lock-keyword-face)
         (2 font-lock-type-face))
-       (,(rx (group (or "NEW" "DELETE")))
+       (,(rx bow (group
+                  (or "NEW" "DELETE"
+                      "DEC_ALWAYS_INLINE"
+                      "ALWAYS_INLINE"
+                      "NO_INLINE" "MAY_ALIAS"
+                      )) eow)
         (1 font-lock-keyword-face))
        (,(rx bow (group (+ (or upper "_" digit))) (* blank) "(")
         (1 font-lock-builtin-face))
