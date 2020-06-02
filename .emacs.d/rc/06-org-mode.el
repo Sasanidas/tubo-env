@@ -114,8 +114,8 @@ If `silent' is nil, print collected nodes before exit."
   (interactive)
   (when (and buffer-file-name
              (file-exists-p buffer-file-name)
-             (string-match-p ".*yangyingchao.gitub.io.*" buffer-file-name)
              (eq major-mode 'org-mode))
+    (delete-trailing-whitespace)
     (save-excursion
       (org-map-entries (lambda () (yc/org-custom-id-get (point) 'create)) nil 'file))))
 
@@ -137,25 +137,6 @@ If `silent' is nil, print collected nodes before exit."
   ;; modify syntax-entry, so electric-pair can work better.
   (modify-syntax-entry ?$ "\$")
   (modify-syntax-entry ?= "(=")
-
-  ;; update latex img directory.
-  (setq org-preview-latex-image-directory
-        (cond
-         ((and buffer-file-name
-               (string-match
-                (rx (group buffer-start (+? nonl) "yangyingchao.github.io/" ))
-                buffer-file-name))
-          (concat (match-string 1 buffer-file-name) "assets/img/"))
-
-         ((file-directory-p "images")
-          (expand-file-name "images")
-          )
-
-         (t "/tmp/")
-         )
-        )
-
-  (PDEBUG "LATEX_DIR: " org-preview-latex-image-directory)
   )
 
 (use-package org

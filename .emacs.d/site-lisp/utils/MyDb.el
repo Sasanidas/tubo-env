@@ -1,4 +1,4 @@
-;;; MyDb.el -- Brief introduction here.
+;;; MyDb.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yingchao.yang@icloud.com>
 
@@ -11,7 +11,7 @@
   :type 'String
   :group 'Mydb)
 
-(defun mydb/--dispatch-file (item)
+(defun mydb/do-dispatch-file (item)
   "Dispatch single ITEM."
   (interactive)
   (unless (file-exists-p item)
@@ -38,11 +38,23 @@
     (if (file-exists-p note-file)
         (with-temp-file note-file
           (insert-file-contents note-file)
-          (goto-char (point-min))
-          (if (search-forward-regexp
-               (rx bol "#+INTERLEAVE_PDF: " (group (+? nonl)) eol) nil t)
-              (replace-match (concat "#+INTERLEAVE_PDF: " target-file))
-            (warn "INTERLEAVE not found in file: %s" note-file))))
+          (save-excursion
+            (goto-char (point-min))
+            (if (search-forward-regexp
+                 (rx bol "#+INTERLEAVE_PDF: " (group (+? nonl)) eol) nil t)
+                (replace-match (concat "#+INTERLEAVE_PDF: " target-file))
+              (warn "INTERLEAVE not found in file: %s" note-file)))
+
+          (save-excursion
+            (goto-char (point-min))
+            (while (search-forward-regexp
+                    (format (rx bol ":NOTER_DOCUMENT: " (group (+? nonl) "%s") eol)
+                            (file-name-nondirectory target-file))
+                     nil t)
+              (replace-match (concat ":NOTER_DOCUMENT: " target-file)))))
+      (if (get-buffer (file-name-nondirectory note-file))
+          (with-temp-buffer (get-buffer (file-name-nondirectory note-file))
+                            (reload-file))))
 
     (message "%s --> %s" item target-dir)))
 
@@ -52,11 +64,11 @@
   (cond
    (buffer-file-name
 
-    (mydb/--dispatch-file buffer-file-name)
+    (mydb/do-dispatch-file buffer-file-name)
     (kill-buffer))
 
    ((equal major-mode 'dired-mode)
-    (mapc 'mydb/--dispatch-file (dired-get-marked-files))
+    (mapc 'mydb/do-dispatch-file (dired-get-marked-files))
     (revert-buffer))
 
    (t (error "Not handled: %S" major-mode))))
@@ -69,7 +81,7 @@
     (unless (file-directory-p directory)
       (error "Directory %s not accessible" directory))
 
-    (mapc 'mydb/--dispatch-file (directory-files-recursively directory ".*"))))
+    (mapc 'mydb/do-dispatch-file (directory-files-recursively directory ".*"))))
 
 (defun mydb/get-note-file (input)
   "Return note file for INPUT."

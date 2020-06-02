@@ -546,7 +546,14 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
       (layout-save-current))
     )
 
-  (interleave-sync-pdf-page-next))
+  (interleave-sync-pdf-page-next)
+  )
+
+(use-package org-noter
+  :commands (org-noter)
+  ;; :hook ((org-noter-doc-mode . yc/interleave-mode-hook))
+  )
+
 
 (use-package org-pdfview
   :commands (org-pdfview-open)
