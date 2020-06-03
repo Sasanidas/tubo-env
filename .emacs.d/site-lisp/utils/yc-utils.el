@@ -19,8 +19,10 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (let* ((flist (directory-files (expand-file-name "~/Desktop/")  t ".*.png"))
          (in-file (ivy-read "Choose a file to copy: "
                             flist))
+         (image-dir (concat  default-directory "/images"))
          (target-dir (read-directory-name "Select target folder to add: "
-                                          default-directory
+                                          (if (file-directory-p image-dir)
+                                              image-dir default-directory)
                                           nil
                                           t))
          (target-name (ivy-read "Input new name: "

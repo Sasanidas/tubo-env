@@ -460,9 +460,34 @@
 
 ;; in org file: [[pdfview:/path/to/myfile.pdf::42][My file Description]]
 
-(use-package MyDb
-  :commands (mydb/dispatch-file mydb/dispatch-directory mydb/open-note-file
-                                mydb/get-note-file))
+
+;; https://github.com/rudolfochrist/interleave
+(use-package my-noter
+  :commands (my-noter-mode my-noter
+                           my-noter/dispatch-file my-noter/dispatch-directory my-noter/open-note-file
+                           my-noter/get-note-file)
+  :hook ((my-noter-mode . yc/my-noter-mode-hook)
+         )
+  :custom
+  (my-noter-disable-narrowing t)
+  :config
+  (progn
+    (defalias 'my-noter-open-notes-file-for-pdf 'my-noter/open-note-file))
+  :defer t)
+
+(defun yc/my-noter-mode-hook ()
+  "Description."
+  (unless (layout-restore)
+    (PDEBUG "BUF" (current-buffer))
+    (PDEBUG "FILE:" buffer-file-name)
+    (when (s-ends-with? ".pdf" buffer-file-name)
+      (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
+    (dolist (win (window-list))
+      (select-window win)
+      (layout-save-current))
+    )
+  ;; (my-noter-sync-pdf-page-next)
+  )
 
  ;; PDF
 (use-package pdf-tools
@@ -477,7 +502,7 @@
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
               ("r" . pdf-history-forward)
-              ("i" . mydb/open-note-file))
+              ("i" . my-noter/open-note-file))
   :config
   (advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
   (unless (file-executable-p pdf-info-epdfinfo-program)
@@ -508,7 +533,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
                                buffer-file-name)))
             (page (format "%d" (pdf-view-current-page)))
             (image-name (concat (s-trim checksum) "-P" page ".png"))
-            (note-file (mydb/get-note-file buffer-file-name))
+            (note-file (my-noter/get-note-file buffer-file-name))
             )
 
         (apply func args)
@@ -522,37 +547,6 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
     (apply func args)))
 
 
-;; https://github.com/rudolfochrist/interleave
-(use-package interleave
-  :commands (interleave-mode)
-  :pin melpa
-  :hook ((interleave-mode . yc/interleave-mode-hook))
-  :custom
-  (interleave-disable-narrowing t)
-  :config
-  (progn
-    (defalias 'interleave-open-notes-file-for-pdf 'mydb/open-note-file))
-  :defer t)
-
-(defun yc/interleave-mode-hook ()
-  "Description."
-  (unless (layout-restore)
-    (PDEBUG "BUF" (current-buffer))
-    (PDEBUG "FILE:" buffer-file-name)
-    (when (s-ends-with? ".pdf" buffer-file-name)
-      (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
-    (dolist (win (window-list))
-      (select-window win)
-      (layout-save-current))
-    )
-
-  (interleave-sync-pdf-page-next)
-  )
-
-(use-package org-noter
-  :commands (org-noter)
-  ;; :hook ((org-noter-doc-mode . yc/interleave-mode-hook))
-  )
 
 
 (use-package org-pdfview
