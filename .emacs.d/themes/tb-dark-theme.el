@@ -461,7 +461,5 @@
    `(flycheck-error-list-filename  ((t (:foreground "#f8f8f8"))))
    ))
 
-
-
 (provide 'tb-dark)
- ;;;;; tb-dark-theme.el ends here
+;;; tb-dark-theme.el ends here

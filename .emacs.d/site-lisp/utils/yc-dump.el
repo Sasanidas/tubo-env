@@ -21,7 +21,7 @@
   "Do dump."
   (dump-emacs-portable "~/.emacs.d/emacs.pdmp"))
 
- (dump-emacs-portable "~/.emacs.d/emacs.pdmp")
+ ;; (dump-emacs-portable "~/.emacs.d/emacs.pdmp")
 
 (defun yc/dump-emacs ()
   "Start another process to dump Emacs."
