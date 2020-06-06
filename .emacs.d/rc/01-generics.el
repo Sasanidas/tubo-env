@@ -125,7 +125,7 @@
    (:eval (if buffer-file-name mode-line-remote ""))
    (:eval (if buffer-file-name " " ""))
 
-                                        ; Position, including warning for 80 columns
+   ;; Position, including warning for 80 columns
    "%p ("
    (:propertize "%l," 'face 'mode-line)
    (:eval (propertize "%c" 'face
@@ -134,7 +134,7 @@
                         'mode-line)))
    ") "
 
-                                        ; File size
+   ;; File size
    (:eval (if buffer-file-name "%I " ""))
 
    " "
@@ -142,7 +142,6 @@
    "%m"
 
    ;; LSP status, if possible
-
    (:eval
     (if (bound-and-true-p lsp-mode)
         yc/modeline--lsp
