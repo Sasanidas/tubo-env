@@ -38,11 +38,17 @@
      load-path)))
   ")")
 
-(defun yc/insert-key-sequence ()
-  "Insert key sequence."
+(defun yc/insert-key-sequence-kbd ()
+  "Insert key sequence (with kbd function)."
   (interactive)
   (let ((key (read-key-sequence "Stoke:")) )
     (insert (format "(kbd \"%s\")" (key-description key)))))
+
+(defun yc/insert-key-sequence ()
+  "Insert key sequence."
+  (interactive)
+  (yc/insert-key-sequence-kbd)
+  (yc/eval-and-insert-comment))
 
 (defun my-lisp-hook ()
   "Hook to run for Lisp mode."
@@ -61,7 +67,6 @@
 
 (put 'add-hook 'lisp-indent-function 'defun)
 
-
 (defun yc/byte-compile-current-elisp ()
   "Byte compile Lisp file."
   (interactive)
@@ -76,7 +81,10 @@
   :mode (((rx "." (or "el" "sexp") eol) . emacs-lisp-mode))
   :bind (:map emacs-lisp-mode-map
               (;; (kbd "C-c M-k")
-               [3 134217835]. yc/insert-key-sequence))
+               [3 134217835] . yc/insert-key-sequence-kbd)
+              (;; (kbd "C-c M-K")
+               [3 134217803] . yc/insert-key-sequence)
+              )
   :hook ((emacs-lisp-mode . my-lisp-hook)
          (lisp-mode my-lisp-hook))
   :config

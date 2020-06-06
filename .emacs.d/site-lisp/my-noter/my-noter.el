@@ -36,7 +36,8 @@
 ;; Link to the original My-Noter package:
 ;; https://github.com/rudolfochrist/my-noter
 
-
+(require '02-functions)
+(autoload 'ffap-url-p "ffap" ""  nil)
 
 (defcustom my-noter/root-directory   (expand-file-name "~/Documents/Database")
   "Root directory of my database."
@@ -84,8 +85,8 @@
                             (file-name-nondirectory target-file))
                      nil t)
               (replace-match (concat ":NOTER_DOCUMENT: " target-file)))))
-      (if (get-buffer (file-name-nondirectory note-file))
-          (with-temp-buffer (get-buffer (file-name-nondirectory note-file))
+      (aif (get-buffer (file-name-nondirectory note-file))
+          (with-temp-buffer it
                             (reload-file))))
 
     (message "%s --> %s" item target-dir)))
@@ -305,8 +306,8 @@ This makes moving notes out of the root heading easier."
   :group 'my-noter
   :type 'boolean)
 
-(defcustom my-noter-insert-note-no-questions nil
-  "When non-nil, `my-noter-insert-note' won't ask for a title and will always insert a new note.
+(defcustom my-noter-add-note-no-questions nil
+  "When non-nil, `my-noter-add-note' won't ask for a title and will always insert a new note.
 The title used will be the default one."
   :group 'my-noter
   :type 'boolean)
@@ -454,115 +455,6 @@ The title used will be the default one."
        (cond ((eq prop-value 'disable) nil)
              (prop-value)
              (t ,variable)))))
-
-(defun my-noter--create-session (ast document-property-value notes-file-path)
-  (let* ((raw-value-not-empty (> (length (org-element-property :raw-value ast)) 0))
-         (display-name (if raw-value-not-empty
-                           (org-element-property :raw-value ast)
-                         (file-name-nondirectory document-property-value)))
-         ;; (frame-name (format "Emacs my-noter - %s" display-name))
-
-         (document (find-file-noselect document-property-value))
-         (document-path (expand-file-name document-property-value))
-         (document-major-mode (buffer-local-value 'major-mode document))
-         (document-buffer-name
-          (generate-new-buffer-name (concat (unless raw-value-not-empty "my-noter: ") display-name)))
-         (document-buffer   document
-          ;; (if (eq document-major-mode 'nov-mode)
-          ;;     document
-          ;;   (make-indirect-buffer document document-buffer-name t))
-          )
-
-         (notes-buffer (or (buffer-base-buffer) (current-buffer))
-          ;; (make-indirect-buffer
-          ;;  (or (buffer-base-buffer) (current-buffer))
-          ;;  (generate-new-buffer-name (concat "Notes of " display-name)) t)
-          )
-
-         (session
-          (make-my-noter--session
-           :id (my-noter--get-new-id)
-           :display-name display-name
-           :frame (selected-frame)
-           ;; (if (or my-noter-always-create-frame
-           ;;         (catch 'has-session
-           ;;           (dolist (test-session my-noter--sessions)
-           ;;             (when (eq (my-noter--session-frame test-session) (selected-frame))
-           ;;               (throw 'has-session t)))))
-           ;;     (make-frame `((name . ,frame-name) (fullscreen . maximized)))
-           ;;   (set-frame-parameter nil 'name frame-name)
-           ;;   (selected-frame))
-           :doc-mode document-major-mode
-           :property-text document-property-value
-           :notes-file-path notes-file-path
-           :doc-buffer document-buffer
-           :notes-buffer notes-buffer
-           :level (org-element-property :level ast)
-           :window-behavior (my-noter--property-or-default notes-window-behavior)
-           :window-location (my-noter--property-or-default notes-window-location)
-           :doc-split-fraction (my-noter--property-or-default doc-split-fraction)
-           :auto-save-last-location (my-noter--property-or-default auto-save-last-location)
-           :hide-other (my-noter--property-or-default hide-other)
-           :closest-tipping-point (my-noter--property-or-default closest-tipping-point)
-           :modified-tick -1))
-
-         (target-location my-noter--start-location-override)
-         (starting-point (point)))
-
-    (add-hook 'delete-frame-functions 'my-noter--handle-delete-frame)
-    (push session my-noter--sessions)
-
-    (with-current-buffer document-buffer
-      (cond
-       ;; NOTE(nox): PDF Tools
-       ((eq document-major-mode 'pdf-view-mode)
-        (setq buffer-file-name document-path)
-        (pdf-view-mode)
-        (add-hook 'pdf-view-after-change-page-hook 'my-noter--doc-location-change-handler nil t))
-
-       ;; NOTE(nox): DocView
-       ((eq document-major-mode 'doc-view-mode)
-        (setq buffer-file-name document-path)
-        (doc-view-mode)
-        (advice-add 'doc-view-goto-page :after 'my-noter--location-change-advice))
-
-       ;; NOTE(nox): Nov.el
-       ((eq document-major-mode 'nov-mode)
-        (rename-buffer document-buffer-name)
-        (advice-add 'nov-render-document :after 'my-noter--nov-scroll-handler)
-        (add-hook 'window-scroll-functions 'my-noter--nov-scroll-handler nil t))
-
-       (t (error "This document handler is not supported :/")))
-
-      (my-noter-doc-mode 1)
-      (setq my-noter--session session)
-      (add-hook 'kill-buffer-hook 'my-noter--handle-kill-buffer nil t))
-
-    (with-current-buffer notes-buffer
-      (my-noter-notes-mode 1)
-      ;; NOTE(nox): This is needed because a session created in an indirect buffer would use the point of
-      ;; the base buffer (as this buffer is indirect to the base!)
-      (goto-char starting-point)
-      (setq buffer-file-name notes-file-path
-            my-noter--session session
-            fringe-indicator-alist '((truncation . nil)))
-      (add-hook 'kill-buffer-hook 'my-noter--handle-kill-buffer nil t)
-      (add-hook 'window-scroll-functions 'my-noter--set-notes-scroll nil t)
-      (my-noter--set-text-properties (my-noter--parse-root (vector notes-buffer document-property-value))
-                                      (my-noter--session-id session))
-      (unless target-location
-        (setq target-location (my-noter--parse-location-property (my-noter--get-containing-heading t)))))
-
-    (my-noter--setup-windows session)
-
-    ;; NOTE(nox): This timer is for preventing reflowing too soon.
-    (run-with-idle-timer
-     0.05 nil
-     (lambda ()
-       (with-current-buffer document-buffer
-         (let ((my-noter--inhibit-location-change-handler t))
-           (when target-location (my-noter--doc-goto-location target-location)))
-         (my-noter--doc-location-change-handler))))))
 
 (defun my-noter--valid-session (session)
   (when session
@@ -1390,10 +1282,17 @@ relative to."
             (throw 'break t)))))))
 
 (defsubst my-noter--check-doc-prop (doc-prop)
-  (and doc-prop (not (file-directory-p doc-prop)) (file-readable-p doc-prop)))
+  (and doc-prop
+       (or
+        (ffap-url-p doc-prop)
+        (and (not (file-directory-p doc-prop)) (file-readable-p doc-prop)))))
 
 (defun my-noter--get-or-read-document-property (inherit-prop &optional force-new)
-  (let ((doc-prop (and (not force-new) (org-entry-get nil my-noter-property-doc-file inherit-prop))))
+  (let ((doc-prop
+         (and (not force-new)
+              (org-entry-get nil my-noter-property-doc-file inherit-prop))))
+
+    (PDEBUG "DOC-PROP:" doc-prop)
     (unless (my-noter--check-doc-prop doc-prop)
       (setq doc-prop nil)
 
@@ -1862,144 +1761,6 @@ Only available with PDF Tools."
 
     (t (user-error "This command is only supported on PDF Tools.")))))
 
-;; (defun my-noter-insert-note (&optional precise-info)
-;;   "Insert note associated with the current location.
-
-;; This command will prompt for a title of the note and then insert
-;; it in the notes buffer. When the input is empty, a title based on
-;; `my-noter-default-heading-title' will be generated.
-
-;; If there are other notes related to the current location, the
-;; prompt will also suggest them. Depending on the value of the
-;; variable `my-noter-closest-tipping-point', it may also
-;; suggest the closest previous note.
-
-;; PRECISE-INFO makes the new note associated with a more
-;; specific location (see `my-noter-insert-precise-note' for more
-;; info).
-
-;; When you insert into an existing note and have text selected on
-;; the document buffer, the variable `my-noter-insert-selected-text-inside-note'
-;; defines if the text should be inserted inside the note."
-;;   (interactive)
-;;   (my-noter--with-valid-session
-;;    (let* ((ast (my-noter--parse-root)) (contents (org-element-contents ast))
-;;           (window (my-noter--get-notes-window 'force))
-;;           (selected-text
-;;            (cond
-;;             ((eq (my-noter--session-doc-mode session) 'pdf-view-mode)
-;;              (when (pdf-view-active-region-p)
-;;                (mapconcat 'identity (pdf-view-active-region-text) ? )))
-
-;;             ((eq (my-noter--session-doc-mode session) 'nov-mode)
-;;              (when (region-active-p)
-;;                (buffer-substring-no-properties (mark) (point))))))
-;;           force-new
-;;           (location (my-noter--doc-approx-location (or precise-info 'interactive) (gv-ref force-new)))
-;;           (view-info (my-noter--get-view-info (my-noter--get-current-view) location)))
-
-;;      (let ((inhibit-quit t))
-;;        (with-local-quit
-;;          (select-frame-set-input-focus (window-frame window))
-;;          (select-window window)
-
-;;          ;; IMPORTANT(nox): Need to be careful changing the next part, it is a bit
-;;          ;; complicated to get it right...
-
-;;          (let ((point (point))
-;;                (minibuffer-local-completion-map my-noter--completing-read-keymap)
-;;                collection default default-begin title selection
-;;                (empty-lines-number (if my-noter-separate-notes-from-heading 2 1)))
-
-;;            (cond
-;;             ;; NOTE(nox): Both precise and without questions will create new notes
-;;             ((or precise-info force-new)
-;;              (setq default (and selected-text (replace-regexp-in-string "\n" " " selected-text))))
-;;             (my-noter-insert-note-no-questions)
-;;             (t
-;;              (dolist (note-cons (my-noter--view-info-notes view-info))
-;;                (let ((display (org-element-property :raw-value (car note-cons)))
-;;                      (begin (org-element-property :begin (car note-cons))))
-;;                  (push (cons display note-cons) collection)
-;;                  (when (and (>= point begin) (> begin (or default-begin 0)))
-;;                    (setq default display
-;;                          default-begin begin))))))
-
-;;            (setq collection (nreverse collection)
-;;                  title (if my-noter-insert-note-no-questions
-;;                            default
-;;                          (completing-read "Note: " collection nil nil nil nil default))
-;;                  selection (unless my-noter-insert-note-no-questions (cdr (assoc title collection))))
-
-;;            (if selection
-;;                ;; NOTE(nox): Inserting on an existing note
-;;                (let* ((note (car selection))
-;;                       (insert-before-element (cdr selection))
-;;                       (has-content
-;;                        (eq (org-element-map (org-element-contents note) org-element-all-elements
-;;                              (lambda (element)
-;;                                (if (my-noter--check-location-property element)
-;;                                    'stop
-;;                                  (not (memq (org-element-type element) '(section property-drawer)))))
-;;                              nil t)
-;;                            t)))
-;;                  (when has-content (setq empty-lines-number 2))
-;;                  (if insert-before-element
-;;                      (goto-char (org-element-property :begin insert-before-element))
-;;                    (goto-char (org-element-property :end note)))
-
-
-;;                  (if (org-at-heading-p)
-;;                      (progn
-;;                        (org-N-empty-lines-before-current empty-lines-number)
-;;                        (forward-line -1))
-;;                    (unless (bolp) (insert "\n"))
-;;                    (org-N-empty-lines-before-current (1- empty-lines-number)))
-
-;;                  (when (and my-noter-insert-selected-text-inside-note selected-text) (insert selected-text)))
-
-;;              ;; NOTE(nox): Inserting a new note
-;;              (let ((reference-element-cons (my-noter--view-info-reference-for-insertion view-info))
-;;                    level)
-;;                (when (zerop (length title))
-;;                  (setq title (replace-regexp-in-string (regexp-quote "$p$") (number-to-string (car location))
-;;                                                        my-noter-default-heading-title)))
-
-;;                (if reference-element-cons
-;;                    (progn
-;;                      (cond
-;;                       ((eq (car reference-element-cons) 'before)
-;;                        (goto-char (org-element-property :begin (cdr reference-element-cons))))
-;;                       ((eq (car reference-element-cons) 'after)
-;;                        (goto-char (org-element-property :end (cdr reference-element-cons)))))
-
-;;                      ;; NOTE(nox): This is here to make the automatic "should insert blank" work better.
-;;                      (when (org-at-heading-p) (backward-char))
-
-;;                      (setq level (org-element-property :level (cdr reference-element-cons))))
-
-;;                  (goto-char (org-element-map contents 'section
-;;                               (lambda (section) (org-element-property :end section))
-;;                               nil t org-element-all-elements))
-;;                  (setq level (1+ (org-element-property :level ast))))
-
-;;                ;; NOTE(nox): This is needed to insert in the right place
-;;                (outline-show-entry)
-;;                (my-noter--insert-heading level title empty-lines-number location)
-;;                ;; (when (my-noter--session-hide-other session) (org-overview))
-
-;;                ;; (setf (my-noter--session-num-notes-in-view session)
-;;                ;;       (1+ (my-noter--session-num-notes-in-view session)))
-;;                ))
-
-;;            (org-show-set-visibility t)
-;;            (org-cycle-hide-drawers 'all)
-;;            (org-cycle-show-empty-lines t)))
-;;        (when quit-flag
-;;          ;; NOTE(nox): If this runs, it means the user quitted while creating a note, so
-;;          ;; revert to the previous window.
-;;          (select-frame-set-input-focus (my-noter--session-frame session))
-;;          (select-window (get-buffer-window (my-noter--session-doc-buffer session))))))))
 
 (defun my-noter-insert-precise-note (&optional toggle-no-questions)
   "Insert note associated with a specific location.
@@ -2011,22 +1772,21 @@ When text is selected, it will automatically choose the top of
 the selected text as the location and the text itself as the
 title of the note (you may change it anyway!).
 
-See `my-noter-insert-note' docstring for more."
+See `my-noter-add-note' docstring for more."
   (interactive "P")
   (my-noter--with-valid-session
-   (let ((my-noter-insert-note-no-questions (if toggle-no-questions
-                                                 (not my-noter-insert-note-no-questions)
-                                               my-noter-insert-note-no-questions)))
-     (my-noter-insert-note (my-noter--get-precise-info)))))
+   (let ((my-noter-add-note-no-questions (if toggle-no-questions
+                                                 (not my-noter-add-note-no-questions)
+                                               my-noter-add-note-no-questions)))
+     (my-noter-add-note (my-noter--get-precise-info)))))
 
-
-(defun my-noter-insert-note-toggle-no-questions ()
+(defun my-noter-add-note-toggle-no-questions ()
   "Insert note associated with the current location.
-This is like `my-noter-insert-note', except it will toggle `my-noter-insert-note-no-questions'"
+This is like `my-noter-add-note', except it will toggle `my-noter-add-note-no-questions'"
   (interactive)
   (my-noter--with-valid-session
-   (let ((my-noter-insert-note-no-questions (not my-noter-insert-note-no-questions)))
-     (my-noter-insert-note))))
+   (let ((my-noter-add-note-no-questions (not my-noter-add-note-no-questions)))
+     (my-noter-add-note))))
 
 (defmacro my-noter--map-ignore-headings-with-doc-file (contents match-first &rest body)
   `(let (ignore-until-level)
@@ -2166,8 +1926,8 @@ As such, it will only work when the notes window exists."
   "Minor mode for the document buffer.
 Keymap:
 \\{my-noter-doc-mode-map}"
-  :keymap `((,(kbd   "i")   . my-noter-insert-note)
-            (,(kbd "C-i")   . my-noter-insert-note-toggle-no-questions)
+  :keymap `((,(kbd   "i")   . my-noter-add-note)
+            (,(kbd "C-i")   . my-noter-add-note-toggle-no-questions)
             (,(kbd "M-i")   . my-noter-insert-precise-note)
             (,(kbd   "q")   . my-noter-kill-session)
             (,(kbd "M-p")   . my-noter-sync-prev-page-or-chapter)
@@ -2245,7 +2005,7 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
 (defvar my-noter-org-buffer nil
   "Org notes buffer name.")
 
-(defvar my-noter-pdf-buffer nil
+(defvar my-noter-doc-buffer nil
   "Name of PDF buffer associated with `my-noter-org-buffer'.")
 
 (defvar my-noter--window-configuration nil
@@ -2260,22 +2020,33 @@ Use WINDOW for optional window properties passed to `image-mode'."
 ;;;###autoload
 (define-obsolete-variable-alias 'my-noter--pdf-current-page-fn 'my-noter-pdf-current-page-fn "1.3.0")
 (defvar my-noter-pdf-current-page-fn #'my-noter--current-page
-  "Function to call to display the current PDF page.")
+  "Function to call to display the current page.")
 
 ;;;###autoload
 (define-obsolete-variable-alias 'my-noter--pdf-next-page-fn 'my-noter-pdf-next-page-fn "1.3.0")
 (defvar my-noter-pdf-next-page-fn #'doc-view-next-page
-  "Function to call to display the next PDF page.")
+  "Function to call to display the next page.")
 
 ;;;###autoload
 (define-obsolete-variable-alias 'my-noter--pdf-previous-page-fn 'my-noter-pdf-previous-page-fn "1.3.0")
 (defvar my-noter-pdf-previous-page-fn #'doc-view-previous-page
-  "Function to call to display the previous PDF page.")
+  "Function to call to display the previous page.")
 
 ;;;###autoload
-(define-obsolete-variable-alias 'my-noter--pdf-goto-page-fn 'my-noter-pdf-goto-page-fn "1.3.0")
-(defvar my-noter-pdf-goto-page-fn #'doc-view-goto-page
-  "Function to call to jump to a given PDF page.")
+(defun my-noter-goto-doc-page (page)
+  "Goto PAGE of document.."
+  (interactive)
+  (cond
+   ((eq major-mode 'pdf-view-mode)  (pdf-view-goto-page page))
+   ((memq major-mode '(doc-view-mode pdf-view-mode))
+
+    (doc-view-goto-page page))
+
+   (t
+    (when (>= (point-max) page)
+      (forward-char (- page (point)))
+      (recenter)))))
+
 
 ;;;###autoload
 (define-obsolete-variable-alias
@@ -2328,14 +2099,14 @@ taken as columns."
 (declare-function pdf-view-scroll-up-or-next-page "pdf-view.el")
 (declare-function pdf-view-scroll-down-or-previous-page "pdf-view.el")
 
-(eval-after-load 'pdf-view ; if/when `pdf-tools' is loaded
-  '(progn
-     ;; Function wrapper for the macro `pdf-view-current-page'
-     (setq my-noter-pdf-next-page-fn #'pdf-view-next-page
-           my-noter-pdf-previous-page-fn #'pdf-view-previous-page
-           my-noter-pdf-goto-page-fn #'pdf-view-goto-page
-           my-noter-pdf-scroll-up-or-next-page-fn #'pdf-view-scroll-up-or-next-page
-           my-noter-pdf-scroll-down-or-previous-page-fn #'pdf-view-scroll-down-or-previous-page)))
+;; (eval-after-load 'pdf-view ; if/when `pdf-tools' is loaded
+;;   '(progn
+;;      ;; Function wrapper for the macro `pdf-view-current-page'
+;;      (setq my-noter-pdf-next-page-fn #'pdf-view-next-page
+;;            my-noter-pdf-previous-page-fn #'pdf-view-previous-page
+;;            my-noter-pdf-goto-page-fn #'pdf-view-goto-page
+;;            my-noter-pdf-scroll-up-or-next-page-fn #'pdf-view-scroll-up-or-next-page
+;;            my-noter-pdf-scroll-down-or-previous-page-fn #'pdf-view-scroll-down-or-previous-page)))
 
 (define-obsolete-variable-alias '*my-noter--page-marker* 'my-noter-page-marker "1.3.0")
 (make-variable-buffer-local
@@ -2360,7 +2131,7 @@ taken as columns."
         (when (re-search-forward "^#\\+noter_document: \\(.*\\)" nil :noerror)
           (match-string 1))))))
 
-(defun my-noter--headline-pdf-path (buffer)
+(defun my-noter--headline-doc-path (buffer)
   "Return the NOTER_DOCUMENT property of the current headline in BUFFER."
   (with-current-buffer buffer
     (save-excursion
@@ -2369,11 +2140,9 @@ taken as columns."
          "CONTENT: " headline
          "HEADLINE: " (org-element-type headline)
          "FF:" (org-entry-get nil my-noter-property-doc-file t))
-        (when (and (or (equal (org-element-type headline) 'headline)
-                       (equal (org-element-type headline) 'node-property))
-                   (org-entry-get nil my-noter-property-doc-file t))
+        (awhen (org-entry-get nil my-noter-property-doc-file t)
           (setq my-noter-multi-pdf-notes-file t)
-          (org-entry-get nil my-noter-property-doc-file t))))))
+          it)))))
 
 (defun my-noter--open-file (split-window)
   "Opens the pdf file in besides the notes buffer.
@@ -2381,34 +2150,40 @@ taken as columns."
 SPLIT-WINDOW is a function that actually splits the window, so it must be either
 `split-window-right' or `split-window-below'."
   (let* ((buf (current-buffer))
-         (pdf-file-name
-          (or (my-noter--headline-pdf-path buf)
+         (doc-file-name
+          (or (my-noter--headline-doc-path buf)
               (my-noter--find-pdf-path buf))))
     (PDEBUG "CURRNET-BUFF:" buf
             "POINT: " (point)
-            "HEADLINE-PDF: " (my-noter--headline-pdf-path buf)
+            "HEADLINE-PDF: " (my-noter--headline-doc-path buf)
             "FIND-PDF:" (my-noter--find-pdf-path buf)
             )
-    (unless pdf-file-name
-      (setq pdf-file-name
+    (unless doc-file-name
+      (setq doc-file-name
             (read-file-name "No NOTER_DOCUMENT property found. Please specify path: " nil nil t))
 
       ;; Check whether we have any entry at point with `org-entry-properties' before
       ;; prompting if the user wants multi-pdf.
       (if (and (org-entry-properties) (y-or-n-p "Is this multi-pdf? "))
-          (org-entry-put (point) "NOTER_DOCUMENT" pdf-file-name)
+          (org-entry-put (point) "NOTER_DOCUMENT" doc-file-name)
         (save-excursion
           (goto-char (point-min))
-          (insert "#+NOTER_DOCUMENT: " pdf-file-name))))
+          (insert "#+NOTER_DOCUMENT: " doc-file-name))))
+
     (delete-other-windows)
     (funcall split-window)
     (when (integerp my-noter-split-lines)
       (if (eql my-noter-split-direction 'horizontal)
           (enlarge-window my-noter-split-lines)
         (enlarge-window-horizontally my-noter-split-lines)))
-    (find-file (expand-file-name pdf-file-name))
+
+    (aif (ffap-url-p doc-file-name)
+        (eww it)
+        (find-file (expand-file-name doc-file-name)))
+
+
     (my-noter-pdf-mode 1)
-    pdf-file-name))
+    doc-file-name))
 
 (defun my-noter--goto-parent-headline (property)
   "Traverse the tree until the parent headline.
@@ -2519,10 +2294,14 @@ It (possibly) narrows the subtree when found."
 Inserts a newline into the notes buffer if INSERT-NEWLINE-MAYBE
 is non-nil.
 If POSITION is non-nil move point to it."
-  (if (or (derived-mode-p 'doc-view-mode)
-          (derived-mode-p 'pdf-view-mode))
-      (switch-to-buffer-other-window my-noter-org-buffer)
-    (switch-to-buffer my-noter-org-buffer))
+
+  (PDEBUG "CURRENT-BUFF:" (current-buffer)
+          "EQ" (eq (buffer-name) my-noter-org-buffer))
+  (if (eq (buffer-name) my-noter-org-buffer)
+      (switch-to-buffer my-noter-org-buffer)
+    (switch-to-buffer-other-window my-noter-org-buffer)
+    )
+
   (when (integerp position)
     (goto-char position))
   (when insert-newline-maybe
@@ -2536,13 +2315,16 @@ If POSITION is non-nil move point to it."
     (redisplay)
     ;; Insert a new line if not already on a new line
     (when (not (looking-back "^ *" (line-beginning-position)))
-      (org-return))))
+      (org-return))
+    ))
 
-(defun my-noter--switch-to-pdf-buffer ()
+(defun my-noter--switch-to-doc-buffer ()
   "Switch to the pdf buffer."
-  (if (derived-mode-p 'org-mode)
-      (switch-to-buffer-other-window my-noter-pdf-buffer)
-    (switch-to-buffer my-noter-pdf-buffer)))
+  (switch-to-buffer-other-window my-noter-doc-buffer)
+  ;; (if (derived-mode-p 'org-mode)
+  ;;     (switch-to-buffer-other-window my-noter-doc-buffer)
+  ;;   (switch-to-buffer my-noter-doc-buffer))
+  )
 
 (defun my-noter--goto-insert-position ()
   "Move the point to the right insert postion.
@@ -2578,8 +2360,9 @@ Return the position of the newly inserted heading."
 (defun my-noter--create-new-note (document page &optional selected-text)
   "Create a new headline for the page PAGE."
   (PDEBUG "ENTER: page: " page)
-  (unless (and document
-               (file-exists-p document))
+  (unless (or (ffap-url-p document)
+              (and document
+         (file-exists-p document)))
     (warn "Document not specified..."))
 
   (let ((title (completing-read "Note: " nil nil nil nil nil
@@ -2597,7 +2380,7 @@ Return the position of the newly inserted heading."
 
       (org-entry-put nil my-noter-property-doc-file
                      (or document
-                         (my-noter--headline-pdf-path (current-buffer))
+                         (my-noter--headline-doc-path (current-buffer))
                          (my-noter--find-pdf-path (current-buffer))))
       (org-entry-put nil my-noter-property-note-location (number-to-string page))
 
@@ -2609,7 +2392,7 @@ Return the position of the newly inserted heading."
 
     (my-noter--switch-to-org-buffer t new-note-position)))
 
-(defun my-noter-add-note ()
+(defun my-noter-add-note (&optional precise-info)
   "Insert note associated with the current location.
 
 This command will prompt for a title of the note and then insert
@@ -2629,6 +2412,7 @@ When you insert into an existing note and have text selected on
 the document buffer, the variable `my-noter-insert-selected-text-inside-note'
 defines if the text should be inserted inside the note."
   (interactive)
+  (PDEBUG "INFO: " precise-info)
   (let* ((page (car (my-noter--doc-approx-location-cons)))
          (position (my-noter--go-to-page-note page))
          (selected-text
@@ -2637,13 +2421,14 @@ defines if the text should be inserted inside the note."
             (when (pdf-view-active-region-p)
               (mapconcat 'identity (pdf-view-active-region-text) ? )))
 
-           ((eq major-mode 'nov-mode)
+           (t
             (when (region-active-p)
               (buffer-substring-no-properties (mark) (point))))))
 
-         (buffer-file-name (or buffer-file-name (bound-and-true-p nov-file-name)))
-         (document-path (or buffer-file-name buffer-file-truename
-                            (error "This buffer does not seem to be visiting any file"))))
+         (document-path (my-noter/get-document-path)))
+
+    (if (region-active-p)
+        (deactivate-mark))
 
     (PDEBUG "TEXT:" selected-text)
     (PDEBUG "DOCUMENT-PATH:" document-path)
@@ -2652,19 +2437,39 @@ defines if the text should be inserted inside the note."
       (my-noter--create-new-note document-path page selected-text))))
 
 (define-obsolete-function-alias
-  'my-noter--sync-pdf-page-current 'my-noter-sync-pdf-page-current "1.3.0")
+  'my-noter--sync-pdf-page-current 'my-noter-sync-page-current "1.3.0")
 
-(defun my-noter-sync-pdf-page-current ()
-  "Open PDF page for currently visible notes."
+(defun my-noter/eww-after-render ()
+  "Function to run after eww is rendered."
+  (remove-hook 'eww-after-render-hook 'my-noter/eww-after-render)
+  (my-noter-sync-page-current))
+
+(defun my-noter-sync-page-current ()
+  "Open page for currently visible notes."
   (interactive)
   (my-noter--switch-to-org-buffer)
-  (let ((pdf-page (string-to-number
-                   (org-entry-get-with-inheritance my-noter-property-note-location))))
-    (when (and (integerp pdf-page)
-               (> pdf-page 0)) ; The page number needs to be a positive integer
+  (let ((page (string-to-number
+               (org-entry-get-with-inheritance my-noter-property-note-location)))
+        (doc-path (my-noter--headline-doc-path (current-buffer))))
+    (when (and (integerp page)
+               (> page 0)) ; The page number needs to be a positive integer
       (my-noter--narrow-to-subtree)
-      (my-noter--switch-to-pdf-buffer)
-      (funcall my-noter-pdf-goto-page-fn pdf-page))))
+      (my-noter--switch-to-doc-buffer)
+
+      (PDEBUG "CURNET-BUFF:" (current-buffer)
+              "DOC-PATH: " doc-path
+              "CURRENT-URL: " (eww-current-url)
+              )
+      ;; check if we need to update doc content...
+      (cond
+       ((ffap-url-p doc-path)
+        (unless (string-equal doc-path (eww-current-url))
+          (add-hook 'eww-after-render-hook 'my-noter/eww-after-render)
+          (eww doc-path)
+          )
+        )
+       )
+      (my-noter-goto-doc-page page))))
 
 (define-obsolete-function-alias
   'my-noter--sync-pdf-page-previous 'my-noter-sync-pdf-page-previous "1.3.0")
@@ -2680,13 +2485,13 @@ This show the previous notes and synchronizes the PDF to the right page number."
   (my-noter--narrow-to-subtree)
   (org-show-subtree)
   (org-cycle-hide-drawers t)
-  (let ((pdf-page (string-to-number
+  (let ((page (string-to-number
                    (org-entry-get-with-inheritance my-noter-property-note-location))))
-    (when (and (integerp pdf-page)
-               (> pdf-page 0)) ; The page number needs to be a positive integer
+    (when (and (integerp page)
+               (> page 0)) ; The page number needs to be a positive integer
 
-      (my-noter--switch-to-pdf-buffer)
-      (funcall my-noter-pdf-goto-page-fn pdf-page))))
+      (my-noter--switch-to-doc-buffer)
+      (my-noter-goto-doc-page page))))
 
 (define-obsolete-function-alias
   'my-noter--sync-pdf-page-next 'my-noter-sync-pdf-page-next "1.3.0")
@@ -2713,8 +2518,8 @@ This shows the next notes and synchronizes the PDF to the right page number."
                    (org-entry-get (point) my-noter-property-note-location))))
     (when (and (integerp pdf-page)
                (> pdf-page 0)) ; The page number needs to be a positive integer
-      (my-noter--switch-to-pdf-buffer)
-      (funcall my-noter-pdf-goto-page-fn pdf-page))))
+      (my-noter--switch-to-doc-buffer)
+      (my-noter-goto-doc-page pdf-page))))
 
 ;;;###autoload
 (define-obsolete-function-alias
@@ -2892,15 +2697,33 @@ Keybindings (org-mode buffer):
         ('quit
          (my-noter-mode -1)))
     ;; Disable the corresponding minor mode in the PDF file too.
-    (when (and my-noter-pdf-buffer
-               (get-buffer my-noter-pdf-buffer))
-      (my-noter--switch-to-pdf-buffer)
+    (when (and my-noter-doc-buffer
+               (get-buffer my-noter-doc-buffer))
+      (my-noter--switch-to-doc-buffer)
       (my-noter-pdf-mode -1)
-      (setq my-noter-pdf-buffer nil))
+      (setq my-noter-doc-buffer nil))
     (set-window-configuration my-noter--window-configuration)
     (setq my-noter--window-configuration nil)
     (setq my-noter-org-buffer nil)
     (message "My-Noter mode disabled")))
+
+(defun my-noter/get-document-path ()
+  "Return path of document visited by this buffer."
+  (interactive)
+  (let ((buffer-file-name (or buffer-file-name
+                              (if (eq major-mode 'nov-mode)
+                                  (bound-and-true-p nov-file-name))))
+        (document-path
+         (or buffer-file-name buffer-file-truename
+             (if (eq major-mode 'eww-mode)
+                 (eww-current-url)
+
+               (error "This buffer does not seem to be visiting any file"))
+             )))
+
+    (if (called-interactively-p 'interactive)
+        (PDEBUG "Document path: " document-path))
+    document-path))
 
 (defun my-noter (&optional arg)
   "Start `my-noter' session.
@@ -2943,164 +2766,54 @@ folder (direct or otherwise) of the document.
 You may pass a prefix ARG in order to make it let you choose the
 notes file, even if it finds one."
   (interactive "P")
-  (cond
-   ;; NOTE(nox): Creating the session from notes file
-   ((eq major-mode 'org-mode)
-    (when (org-before-first-heading-p)
-      ;; TODO: check #+NOTER_DOCUMENT:
-      (error "`my-noter' must be issued inside a heading"))
 
-    (if (my-noter--get-or-read-document-property (not (equal arg '(4)))
-                                                 (equal arg '(16)))
-        (my-noter-mode)
-      (error "???")))
+  (if (eq major-mode 'org-mode)
 
-   ;; NOTE(nox): Creating the session from the annotated document
-   ((memq major-mode '(doc-view-mode pdf-view-mode nov-mode))
-          (let* ((buffer-file-name (or buffer-file-name (bound-and-true-p nov-file-name)))
-             (document-path (or buffer-file-name buffer-file-truename
-                                (error "This buffer does not seem to be visiting any file")))
-             (document-name (file-name-nondirectory document-path))
-             (document-base (file-name-base document-name))
-             (document-directory (if buffer-file-name
-                                     (file-name-directory buffer-file-name)
-                                   (if (file-equal-p document-name buffer-file-truename)
-                                       default-directory
-                                     (file-name-directory buffer-file-truename))))
-             ;; NOTE(nox): This is the path that is actually going to be used, and should
-             ;; be the same as `buffer-file-name', but is needed for the truename workaround
-             (document-used-path (expand-file-name document-name document-directory))
+      ;; Creating session from notes file.
+      (progn
+        (when (org-before-first-heading-p)
+          ;; TODO: check #+NOTER_DOCUMENT:
+          (error "`my-noter' must be issued inside a heading"))
 
-             (search-names (append my-noter-default-notes-file-names (list (concat document-base ".org"))))
-             notes-files-annotating     ; List of files annotating document
-             notes-files                ; List of found notes files (annotating or not)
+        (if (my-noter--get-or-read-document-property (not (equal arg '(4)))
+                                                     (equal arg '(16)))
+            (my-noter-mode)
+          (error "???"))
+        )
 
-             (document-location (my-noter--doc-approx-location)))
+    ;; Creating the session from the annotated document
+    (let* ((buffer-file-name (or buffer-file-name
+                                 (if (eq major-mode 'nov-mode)
+                                     (bound-and-true-p nov-file-name))))
+           (document-path
+            (or buffer-file-name buffer-file-truename
+                (if (eq major-mode 'eww-mode)
+                    (eww-current-url)
 
-        ;; NOTE(nox): Check the search path
-        (dolist (path my-noter-notes-search-path)
-          (dolist (name search-names)
-            (let ((file-name (expand-file-name name path)))
-              (when (file-exists-p file-name)
-                (push file-name notes-files)
-                (when (my-noter--check-if-document-is-annotated-on-file document-path file-name)
-                  (push file-name notes-files-annotating))))))
+                  (error "This buffer does not seem to be visiting any file"))
+                ))
 
-        ;; NOTE(nox): `search-names' is in reverse order, so we only need to (push ...)
-        ;; and it will end up in the correct order
-        (dolist (name search-names)
-          (let ((directory (locate-dominating-file document-directory name))
-                file)
-            (when directory
-              (setq file (expand-file-name name directory))
-              (unless (member file notes-files) (push file notes-files))
-              (when (my-noter--check-if-document-is-annotated-on-file document-path file)
-                (push file notes-files-annotating)))))
-
-        (setq search-names (nreverse search-names))
-
-        (when (or arg (not notes-files-annotating))
-          (when (or arg (not notes-files))
-            (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
-                                                     search-names nil t))
-                   list-of-possible-targets
-                   target)
-
-              ;; NOTE(nox): Create list of targets from current path
-              (catch 'break
-                (let ((current-directory document-directory)
-                      file-name)
-                  (while t
-                    (setq file-name (expand-file-name notes-file-name current-directory))
-                    (when (file-exists-p file-name)
-                      (setq file-name (propertize file-name 'display
-                                                  (concat file-name
-                                                          (propertize " -- Exists!"
-                                                                      'face '(foreground-color . "green")))))
-                      (push file-name list-of-possible-targets)
-                      (throw 'break nil))
-
-                    (push file-name list-of-possible-targets)
-
-                    (when (string= current-directory
-                                   (setq current-directory
-                                         (file-name-directory (directory-file-name current-directory))))
-                      (throw 'break nil)))))
-              (setq list-of-possible-targets (nreverse list-of-possible-targets))
-
-              ;; NOTE(nox): Create list of targets from search path
-              (dolist (path my-noter-notes-search-path)
-                (when (file-exists-p path)
-                  (let ((file-name (expand-file-name notes-file-name path)))
-                    (unless (member file-name list-of-possible-targets)
-                      (when (file-exists-p file-name)
-                        (setq file-name (propertize file-name 'display
-                                                    (concat file-name
-                                                            (propertize " -- Exists!"
-                                                                        'face '(foreground-color . "green"))))))
-                      (push file-name list-of-possible-targets)))))
-
-              (setq target (completing-read "Where do you want to save it? " list-of-possible-targets
-                                            nil t))
-              (set-text-properties 0 (length target) nil target)
-              (unless (file-exists-p target) (write-region "" nil target))
-
-              (setq notes-files (list target))))
-
-          (when (> (length notes-files) 1)
-            (setq notes-files (list (completing-read "In which notes file should we create the heading? "
-                                                     notes-files nil t))))
-
-          (if (member (car notes-files) notes-files-annotating)
-              ;; NOTE(nox): This is needed in order to override with the arg
-              (setq notes-files-annotating notes-files)
-            (with-current-buffer (find-file-noselect (car notes-files))
-              (goto-char (point-max))
-              (insert (if (save-excursion (beginning-of-line) (looking-at "[[:space:]]*$")) "" "\n")
-                      "* " document-base)
-              (org-entry-put nil my-noter-property-doc-file
-                             (file-relative-name document-used-path
-                                                 (file-name-directory (car notes-files)))))
-            (setq notes-files-annotating notes-files)))
-
-        (when (> (length (cl-delete-duplicates notes-files-annotating :test 'equal)) 1)
-          (setq notes-files-annotating (list (completing-read "Which notes file should we open? "
-                                                              notes-files-annotating nil t))))
-
-        (with-current-buffer (find-file-noselect (car notes-files-annotating))
-          (org-with-wide-buffer
-           (catch 'break
-             (goto-char (point-min))
-             (while (re-search-forward (org-re-property my-noter-property-doc-file) nil t)
-               (when (file-equal-p (expand-file-name (match-string 3)
-                                                     (file-name-directory (car notes-files-annotating)))
-                                   document-path)
-                 (let ((my-noter--start-location-override document-location))
-                   (my-noter))
-                 (throw 'break t)))))))
-          )
-
-   ;; anything else.
-   (t
-    (let* ((buffer-file-name (or buffer-file-name (bound-and-true-p nov-file-name)))
-           (document-path (or buffer-file-name buffer-file-truename
-                              (error "This buffer does not seem to be visiting any file")))
            (document-name (file-name-nondirectory document-path))
            (document-base (file-name-base document-name))
-           (document-directory (if buffer-file-name
-                                   (file-name-directory buffer-file-name)
-                                 (if (file-equal-p document-name buffer-file-truename)
-                                     default-directory
-                                   (file-name-directory buffer-file-truename))))
-           ;; NOTE(nox): This is the path that is actually going to be used, and should
-           ;; be the same as `buffer-file-name', but is needed for the truename workaround
+           (document-directory
+            (if buffer-file-name
+                (file-name-directory buffer-file-name)
+              (if (and document-name  buffer-file-truename)
+                (if (file-equal-p document-name buffer-file-truename)
+                    default-directory
+                  (file-name-directory buffer-file-truename))
+                default-directory)))
+
+           ;; NOTE: This is the path that is actually going to be used, and
+           ;; should be the same as `buffer-file-name', but is needed for the
+           ;; truename workaround
            (document-used-path (expand-file-name document-name document-directory))
 
            (search-names (append my-noter-default-notes-file-names (list (concat document-base ".org"))))
            notes-files-annotating     ; List of files annotating document
            notes-files                ; List of found notes files (annotating or not)
 
-           (document-location (my-noter--doc-approx-location)))
+           (document-location (my-noter--doc-approx-location)) )
 
       ;; NOTE(nox): Check the search path
       (dolist (path my-noter-notes-search-path)
@@ -3127,7 +2840,7 @@ notes file, even if it finds one."
       (when (or arg (not notes-files-annotating))
         (when (or arg (not notes-files))
           (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
-                                                   search-names nil t))
+                                                   search-names nil nil))
                  list-of-possible-targets
                  target)
 
@@ -3202,9 +2915,11 @@ notes file, even if it finds one."
                                  document-path)
                (let ((my-noter--start-location-override document-location))
                  (my-noter))
-               (throw 'break t)))))))
+               (throw 'break t))))))
+
+      )
     )
-   ))
+)
 
 ;;; My-Noter PDF Mode
 ;; Minor mode for the pdf file buffer associated with the notes
@@ -3219,11 +2934,11 @@ notes file, even if it finds one."
   :keymap  my-noter-pdf-mode-map
   (when my-noter-pdf-mode
     (progn
-      (setq my-noter-pdf-buffer (buffer-name)))))
+      (setq my-noter-doc-buffer (buffer-name)))))
 
 ;;; Key-bindings
 
-(define-key my-noter-mode-map (kbd "M-.") #'my-noter-sync-pdf-page-current)
+(define-key my-noter-mode-map (kbd "M-.") #'my-noter-sync-page-current)
 (define-key my-noter-mode-map (kbd "M-p") #'my-noter-sync-pdf-page-previous)
 (define-key my-noter-mode-map (kbd "M-n") #'my-noter-sync-pdf-page-next)
 
@@ -3234,7 +2949,7 @@ notes file, even if it finds one."
 (define-key my-noter-pdf-mode-map (kbd "DEL")   #'my-noter-scroll-down)
 (define-key my-noter-pdf-mode-map (kbd "i")     #'my-noter-add-note)
 (define-key my-noter-pdf-mode-map (kbd "q")     #'my-noter-quit)
-(define-key my-noter-pdf-mode-map (kbd "M-.")   #'my-noter-sync-pdf-page-current)
+(define-key my-noter-pdf-mode-map (kbd "M-.")   #'my-noter-sync-page-current)
 (define-key my-noter-pdf-mode-map (kbd "M-p")   #'my-noter-sync-pdf-page-previous)
 (define-key my-noter-pdf-mode-map (kbd "M-n")   #'my-noter-sync-pdf-page-next)
 

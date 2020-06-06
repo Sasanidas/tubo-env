@@ -42,16 +42,29 @@ If `silent' is nil, print collected nodes before exit."
 (use-package flycheck-plantuml
   :commands (flycheck-plantuml-setup))
 
-(use-package plantuml+
-  :commands (company-plantuml plantuml-indent-line))
+(defun company-plantuml--candidates (prefix)
+  "Return candiates for `PREFIX'."
+  (all-completions prefix plantuml-kwdList))
 
+;;;###autoload
+(defun company-plantuml (command &optional arg &rest ignored)
+  "`company-mode' completion backend for plantuml.
+plantuml is a cross-platform, open-source make system."
+  (interactive (list 'interactive))
+  (cl-case command
+    (interactive (company-begin-backend 'company-plantuml))
+    (init (unless (equal major-mode 'plantuml-mode)
+            (error "Major mode is not plantuml-mode")))
+    (prefix (and (not (company-in-string-or-comment))
+                 (company-grab-symbol)))
+    (candidates (company-plantuml--candidates arg))))
 
 (use-package plantuml-mode
+  :pin melpa
   :mode (rx "." (or "plantuml" "puml" "plu" "pu") eow)
   :hook ((plantuml-mode .
                         (lambda ()
                           (flycheck-plantuml-setup)
-                          (setq-local indent-line-function 'plantuml-indent-line)
                           (yc/add-company-backends-with-yasnippet company-plantuml)
                           (uml/parse-stringfied-nodes t))))
   :config
@@ -60,7 +73,10 @@ If `silent' is nil, print collected nodes before exit."
     (aif (executable-find "dot")
         (setenv "GRAPHVIZ_DOT" it)
       (warn "plantUML depends on graphviz, which is not installed."))
-))
+    )
+  :custom
+  (plantuml-default-exec-mode 'jar)
+  (plantuml-indent-level 4))
 
  ;; *************************** Org Mode ********************************
 (use-package org-indent

@@ -574,7 +574,6 @@ And install necessary packages if there are errors while executing FUNC."
 
 (defun yc/run-with-idle-timer (secs repeat function &rest args)
   "Like `run-with-idle-timer', but always runs in the `current-buffer'.
-
 Cancels itself, if this buffer was killed."
   (let* (;; Chicken and egg problem.
          (fns (make-symbol "local-idle-timer"))

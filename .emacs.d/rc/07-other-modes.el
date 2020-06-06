@@ -228,8 +228,8 @@
          ([mouse-5] . up-slightly)
          (;; (kbd "<C-return>")
           [C-return] . yc/insert-line-number)
-         (;; (kbd "<M-return>")
-          [M-return] . kill-current-buffer)
+         (;(kbd "<M-K>")
+          [M-K] . kill-current-buffer)
 
          (;; (kbd "<M-f11>")
           [M-f11] . yc/fill-region)
@@ -336,8 +336,27 @@
 
  ;; ****************** eww ***************************
 
+(use-package shr
+  :custom
+  (shr-use-fonts nil)
+  (shr-use-colors t)
+  )
+
 (use-package browse-url
-  :commands (browse-url-generic))
+  :commands (browse-url-generic)
+  :custom
+  (browse-url-generic-program (cond ((string= system-type "darwin")
+                                     "/usr/bin/open")
+                                    ((string= system-type "gnu/linux")
+                                     (or
+                                      (executable-find "google-chrome-stable")
+                                      (executable-find "google-chrome")
+                                      (executable-find "google-chrome-beta")
+                                      (executable-find "firefox")
+                                      (executable-find "firefox-bin")
+                                      "/usr/bin/xdg-open"))
+                                    (t nil)))
+  )
 
 (defun eww-open-current-page ()
   "Call eww to open current file."
@@ -412,34 +431,23 @@
 (use-package eww
   :defer t
   :hook ((eww-mode . yc/disable-trailling-spaces))
-  :custom
-  (browse-url-generic-program (cond ((string= system-type "darwin")
-                                      "/usr/bin/open")
-                                     ((string= system-type "gnu/linux")
-                                      (or
-                                       (executable-find "google-chrome-stable")
-                                       (executable-find "google-chrome")
-                                       (executable-find "google-chrome-beta")
-                                       (executable-find "firefox")
-                                       (executable-find "firefox-bin")
-                                       "/usr/bin/xdg-open"))
-                                     (t nil)))
-
-  :bind ((;; ,(kbd "<C-f8>")
-          [C-f8] . eww)
-         (;; ,(kbd "<C-S-f8>")
-          [C-S-f8]. eww-open-current-page)
-         (;; ,(kbd "<M-left>")
-          [M-left]. eww-back-url)
-         (;; ,(kbd "<M-right>")
-          [M-right]. eww-forward-url)
-         ;; (;(kbd "M-l")
-         ;;  [134217836] . yc/eww-hilight-region)
-
-
-         :map eww-mode-map)
   :bind (:map eww-mode-map
-              ("\C-co" . eww-open-current-page-in-gui)))
+              ("\C-co" . eww-open-current-page-in-gui)
+
+              (;; ,(kbd "<M-left>")
+               [M-left]. eww-back-url)
+              (;; ,(kbd "<M-right>")
+               [M-right]. eww-forward-url)
+
+              ;; URL copy: bind to "w"
+
+              (;; ,(kbd "<C-f8>")
+               [C-f8] . eww)
+              (;; ,(kbd "<C-S-f8>")
+               [C-S-f8]. eww-open-current-page)
+              ;; (;(kbd "M-l")
+              ;;  [134217836] . yc/eww-hilight-region)
+              ))
 
 (use-package my-net-utils
   :commands (yc/download-url yc/open-url)
@@ -480,8 +488,8 @@
   (unless (layout-restore)
     (PDEBUG "BUF" (current-buffer))
     (PDEBUG "FILE:" buffer-file-name)
-    (when (s-ends-with? ".pdf" buffer-file-name)
-      (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
+    ;; (when (s-ends-with? ".pdf" buffer-file-name)
+    ;;   (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
     (dolist (win (window-list))
       (select-window win)
       (layout-save-current))

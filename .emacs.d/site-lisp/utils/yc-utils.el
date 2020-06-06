@@ -200,18 +200,18 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
           'face (list :background (yc/expand-color (match-string-no-properties 0))))))))
   (font-lock-flush))
 
+(defun int-to-binary-string (i)
+  "Convert an integer (I) into it's binary representation in string format."
+  (let ((res ""))
+    (while (not (= i 0))
+      (setq res (concat (if (= 1 (logand i 1)) "1" "0") res)
+            i (lsh i -1)))
+    (if (string= res "")
+        "0" res)))
+
 (defun yc/binary-form ()
   "Show binary format of current symbol."
   (interactive)
-
-  (defun int-to-binary-string (i)
-    "Convert an integer (I) into it's binary representation in string format."
-    (let ((res ""))
-      (while (not (= i 0))
-        (setq res (concat (if (= 1 (logand i 1)) "1" "0") res)
-              i (lsh i -1)))
-      (if (string= res "")
-          "0" res)))
   (let* ((symbol (symbol-at-point))
          (str (if symbol (symbol-name symbol)))
          number)
@@ -265,9 +265,13 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
             (buffer-substring-no-properties (point-min) (point-max)))))
 
     (insert "\n  " val-str)
-    (let ((new-pos (point)) )
+
+    (let* ((new-pos (point))
+           (c-start comment-start)
+           (c-add comment-add))
+
       (goto-char pos)
-      (insert comment-start)
+      (insert (comment-padright c-start c-add ))
       (indent-region pos (+ new-pos (length comment-start))))))
 
 ;;;###autoload
