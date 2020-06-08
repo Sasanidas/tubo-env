@@ -370,10 +370,6 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
     doc-prop))
 
 
-;;; If pdf-tools are installed try to use them,
-;;; but fail silently.
-(require 'pdf-tools nil t)
-
 ;; Redefining `doc-view-kill-proc-and-buffer' as `my-noter-pdf-kill-proc-and-buffer'
 ;; because this function is obsolete in emacs 25.1 onwards.
 (define-obsolete-function-alias 'my-noter--pdf-kill-proc-and-buffer 'my-noter-pdf-kill-proc-and-buffer "1.3.0")
@@ -865,7 +861,7 @@ This shows the next notes and synchronizes the PDF to the right page number."
     (when (my-noter--headlines-available-p)
       (my-noter--sort-notes my-noter-sort-order)
       (org-overview))
-    (my-noter-mode 0))
+    (my-noter-notes-mode 0))
   (my-noter-pdf-kill-proc-and-buffer))
 
 (defun my-noter--headlines-available-p ()
@@ -994,47 +990,9 @@ Keybindings (org-mode buffer):
         (PDEBUG "Document path: " document-path))
     document-path))
 
-(defun my-noter (&optional arg)
-  "Start `my-noter' session.
-
-There are two modes of operation. You may create the session from:
-- The Org notes file
-- The document to be annotated (PDF, EPUB, ...)
-
-- Creating the session from notes file -----------------------------------------
-This will open a session for taking your notes, with indirect
-buffers to the document and the notes side by side. Your current
-window configuration won't be changed, because this opens in a
-new frame.
-
-You only need to run this command inside a heading (which will
-hold the notes for this document). If no document path property is found,
-this command will ask you for the target file.
-
-With a prefix universal argument ARG, only check for the property
-in the current heading, don't inherit from parents.
-
-With 2 prefix universal arguments ARG, ask for a new document,
-even if the current heading annotates one.
-
-With a prefix number ARG:
-- Greater than 0: Open the document like `find-file'
--     Equal to 0: Create session with `my-noter-always-create-frame' toggled
--    Less than 0: Open the folder containing the document
-
-- Creating the session from the document ---------------------------------------
-This will try to find a notes file in any of the parent folders.
-The names it will search for are defined in `my-noter-default-notes-file-names'.
-It will also try to find a notes file with the same name as the
-document, giving it the maximum priority.
-
-When it doesn't find anything, it will interactively ask you what
-you want it to do. The target notes file must be in a parent
-folder (direct or otherwise) of the document.
-
-You may pass a prefix ARG in order to make it let you choose the
-notes file, even if it finds one."
-  (interactive "P")
+(defun my-noter ()
+  "Start `my-noter' session."
+  (interactive)
 
   (if (eq major-mode 'org-mode)
 
@@ -1062,9 +1020,9 @@ notes file, even if it finds one."
             (if buffer-file-name
                 (file-name-directory buffer-file-name)
               (if (and document-name  buffer-file-truename)
-                (if (file-equal-p document-name buffer-file-truename)
-                    default-directory
-                  (file-name-directory buffer-file-truename))
+                  (if (file-equal-p document-name buffer-file-truename)
+                      default-directory
+                    (file-name-directory buffer-file-truename))
                 default-directory)))
 
            ;; NOTE: This is the path that is actually going to be used, and
@@ -1075,8 +1033,7 @@ notes file, even if it finds one."
            (search-names (append my-noter-default-notes-file-names (list (concat document-base ".org"))))
            notes-files-annotating     ; List of files annotating document
            notes-files                ; List of found notes files (annotating or not)
-
-           (document-location (my-noter/doc-approx-location)) )
+           )
 
       ;; NOTE(nox): Check the search path
       (dolist (path my-noter-notes-search-path)
@@ -1098,58 +1055,77 @@ notes file, even if it finds one."
             (setq file (expand-file-name name directory))
             (unless (member file notes-files) (push file notes-files))
             (when (my-noter/check-if-document-is-annotated-on-file document-path file)
-              (PDEBUG "Annotated file2:" file-name)
               (push file notes-files-annotating)))))
 
       (setq search-names (nreverse search-names))
 
-      (when (or arg (not notes-files-annotating))
-        (when (or arg (not notes-files))
-          (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
-                                                   search-names nil nil))
-                 list-of-possible-targets
-                 target)
+      (when (not notes-files-annotating)
+        (let* ((file-name document-path)
+               (choices (list
+                         "  Create new note file."
+                         "  Locate note file manually."))
+               (action-index (cl-position
+                              (completing-read
+                               (format "Could not find note file %s, choose an action: "
+                                       file-name)
+                               choices
+                               nil
+                               t)
+                              choices
+                              :test 'equal)))
 
-            ;; NOTE(nox): Create list of targets from current path
-            (catch 'break
-              (let ((current-directory document-directory)
-                    file-name)
-                (while t
-                  (setq file-name (expand-file-name notes-file-name current-directory))
-                  (when (file-exists-p file-name)
-                    (setq file-name (propertize file-name 'display
-                                                (concat file-name
-                                                        (propertize " -- Exists!"
-                                                                    'face '(foreground-color . "green")))))
-                    (push file-name list-of-possible-targets)
-                    (throw 'break nil))
+          (case action-index
+            (0 (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
+                                                        search-names nil nil))
+                      list-of-possible-targets
+                      target)
 
-                  (push file-name list-of-possible-targets)
+                 ;; NOTE(nox): Create list of targets from current path
+                 (catch 'break
+                   (let ((current-directory document-directory)
+                         file-name)
+                     (while t
+                       (setq file-name (expand-file-name notes-file-name current-directory))
+                       (when (file-exists-p file-name)
+                         (setq file-name (propertize file-name 'display
+                                                     (concat file-name
+                                                             (propertize " -- Exists!"
+                                                                         'face '(foreground-color . "green")))))
+                         (push file-name list-of-possible-targets)
+                         (throw 'break nil))
 
-                  (when (string= current-directory
-                                 (setq current-directory
-                                       (file-name-directory (directory-file-name current-directory))))
-                    (throw 'break nil)))))
-            (setq list-of-possible-targets (nreverse list-of-possible-targets))
+                       (push file-name list-of-possible-targets)
 
-            ;; NOTE(nox): Create list of targets from search path
-            (dolist (path my-noter-notes-search-path)
-              (when (file-exists-p path)
-                (let ((file-name (expand-file-name notes-file-name path)))
-                  (unless (member file-name list-of-possible-targets)
-                    (when (file-exists-p file-name)
-                      (setq file-name (propertize file-name 'display
-                                                  (concat file-name
-                                                          (propertize " -- Exists!"
-                                                                      'face '(foreground-color . "green"))))))
-                    (push file-name list-of-possible-targets)))))
+                       (when (string= current-directory
+                                      (setq current-directory
+                                            (file-name-directory (directory-file-name current-directory))))
+                         (throw 'break nil)))))
+                 (setq list-of-possible-targets (nreverse list-of-possible-targets))
 
-            (setq target (completing-read "Where do you want to save it? " list-of-possible-targets
-                                          nil t))
-            (set-text-properties 0 (length target) nil target)
-            (unless (file-exists-p target) (write-region "" nil target))
+                 ;; NOTE(nox): Create list of targets from search path
+                 (dolist (path my-noter-notes-search-path)
+                   (when (file-exists-p path)
+                     (let ((file-name (expand-file-name notes-file-name path)))
+                       (unless (member file-name list-of-possible-targets)
+                         (when (file-exists-p file-name)
+                           (setq file-name (propertize file-name 'display
+                                                       (concat file-name
+                                                               (propertize " -- Exists!"
+                                                                           'face '(foreground-color . "green"))))))
+                         (push file-name list-of-possible-targets)))))
 
-            (setq notes-files (list target))))
+                 (setq target (completing-read "Where do you want to save it? " list-of-possible-targets
+                                               nil t))
+                 (set-text-properties 0 (length target) nil target)
+                 (unless (file-exists-p target) (write-region "" nil target))
+
+                 (setq notes-files (list target))))
+            (1
+             (push (read-file-name "Select note file: "
+                                   (expand-file-name
+                                    (car my-noter-notes-search-path)))
+                   notes-files))
+            (t nil)))
 
         (when (> (length notes-files) 1)
           (setq notes-files (list (completing-read "In which notes file should we create the heading? "
