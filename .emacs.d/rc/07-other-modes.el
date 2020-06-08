@@ -471,16 +471,13 @@
 
 ;; https://github.com/rudolfochrist/interleave
 (use-package my-noter
-  :commands (my-noter-mode my-noter
-                           my-noter/dispatch-file my-noter/dispatch-directory my-noter/open-note-file
-                           my-noter/get-note-file)
+  :commands (my-noter
+             my-noter/dispatch-file my-noter/dispatch-directory
+             my-noter/get-note-file)
   :hook ((my-noter-mode . yc/my-noter-mode-hook)
          )
   :custom
   (my-noter-disable-narrowing t)
-  :config
-  (progn
-    (defalias 'my-noter-open-notes-file-for-pdf 'my-noter/open-note-file))
   :defer t)
 
 (defun yc/my-noter-mode-hook ()
