@@ -1429,8 +1429,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
       (setq leetcode-prefer-language
            (ivy-read "Set preferred language to: "
                      '("c" "cpp" "python3" "rust"))))
-    )
-  )
+    ))
 
 (use-package dockerfile-mode
   :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end)
