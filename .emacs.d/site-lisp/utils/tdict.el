@@ -7,6 +7,13 @@
 ;;; Code:
 (require 'popup)
 
+(defmacro aif (test-form then-form &rest else-forms)
+  "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
+THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
+  (declare (indent 2) (debug t))
+  `(let ((it ,test-form))
+     (if it ,then-form ,@else-forms)))
+
 (defcustom tdict-app "sdcv"
   "Application to run to look up for a word."
   :type 'string
@@ -23,10 +30,6 @@
 
  ;; for stardict.
 (defvar tdict--missing-app-warned nil "Nil.")
-
-(defun -format-request-url (query-word)
-  "Format QUERY-WORD as a HTTP request URL."
-  (format api-url (url-hexify-string query-word)))
 
 (defun tdict--search-sdcv (word)
   "Search result from app for `WORD'."
@@ -52,17 +55,16 @@
  ;; for youdao.
 
 (defconst tdict--youdao-api-url
-  "http://fanyi.youdao.com/openapi.do?keyfrom=YouDaoCV&key=659600698&type=data&doctype=json&version=1.1&q=%s"
+  "https://fanyi.youdao.com/openapi.do?keyfrom=YouDaoCV&key=659600698&type=data&doctype=json&version=1.1&q=%s"
   "Youdao dictionary API template, URL `http://dict.youdao.com/'.")
 
 (defun tdict--request-youdao (word)
   "Request WORD, return JSON as an alist if successes."
-  (let (json)
+  (let ((url (format tdict--youdao-api-url (url-hexify-string word)))
+        json)
+    (PDEBUG "REQUEST: " url)
     (with-current-buffer
-        (url-retrieve-synchronously
-         (format tdict--youdao-api-url (url-hexify-string word))
-         nil nil 1
-         )
+        (url-retrieve-synchronously url  nil nil 1)
       (set-buffer-multibyte t)
       (goto-char (point-min))
       (PDEBUG "RES:" (buffer-string))
