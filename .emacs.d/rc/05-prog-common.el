@@ -589,7 +589,7 @@ Call FUNC which is 'lsp with ARGS."
 
 (defun yc/modeline-update-lsp (&rest args)
   "Update `lsp-mode' status."
-  (set (make-local-variable 'yc/modeline--lsp)
+  (setq-local yc/modeline--lsp
        (if-let (workspaces (lsp-workspaces))
            (concat " LSP"
                    (string-join

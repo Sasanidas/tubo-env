@@ -107,7 +107,7 @@
 (make-face 'mode-line-80col-face)
 
 
-(defvar yc/modeline--lsp nil "Nil.")
+(defvar yc/modeline--lsp "" "Nil.")
 
 (setq-default
   mode-line-position
@@ -128,30 +128,24 @@
           ((buffer-modified-p)
            (propertize "%b" 'face 'mode-line-modified-face))
           (t (propertize "%b" 'face 'mode-line-buffer-id))))
-   " "
+   "  "
 
    ;; is remote or local?
    (:eval (if buffer-file-name mode-line-remote ""))
    (:eval (if buffer-file-name " " ""))
 
    ;; Position, including warning for 80 columns
-   " " mode-line-position
+   "  " mode-line-position
 
    ;; File size
-   "   "    (:eval (if buffer-file-name "%I " ""))
+   "  "  (:eval (if buffer-file-name "%I " ""))
 
-   " "
+   "  "
    ;; Major mode
    "%m"
 
    ;; LSP status, if possible
-   (:eval
-    (if (bound-and-true-p lsp-mode)
-        yc/modeline--lsp
-      )
-    )
-
-
+   "  " yc/modeline--lsp
 
    ;; which function
    "  ["
