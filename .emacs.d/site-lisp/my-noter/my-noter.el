@@ -92,16 +92,6 @@ When nil, it will use the selected frame if it does not belong to any other sess
   :group 'my-noter
   :type 'boolean)
 
-(defcustom my-noter-suggest-from-attachments t
-  "When non-nil, my-noter will suggest files from the attachments
-when creating a session, if the document is missing."
-  :group 'my-noter
-  :type 'boolean)
-
-(defcustom my-noter-separate-notes-from-heading nil
-  "When non-nil, add an empty line between each note's heading and content."
-  :group 'my-noter
-  :type 'boolean)
 
 (defcustom my-noter-insert-selected-text-inside-note t
   "When non-nil, it will automatically append the selected text into an existing note."
@@ -246,83 +236,20 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
                       org-file-create-dir)))
 
 
-;; --------------------------------------------------------------------------------
-;; NOTE(nox): Private variables or constants
-(cl-defstruct my-noter--session
-  id frame doc-buffer notes-buffer ast modified-tick doc-mode display-name notes-file-path property-text
-  level num-notes-in-view window-behavior window-location doc-split-fraction auto-save-last-location
-  hide-other closest-tipping-point)
-
-(defvar my-noter--sessions nil
-  "List of `my-noter' sessions.")
-
-(defvar-local my-noter--session nil
-  "Session associated with the current buffer.")
-
-(defvar my-noter--inhibit-location-change-handler nil
-  "Prevent location change from updating point in notes.")
-
-(defvar my-noter--start-location-override nil
-  "Used to open the session from the document in the right page.")
-
-(defvar-local my-noter--nov-timer nil
-  "Timer for synchronizing notes after scrolling.")
-
-(defvar my-noter--arrow-location nil
-  "A vector [TIMER WINDOW TOP] that shows where the arrow should appear, when idling.")
-
-(defvar my-noter--completing-read-keymap (make-sparse-keymap)
-  "A `completing-read' keymap that let's the user insert spaces.")
-
-(set-keymap-parent my-noter--completing-read-keymap minibuffer-local-completion-map)
-(define-key my-noter--completing-read-keymap (kbd "SPC") 'self-insert-command)
-
-(defconst my-noter--property-doc-split-fraction "NOTER_DOCUMENT_SPLIT_FRACTION"
-  "Property for overriding global `my-noter-doc-split-fraction'.")
-
-(defconst my-noter--property-auto-save-last-location "NOTER_AUTO_SAVE_LAST_LOCATION"
-  "Property for overriding global `my-noter-auto-save-last-location'.")
-
-(defconst my-noter--property-hide-other "NOTER_HIDE_OTHER"
-  "Property for overriding global `my-noter-hide-other'.")
-
-(defconst my-noter--property-closest-tipping-point "NOTER_CLOSEST_TIPPING_POINT"
-  "Property for overriding global `my-noter-closest-tipping-point'.")
-
-(defconst my-noter--note-search-no-recurse (delete 'headline (append org-element-all-elements nil))
-  "List of elements that shouldn't be recursed into when searching for notes.")
-
-(defconst my-noter--id-text-property 'my-noter-session-id
-  "Text property used to mark the headings with open sessions.")
-
-;; --------------------------------------------------------------------------------
-;; NOTE(nox): Utility functions
-
-(defun my-noter/doc-approx-location-cons (&optional precise-info)
+(defun my-noter/doc-approx-location ()
+  "Return current location."
   (cond
    ((memq major-mode '(doc-view-mode pdf-view-mode))
-    (cons (image-mode-window-get 'page) (if (numberp precise-info) precise-info 0)))
+    (image-mode-window-get 'page))
 
    ((eq major-mode 'nov-mode)
-    (cons nov-documents-index (if (integerp precise-info)
-                                  precise-info
-                                (max 1 (/ (+ (window-start) (window-end nil t)) 2)))))
+    nov-documents-index
+    )
 
-      (t (cons (point) (if (numberp precise-info) precise-info 0)))
-   ;; (t (error "Unknown document type %s" major-mode))
-   ))
-
-(defun my-noter/doc-approx-location (&optional precise-info)
-  (my-noter/doc-approx-location-cons precise-info))
-
-;; NOTE(nox): notes is a list of (HEADING . HEADING-TO-INSERT-TEXT-BEFORE):
-;; - HEADING is the root heading of the note
-;; - SHOULD-ADD-SPACE indicates if there should be extra spacing when inserting text to the note (ie. the
-;;   note has contents)
-(cl-defstruct my-noter--view-info notes regions prev-regions reference-for-insertion)
+   (t (point))))
 
 (defun my-noter/check-if-document-is-annotated-on-file (document-path notes-path)
-  ;; NOTE(nox): In order to insert the correct file contents
+  "Check if doc file (DOCUMENT-PATH) is annotated on note file (NOTES-PATH)."
   (let ((buffer (find-buffer-visiting notes-path)))
     (when buffer (with-current-buffer buffer (save-buffer)))
 
@@ -335,45 +262,7 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
             ;; NOTE(nox): This notes file has the document we want!
             (throw 'break t)))))))
 
-(defsubst my-noter--check-doc-prop (doc-prop)
-  (and doc-prop
-       (or
-        (ffap-url-p doc-prop)
-        (and (not (file-directory-p doc-prop)) (file-readable-p doc-prop)))))
-
-(defun my-noter/get-or-read-document-property (inherit-prop &optional force-new)
-  (let ((doc-prop
-         (and (not force-new)
-              (org-entry-get nil my-noter-property-doc-file inherit-prop))))
-
-    (PDEBUG "DOC-PROP:" doc-prop)
-    (unless (my-noter--check-doc-prop doc-prop)
-      (setq doc-prop nil)
-
-      (when my-noter-suggest-from-attachments
-        (require 'org-attach)
-        (let* ((attach-dir (org-attach-dir))
-               (attach-list (and attach-dir (org-attach-file-list attach-dir))))
-          (when (and attach-list (y-or-n-p "Do you want to annotate an attached file?"))
-            (setq doc-prop (completing-read "File to annotate: " attach-list nil t))
-            (when doc-prop (setq doc-prop (expand-file-name doc-prop attach-dir))))))
-
-      (unless (my-noter--check-doc-prop doc-prop)
-        (setq doc-prop (expand-file-name
-                        (read-file-name
-                         "Invalid or no document property found. Please specify a document path: " nil nil t)))
-        (when (or (file-directory-p doc-prop) (not (file-readable-p doc-prop))) (user-error "Invalid file path"))
-        ;; (when (y-or-n-p "Do you want a relative file name? ") (setq doc-prop (file-relative-name doc-prop)))
-        )
-
-      (org-entry-put nil my-noter-property-doc-file doc-prop))
-    doc-prop))
-
-
-;; Redefining `doc-view-kill-proc-and-buffer' as `my-noter-pdf-kill-proc-and-buffer'
-;; because this function is obsolete in emacs 25.1 onwards.
-(define-obsolete-function-alias 'my-noter--pdf-kill-proc-and-buffer 'my-noter-pdf-kill-proc-and-buffer "1.3.0")
-(defun my-noter-pdf-kill-proc-and-buffer ()
+(defun my-noter-kill-proc-and-buffer ()
   "Kill the current converter process and buffer."
   (interactive)
   (when (derived-mode-p 'doc-view-mode)
@@ -388,22 +277,8 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
 (defvar my-noter-doc-buffer nil
   "Name of PDF buffer associated with `my-noter-org-buffer'.")
 
-(defun my-noter--current-page (&optional window)
-  "Return the page number of the current page.
-
-Use WINDOW for optional window properties passed to `image-mode'."
-  (image-mode-window-get 'page window))
 
 ;;;###autoload
-(defvar my-noter-pdf-current-page-fn #'my-noter--current-page
-  "Function to call to display the current page.")
-
-;;;###autoload
-(defvar my-noter-pdf-next-page-fn #'doc-view-next-page
-  "Function to call to display the next page.")
-
-;;;###autoload
-
 (defvar my-noter-pdf-previous-page-fn #'doc-view-previous-page
   "Function to call to display the previous page.")
 
@@ -582,6 +457,7 @@ If `my-noter-disable-narrowing' is non-nil then the buffer gets
 re-centered to the page heading.
 
 It (possibly) narrows the subtree when found."
+  (PDEBUG "PAGE:" page)
   (with-current-buffer my-noter-org-buffer
     (let (point
           (window (get-buffer-window (current-buffer) 'visible)))
@@ -591,7 +467,7 @@ It (possibly) narrows the subtree when found."
         ;; (when my-noter-multi-pdf-notes-file
         ;;   ;; only search the current subtree for notes. See. Issue #16
         ;;   (my-noter--narrow-to-subtree t))
-        (when (re-search-forward (format "^\[ \t\r\]*\:my-noter_page_note\: %s$"
+        (when (re-search-forward (format "^\[ \t\r\]*\:noter_page\: %s$"
                                          page)
                                  nil t)
           ;; widen the buffer again for the case it is narrowed from
@@ -611,33 +487,57 @@ It (possibly) narrows the subtree when found."
           (recenter)))
       point)))
 
+(defun my-noter/doc-next-page ()
+  "Go to next page of document."
+  (interactive)
+  (cond
+   ((eq major-mode 'pdf-view-mode)
+    (pdf-view-next-page))
+   ((eq major-mode 'doc-view-mode)
+    (doc-view-next-page))
+   (t
+    (error "Error: next-page is not implemented for mode %s"
+           (symbol-name major-mode)))))
+
+(defun my-noter/doc-previous-page ()
+  "Go to next page of document."
+  (interactive)
+  (cond
+   ((eq major-mode 'pdf-view-mode)
+    (pdf-view-previous-page))
+   ((eq major-mode 'doc-view-mode)
+    (doc-view-previous-page))
+   (t
+    (error "Error: previous-page is not implemented for mode %s"
+           (symbol-name major-mode)))))
+
 (defun my-noter-go-to-next-page ()
   "Go to the next page in PDF.  Look up for available notes."
   (interactive)
-  (funcall my-noter-pdf-next-page-fn)
-  (my-noter--go-to-page-note (funcall my-noter-pdf-current-page-fn)))
+  (my-noter/doc-next-page)
+  (my-noter--go-to-page-note (my-noter/doc-approx-location)))
 
 (defun my-noter-go-to-previous-page ()
   "Go to the previous page in PDF.  Look up for available notes."
   (interactive)
-  (funcall my-noter-pdf-previous-page-fn)
-  (my-noter--go-to-page-note (funcall my-noter-pdf-current-page-fn)))
+  (my-noter/doc-previous-page)
+  (my-noter--go-to-page-note (my-noter/doc-approx-location)))
 
 (defun my-noter-scroll-up ()
   "Scroll up the PDF.  Look up for available notes."
   (interactive)
-  (setq my-noter-page-marker (funcall my-noter-pdf-current-page-fn))
+  (setq my-noter-page-marker (my-noter/doc-approx-location))
   (funcall my-noter-pdf-scroll-up-or-next-page-fn)
-  (unless (= my-noter-page-marker (funcall my-noter-pdf-current-page-fn))
-    (my-noter--go-to-page-note (funcall my-noter-pdf-current-page-fn))))
+  (unless (= my-noter-page-marker (my-noter/doc-approx-location))
+    (my-noter--go-to-page-note (my-noter/doc-approx-location))))
 
 (defun my-noter-scroll-down ()
   "Scroll down the PDF.  Look up for available notes."
   (interactive)
-  (setq my-noter-page-marker (funcall my-noter-pdf-current-page-fn))
+  (setq my-noter-page-marker (my-noter/doc-approx-location))
   (funcall my-noter-pdf-scroll-down-or-previous-page-fn)
-  (unless (= my-noter-page-marker (funcall my-noter-pdf-current-page-fn))
-    (my-noter--go-to-page-note (funcall my-noter-pdf-current-page-fn))))
+  (unless (= my-noter-page-marker (my-noter/doc-approx-location))
+    (my-noter--go-to-page-note (my-noter/doc-approx-location))))
 
 (defun my-noter--switch-to-org-buffer (&optional insert-newline-maybe position)
   "Switch to the notes buffer.
@@ -687,7 +587,7 @@ this is the end of the buffer"
       (org-end-of-subtree)))
 
 (defun my-noter--create-new-note (document page &optional selected-text)
-  "Create a new headline for the page PAGE."
+  "Create a new headline for the page PAGE of DOCUMENT."
   (PDEBUG "ENTER: page: " page)
   (unless (or (ffap-url-p document)
               (and document
@@ -725,24 +625,19 @@ this is the end of the buffer"
   "Insert note associated with the current location.
 
 This command will prompt for a title of the note and then insert
-it in the notes buffer. When the input is empty, a default title
+it in the notes buffer.  When the input is empty, a default title
 will be generated.
 
 If there are other notes related to the current location, the
-prompt will also suggest them. Depending on the value of the
+prompt will also suggest them.  Depending on the value of the
 variable `my-noter-closest-tipping-point', it may also
 suggest the closest previous note.
 
 PRECISE-INFO makes the new note associated with a more
 specific location (see `my-noter-insert-precise-note' for more
-info).
-
-When you insert into an existing note and have text selected on
-the document buffer, the variable `my-noter-insert-selected-text-inside-note'
-defines if the text should be inserted inside the note."
-  (interactive)
+info)."
   (PDEBUG "INFO: " precise-info)
-  (let* ((page (car (my-noter/doc-approx-location-cons)))
+  (let* ((page (my-noter/doc-approx-location))
          (position (my-noter--go-to-page-note page))
          (selected-text
           (cond
@@ -800,8 +695,6 @@ defines if the text should be inserted inside the note."
        )
       (my-noter-goto-doc-page page))))
 
-(define-obsolete-function-alias
-  'my-noter--sync-pdf-page-previous 'my-noter-sync-pdf-page-previous "1.3.0")
 (defun my-noter-sync-pdf-page-previous ()
   "Move to the previous set of notes.
 
@@ -821,9 +714,6 @@ This show the previous notes and synchronizes the PDF to the right page number."
 
       (my-noter--switch-to-doc-buffer)
       (my-noter-goto-doc-page page))))
-
-(define-obsolete-function-alias
-  'my-noter--sync-pdf-page-next 'my-noter-sync-doc-page-next "1.3.0")
 
 (defun my-noter-sync-doc-page-next ()
   "Move to the next set of notes.
@@ -862,7 +752,7 @@ This shows the next notes and synchronizes the PDF to the right page number."
       (my-noter--sort-notes my-noter-sort-order)
       (org-overview))
     (my-noter-notes-mode 0))
-  (my-noter-pdf-kill-proc-and-buffer))
+  (my-noter-kill-proc-and-buffer))
 
 (defun my-noter--headlines-available-p ()
   "True if there are headings in the notes buffer."
