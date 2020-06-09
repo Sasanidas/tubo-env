@@ -110,6 +110,15 @@
 (defvar yc/modeline--lsp nil "Nil.")
 
 (setq-default
+  mode-line-position
+  '("%p ("
+   (:propertize "%l," 'face 'mode-line)
+   (:eval (propertize "%c" 'face
+                      (if (>= (current-column) 80)
+                          'mode-line-80col-face
+                        'mode-line)))
+   ") ")
+
  mode-line-format
  '(" %Z "
    ;; mode-line-buffer-identification
@@ -126,16 +135,10 @@
    (:eval (if buffer-file-name " " ""))
 
    ;; Position, including warning for 80 columns
-   "%p ("
-   (:propertize "%l," 'face 'mode-line)
-   (:eval (propertize "%c" 'face
-                      (if (>= (current-column) 80)
-                          'mode-line-80col-face
-                        'mode-line)))
-   ") "
+   " " mode-line-position
 
    ;; File size
-   (:eval (if buffer-file-name "%I " ""))
+   "   "    (:eval (if buffer-file-name "%I " ""))
 
    " "
    ;; Major mode
@@ -160,7 +163,10 @@
    ;; global-mode-string
 
    " "
-   (:eval (format-time-string "%H:%M:%S" (current-time)))))
+   (:eval (format-time-string "%H:%M:%S" (current-time)))
+
+   mode-line-end-spaces
+   ))
 
 
 ;; 不要闪烁光标
