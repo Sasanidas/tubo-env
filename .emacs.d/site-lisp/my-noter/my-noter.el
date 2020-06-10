@@ -123,7 +123,7 @@ This setting may be overridden in a document with the function
   :group 'my-noter
   :type '(repeat string))
 
-(defcustom my-noter-notes-search-path '("~/Documents/Database/000_notes")
+(defcustom my-noter-notes-search-path '("~/Documents/Database/org")
   "List of paths to check (non recursively) when searching for a notes file."
   :group 'my-noter
   :type '(repeat string))
@@ -227,7 +227,7 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
 (defun my-noter/get-note-file (input)
   "Return note file for INPUT."
   (let ((pdf-file-name input)
-        (org-file-create-dir (expand-file-name "000_notes" my-noter/root-directory)))
+        (org-file-create-dir (expand-file-name "org" my-noter/root-directory)))
 
     (unless (file-directory-p org-file-create-dir)
       (make-directory org-file-create-dir t))
@@ -636,9 +636,10 @@ suggest the closest previous note.
 PRECISE-INFO makes the new note associated with a more
 specific location (see `my-noter-insert-precise-note' for more
 info)."
+  (interactive)
   (PDEBUG "INFO: " precise-info)
   (let* ((page (my-noter/doc-approx-location))
-         (position (my-noter--go-to-page-note page))
+         ;; (position (my-noter--go-to-page-note page))
          (selected-text
           (cond
            ((eq major-mode 'pdf-view-mode)
@@ -656,9 +657,11 @@ info)."
 
     (PDEBUG "TEXT:" selected-text)
     (PDEBUG "DOCUMENT-PATH:" document-path)
-    (if position
-        (my-noter--switch-to-org-buffer t position)
-      (my-noter--create-new-note document-path page selected-text))))
+    (my-noter--create-new-note document-path page selected-text)
+    ;; (if position
+    ;;     (my-noter--switch-to-org-buffer t position)
+    ;;   (my-noter--create-new-note document-path page selected-text))
+    ))
 
 (define-obsolete-function-alias
   'my-noter--sync-pdf-page-current 'my-noter-sync-page-current "1.3.0")

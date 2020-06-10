@@ -146,8 +146,10 @@ Otherwise return word around point."
                    (dolist (func '(tdict--search-youdao tdict--search-app))
                      (PDEBUG "FUNC: " func)
                      (condition-case var
-                         (aif (funcall func word)
-                             (throw 'p-found it))
+                         (let ((ret (funcall func word)))
+                           (if ret
+                               (throw 'p-found ret)))
+
                        (error
                         (progn
                           (PDEBUG "ERR: " var)
