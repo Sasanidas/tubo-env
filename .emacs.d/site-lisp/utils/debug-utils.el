@@ -117,7 +117,8 @@
           (while (search-forward-regexp ".+?$" nil t)
             (push (match-string 0)  pid-list)))
 
-        (let ((choosen (ivy-read "Choose process: " pid-list :initial-input proc)) )
+        (let ((choosen (ivy-read "Choose process: " (nreverse pid-list)
+                                 :initial-input proc)) )
           (if (string-match r-match-entry choosen)
               (setq pid (match-string 1 choosen))
             (error "Failed to parse PID")))))
@@ -152,7 +153,7 @@
     (let ((choosen
            (if (= 1 (length pid-list))
                (car pid-list)
-             (ivy-read "Choose process: " pid-list))))
+             (ivy-read "Choose process: " (nreverse pid-list)))))
 
       (if (string-match r-match-entry choosen)
           (attach-proc (match-string 1 choosen))

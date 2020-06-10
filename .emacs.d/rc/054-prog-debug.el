@@ -1,4 +1,4 @@
-;;; 057-prog-debug.el -- Brief introduction here.
+;;; 054-prog-debug.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -90,19 +90,6 @@
   "gdb-mi"
   (advice-add 'gdb-setup-windows :override #'yc/gdb-setup-windows))
 
-
-;; (defun yc/gud-display-line (true-file line)
-;;   "Advice for `gud-display-line'."
-;;   (let ((buf (or (get-file-buffer true-file)
-;;                  (if (file-exists-p true-file)
-;;                      (find-file-noselect true-file)
-;;                    nil))))
-;;     (when (and buf gdb-source-window (window-live-p gdb-source-window))
-;;       (set-window-buffer gdb-source-window buf))))
-
-;; (advice-add 'gud-display-line :before #'yc/gud-display-line)
-;; (advice-remove 'gud-display-line #'yc/gud-display-line)
-
  ;; realgud
 
 (defun yc/realgud-find-file (marker filename directory)
@@ -120,7 +107,8 @@
   (realgud-safe-mode nil)
   (realgud-file-find-function 'yc/realgud-find-file)
   :config
-  (advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv))
+  (advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv)
+)
 
 (use-package realgud-lldb
   :pin melpa
@@ -135,9 +123,6 @@
 Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
   (realgud-track-mode-setup 't))
 
-
-
-
 
 ;; Function to debug process, either attaching to a running one, or start a new one.
 (use-package debug-utils
@@ -145,11 +130,11 @@ Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
                             debug-proc attach-proc attach-proc-su))
 
 
-(provide '057-prog-debug)
+(provide '054-prog-debug)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 057-prog-debug.el ends here
+;;; 054-prog-debug.el ends here

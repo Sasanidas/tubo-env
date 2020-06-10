@@ -68,8 +68,9 @@
 
  ;;; Dictionary.
 (use-package tdict
-  :bind ((;; ,(kbd "<C-f10>")
-          [C-f10]. tdict-search)))
+  :bind ((;; (kbd "<C-f10>")
+          [C-f10]
+          . tdict-search)))
 
 (use-package tabbr
   :bind ((;; ,(kbd "<S-f10>")
@@ -1310,7 +1311,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
                                 (replace-match "-|-")))))))
   :custom
   (markdown-translate-filename-function 'yc/translate-markdown-filename)
-  (markdown-command "markdown_py")
+  ;; (markdown-command "markdown_py")
   (markdown-xhtml-header-content
    "<style type=\"text/css\">html { margin: 0; font: .9em/1.6em \"Droid Serif\", \"Lucida Grande\", \"Lucida Sans Unicode\", \"DejaVu Sans\", Verdana, sans-serif; background-attachment: fixed; background-position: right bottom; background-repeat: no-repeat; background-color: white; }  body { font-size: 12pt; line-height: 18pt; color: black; margin-top: 0; }   pre { font-family: Droid Sans Mono, Monaco, Consolas, \"Lucida Console\", monospace; font-size: 90%; padding: 1.2em; overflow: auto;  line-height: 1.3; font-weight: 100; background-color:#2e3436; box-shadow: 5px 5px 5px #888; border: none; margin-bottom: 10pt; color: white; padding: 1.2em; }  code { font-family: Droid Sans Mono, Monaco, Consolas, \"Lucida Console\", monospace;} </style>")
   :bind (:map markdown-mode-map
