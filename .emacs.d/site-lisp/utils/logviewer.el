@@ -60,12 +60,13 @@
    `(
     ;; Date & time.
     (,(rx bol (** 0 256 not-newline) symbol-start
-          (group (or "ERROR" "FATAL" "WARNING" "WARN"
-                     "error" "fatal" "warning" "warn"
-                     "Error" "Fatal" "Warning" "Warn"
-                     )) (or ":" "]")
+          (group (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN"
+                     "panic" "error" "fatal" "warning" "warn"
+                     "Panic" "Error" "Fatal" "Warning" "Warn"
+                     )) (or ":" "]" ",")
           (group (** 0 256 not-newline)))
      (1 font-lock-warning-face) (2 font-lock-comment-face))
+
     (,(rx line-start
           (*? (or space alnum "/" "-")) (+ digit) ":" (+ digit) ":" (+ digit)
           (? "." (+ digit)))
@@ -195,8 +196,9 @@
         (outline-flag-region (point-min) (point-max) nil)
       (progn
         (let ((logviewer-filter (logviewer-get-filter lvl))
-              (content (buffer-substring-no-properties
-                        (point-min) (point-max))))
+              ;; (content (buffer-substring-no-properties
+              ;;           (point-min) (point-max)))
+              )
           (if (< cur-lvl logviewer-filter-level)
               (outline-flag-region (point-min) (point-max) nil)
             )
@@ -232,8 +234,6 @@
 (defun logviewer-quit ()
   "Quit logviewer."
   (interactive)
-  (when logviewer--current-cache-dir
-    (delete-directory logviewer--current-cache-dir t))
   (kill-buffer))
 
 (defun logviewer--hide-by-regex (r)
@@ -241,7 +241,9 @@
 R should contains one capture group."
   (save-excursion
     (goto-char (point-min))
+    (PDEBUG "PT" (point))
     (while (search-forward-regexp r nil t)
+      (PDEBUG "POINT:" (point))
       (let* ((ov (make-overlay (match-beginning 1) (match-end 1))))
         (overlay-put ov 'invisible 'invs)
         (push ov logviewer--overlays)))))
@@ -265,17 +267,30 @@ Key definitions:
      ;; (rx (repeat logviewer-fold-long-lines not-newline)
      ;;     (group (+? not-newline)) eol)
 
-     )
+     ))
 
-    ;; special handling for pg log (csv).
-    (when (and buffer-file-name
-               (string-match-p
-                (rx buffer-start (+? nonl) "/pg_log/" (+? nonl)
-                    (+? nonl) "." (or "log" "csv")) buffer-file-name))
-      (logviewer--hide-by-regex
-       (rx bol (= 4 digit) (= 2 (: "-" (= 2 digit))) ;; date
-           space (= 2 digit) (= 2 (: ":" (= 2 digit))) "." (+ digit) ;; time
-           space (group (= 16 (: (*? (not (any ","))) ",")))))))
+  ;; special handling for pg log (csv).
+  (when (and buffer-file-name
+             (string-match-p
+              (rx buffer-start (+? nonl) "/pg_log" (+? nonl)
+                  "." (or "log" "csv")) buffer-file-name))
+    (logviewer--hide-by-regex
+     (rx (group
+          "CST," (+? nonl) " CST," ;; session start timestamp
+         (*? nonl) "," ;; virtual transaction id
+         (*? nonl) "," ;; transaction id
+         )))
+    ;; state code
+    (logviewer--hide-by-regex
+     (rx (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN" "LOG")
+         ","
+         (group (+? nonl) ",")
+         "\""))
+
+    (logviewer--hide-by-regex
+     (rx (group (+ ",")"\"\"") eol))
+
+    )
 
 
   (setq buffer-read-only nil)
