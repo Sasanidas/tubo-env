@@ -508,7 +508,7 @@
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
               ("r" . pdf-history-forward)
-              ("i" . my-noter/open-note-file))
+              ("i" . my-noter))
   :config
   (advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
   (unless (file-executable-p pdf-info-epdfinfo-program)

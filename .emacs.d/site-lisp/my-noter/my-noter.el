@@ -967,6 +967,8 @@ Keybindings (org-mode buffer):
                               choices
                               :test 'equal)))
 
+          (PDEBUG "INDEX: " action-index)
+
           (case action-index
             (0 (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
                                                         search-names nil nil))
@@ -1032,8 +1034,7 @@ Keybindings (org-mode buffer):
             (insert (if (save-excursion (beginning-of-line) (looking-at "[[:space:]]*$")) "" "\n")
                     "* " document-base)
             (org-entry-put nil my-noter-property-doc-file
-                           (file-relative-name document-used-path
-                                               (file-name-directory (car notes-files)))))
+                           document-used-path))
           (setq notes-files-annotating notes-files)))
 
       (when (> (length (cl-delete-duplicates notes-files-annotating :test 'equal)) 1)
