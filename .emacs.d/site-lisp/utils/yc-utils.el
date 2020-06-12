@@ -379,6 +379,12 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (interactive)
   (update-debug-vars nil))
 
+(defun yc/delete-backtrace ()
+  "Description."
+  (interactive)
+  (aif (get-buffer "*Backtrace*")
+      (kill-buffer it)))
+
 
 ;;;; Add new line before or after current line.
 (defun zl-newline nil

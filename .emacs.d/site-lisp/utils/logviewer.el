@@ -274,6 +274,7 @@ Key definitions:
              (string-match-p
               (rx buffer-start (+? nonl) "/pg_log" (+? nonl)
                   "." (or "log" "csv")) buffer-file-name))
+    (set (make-local-variable 'logviewer--long-line-hidden) t)
     (logviewer--hide-by-regex
      (rx (group
           "CST," (+? nonl) " CST," ;; session start timestamp

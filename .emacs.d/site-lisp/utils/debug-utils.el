@@ -95,6 +95,16 @@
   (unless (executable-find "gdb")
     (error "Can't find GNU debuger (gdb)"))
 
+  (unless proc
+    (setq proc (cond
+                     ((region-active-p)
+                      (buffer-substring-no-properties (region-beginning)
+                                                      (region-end)))
+                     ((and (symbol-at-point)
+                           (symbol-name (symbol-at-point))
+                           (string-match-p (rx bow (+ digit) eow) (symbol-name (symbol-at-point))))
+                      (symbol-name (symbol-at-point))))))
+
   (let (pid)
     (when proc
       (if (numberp proc) (setq pid (number-to-string proc))
@@ -138,6 +148,14 @@
                         (group (+ digit)) (+ space)
                         (group (+? ascii)) (+ space)
                         (+? ascii) eol))
+        (init-input (cond
+                     ((region-active-p)
+                      (buffer-substring-no-properties (region-beginning)
+                                                      (region-end)))
+                     ((and (symbol-at-point)
+                           (symbol-name (symbol-at-point))
+                           (string-match-p (rx bow (+ digit) eow) (symbol-name (symbol-at-point))))
+                      (symbol-name (symbol-at-point)))))
         pid-list)
 
     (PDEBUG "PS-COMMAND: " ps-cmd)
@@ -153,7 +171,8 @@
     (let ((choosen
            (if (= 1 (length pid-list))
                (car pid-list)
-             (ivy-read "Choose process: " (nreverse pid-list)))))
+             (ivy-read "Choose process: " (nreverse pid-list)
+                       :initial-input init-input))))
 
       (if (string-match r-match-entry choosen)
           (attach-proc (match-string 1 choosen))

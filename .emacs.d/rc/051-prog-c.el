@@ -782,7 +782,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
       (let ((root-dir (file-name-directory root-file)) )
         (setq ccls-args
               (list
-               (format "--log-file=/tmp/cq_%s_%d.log"
+               (format "--log-file=/tmp/ccls_%s_%d.log"
                        (let ((cmps (reverse (s-split "/" root-dir))))
 
                          (while (= (length (car cmps)) 0)
