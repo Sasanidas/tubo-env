@@ -37,6 +37,8 @@
                          (expand-file-name it))))
          (collection (if (ffap-url-p filename) nil 'read-file-name-internal))
          (url (ffap-url-p filename))
+         (find-file-func (if current-prefix-arg 'find-file-literally
+                           'find-file))
          line column)
 
 
@@ -99,8 +101,8 @@
                     (if (and counsel-find-file-speedup-remote
                              (file-remote-p ivy--directory))
                         (let ((find-file-hook nil))
-                          (find-file (expand-file-name x ivy--directory)))
-                      (find-file (expand-file-name x ivy--directory))
+                          (funcall find-file-func (expand-file-name x ivy--directory)))
+                      (funcall find-file-func (expand-file-name x ivy--directory))
                       (when (and line buffer-file-name
                                  (string= buffer-file-name filename))
                         (goto-char (point-min))

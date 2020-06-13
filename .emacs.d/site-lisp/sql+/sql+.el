@@ -256,21 +256,6 @@ Sql is a cross-platform, open-source make system."
    (t (error "Not implemented for type: %s" (symbol-name db/product)))))
 
 
-(defun eshell/restart_pg (&optional datadir)
-  "Restart PG."
-  (interactive)
-  (unless datadir
-    (error "Usage: restart_pg datadir"))
-
-  (aif (executable-find "pg_ctl")
-      (let* ((stop-command (format "%s stop -D %s" it datadir))
-             (start-command (format "%s start -D %s" it datadir))
-             (final-command (format "echo Stopping via '%s'.;%s;echo Starting via '%s'.;%s"
-                                    stop-command stop-command start-command start-command)))
-        (start-process-shell-command "restart_pg" (current-buffer) final-command))
-
-    (error "Could not find pg_ctl, current PATH: %s" (getenv "PATH"))))
-
 (defun sql/remove-costs ()
   "Remove cost info."
   (interactive)

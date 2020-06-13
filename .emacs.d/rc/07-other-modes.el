@@ -599,28 +599,24 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
     (defalias 'eshell/d 'dired)
     (setenv "PAGER" "cat")
 
-    ;; Visual commands
-    (require 'em-term)
-    (mapc (lambda (x) (push x eshell-visual-commands))
-          '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
-            "spark-shell" "sbt"))
-
     ;; automatically truncate buffer after output
     (when (boundp 'eshell-output-filter-functions)
       (push 'eshell-truncate-buffer eshell-output-filter-functions))
 
     (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)))
 
-(defun eshell/ldd (&rest args)
-  "Implementation of mkdir in Lisp."
-  (cond
-   ((executable-find "ldd")
-    (shell-command-to-string (concat "ldd " (mapconcat 'identity args " "))))
+(use-package eshell+
+  :commands (eshell/ldd eshell/restart_pg))
 
-   ((executable-find "otool")
-    (shell-command-to-string (concat "otool -L " (mapconcat 'identity args " "))))
-   (t
-    (error "Can't find ldd or otool"))))
+
+(use-package em-term
+  :config
+  (mapc (lambda (x) (push x eshell-visual-commands))
+        '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
+          "spark-shell" "sbt" "watch"))
+  )
+
+
 
 (defun yc/open-eshell ()
   "DOCSTRING."
