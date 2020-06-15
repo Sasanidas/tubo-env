@@ -248,6 +248,26 @@ R should contains one capture group."
         (overlay-put ov 'invisible 'invs)
         (push ov logviewer--overlays)))))
 
+(defun logviewer-special-handling-csv ()
+  "Special handling for pg logs of CSV format."
+  (interactive)
+  (set (make-local-variable 'logviewer--long-line-hidden) t)
+  (logviewer--hide-by-regex
+   (rx (group
+        "CST," (+? nonl) " CST," ;; session start timestamp
+        (*? nonl) "," ;; virtual transaction id
+        (*? nonl) "," ;; transaction id
+        )))
+  ;; state code
+  (logviewer--hide-by-regex
+   (rx (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN" "LOG" "DEBUG")
+       ","
+       (group (+? nonl) ",")
+       "\""))
+
+  (logviewer--hide-by-regex
+   (rx (group (+ ",")"\"\"") eol)))
+
 ;;;###autoload
 (define-derived-mode logviewer-mode fundamental-mode "Log-Viewer"
   "Major mode for editing Logviewer files
@@ -274,23 +294,7 @@ Key definitions:
              (string-match-p
               (rx buffer-start (+? nonl) "/pg_log" (+? nonl)
                   "." (or "log" "csv")) buffer-file-name))
-    (set (make-local-variable 'logviewer--long-line-hidden) t)
-    (logviewer--hide-by-regex
-     (rx (group
-          "CST," (+? nonl) " CST," ;; session start timestamp
-         (*? nonl) "," ;; virtual transaction id
-         (*? nonl) "," ;; transaction id
-         )))
-    ;; state code
-    (logviewer--hide-by-regex
-     (rx (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN" "LOG")
-         ","
-         (group (+? nonl) ",")
-         "\""))
-
-    (logviewer--hide-by-regex
-     (rx (group (+ ",")"\"\"") eol))
-
+    (logviewer-special-handling-csv)
     )
 
 
