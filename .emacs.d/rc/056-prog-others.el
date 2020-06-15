@@ -328,14 +328,14 @@ Call FUNC with ARGS."
 
 
  ;; llvm
-(use-package llvm-mode
-  :mode (rx ".ll" eol)
-  )
+;; (use-package llvm-mode
+;;   :mode (rx ".ll" eol)
+;;   )
 
-(use-package tablegen-mode
-  :mode (rx ".td" eol))
+;; (use-package tablegen-mode
+;;   :mode (rx ".td" eol))
 
-(require 'autodisass-llvm-bitcode)
+;; (require 'autodisass-llvm-bitcode)
 
  ;; rust
 (use-package rust-mode

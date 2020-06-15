@@ -868,16 +868,12 @@ Keybindings (org-mode buffer):
 (defun my-noter/get-document-path ()
   "Return path of document visited by this buffer."
   (interactive)
-  (let ((buffer-file-name (or buffer-file-name
-                              (if (eq major-mode 'nov-mode)
-                                  (bound-and-true-p nov-file-name))))
-        (document-path
-         (or buffer-file-name buffer-file-truename
-             (if (eq major-mode 'eww-mode)
-                 (eww-current-url)
+  (let ((document-path
+         (cond
+          ((eq major-mode 'nove-mode) nov-file-name)
+          ((eq major-mode 'eww-mode) (eww-current-url))
 
-               (error "This buffer does not seem to be visiting any file"))
-             )))
+          (t (expand-file-name (or buffer-file-name buffer-file-truename))))))
 
     (if (called-interactively-p 'interactive)
         (PDEBUG "Document path: " document-path))

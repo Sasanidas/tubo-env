@@ -457,15 +457,23 @@
          (;;(kbd "C-x C-o")
           "" . yc/open-url)))
 
- ;; ********************** autocompressings *********************
-;; Now add bzip2 support and turn auto compression back on.
-(add-to-list 'jka-compr-compression-info-list
-             ["\\.dia\\'"
-              "compressing" "gzip" ("-c" "-q")
-              "uncompressing" "gzip" ("-c" "-q" "-d")
-              t t ""]
-             )
-(jka-compr-update)
+;;  ;; ********************** autocompressings *********************
+;; ;; Now add bzip2 support and turn auto compression back on.
+;; (add-to-list 'jka-compr-compression-info-list
+;;              ["\\.dia\\'"
+;;               "compressing" "gzip" ("-c" "-q")
+;;               "uncompressing" "gzip" ("-c" "-q" "-d")
+;;               t t ""]
+;;              )
+
+;; (jka-compr-update)
+
+ ;; nov, epub reader
+
+(use-package nov
+  :mode ((rx ".epub") . nov-mode)
+  )
+
 
 ;; in org file: [[pdfview:/path/to/myfile.pdf::42][My file Description]]
 
