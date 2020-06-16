@@ -252,21 +252,43 @@ R should contains one capture group."
   "Special handling for pg logs of CSV format."
   (interactive)
   (set (make-local-variable 'logviewer--long-line-hidden) t)
-  (logviewer--hide-by-regex
-   (rx (group
-        "CST," (+? nonl) " CST," ;; session start timestamp
-        (*? nonl) "," ;; virtual transaction id
-        (*? nonl) "," ;; transaction id
-        )))
-  ;; state code
-  (logviewer--hide-by-regex
-   (rx (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN" "LOG" "DEBUG")
-       ","
-       (group (+? nonl) ",")
-       "\""))
+  (let ((old-value buffer-read-only)
+        (buffer-read-only nil))
 
-  (logviewer--hide-by-regex
-   (rx (group (+ ",")"\"\"") eol)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (search-forward-regexp
+              (rx bol "./pg_log/postgresql-" (+? nonl) ".csv:" (+ digit) ":") nil
+              t)
+
+        (replace-match "PRI:  ")))
+
+    (save-excursion
+      (goto-char (point-min))
+      (while (search-forward-regexp
+              (rx bol "./pg_log_" (+ digit) "/postgresql-" (+? nonl) ".csv:"
+                  (+ digit) ":") nil
+              t)
+
+        (replace-match "SEC:  ")))
+
+    (logviewer--hide-by-regex
+     (rx (group
+          "CST," (+? nonl) " CST," ;; session start timestamp
+          (*? nonl) "," ;; virtual transaction id
+          (*? nonl) "," ;; transaction id
+          )))
+    ;; state code
+    (logviewer--hide-by-regex
+     (rx (or "PANIC" "ERROR" "FATAL" "WARNING" "WARN" "LOG" "DEBUG")
+         ","
+         (group (+? nonl) ",")
+         "\""))
+
+    (logviewer--hide-by-regex
+     (rx (group (+ ",")"\"\"") eol))
+
+    (setq buffer-read-only old-value)))
 
 ;;;###autoload
 (define-derived-mode logviewer-mode fundamental-mode "Log-Viewer"

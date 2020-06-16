@@ -758,6 +758,14 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   :commands (wdired-change-to-wdired-mode)
 )
 
+(defun yc/dired-find-file-adv (&rest args)
+  "Advice for 'dired-find-file'.
+Call FUNC which is 'dired-find-file with ARGS."
+  (let ((buffer (find-buffer-visiting (dired-get-file-for-visit))))
+    (when buffer
+      (switch-to-buffer buffer ))))
+
+
 (use-package dired
   :commands (dired)
   :custom
@@ -786,6 +794,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   (progn
     (setq-default dired-listing-switches "-alh")
     (advice-add 'dired-ediff :around #'yc/dired-ediff-adv)
+    (advice-add 'dired-find-file :before-until #'yc/dired-find-file-adv)
     (load-library "ls-lisp")))
 
 (use-package dired-x

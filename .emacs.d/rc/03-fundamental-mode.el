@@ -381,11 +381,25 @@ ID, ACTION, CONTEXT."
   (vlf-batch-size 2000000) ;; 2 MB.
   )
 
+
+(defun yc/find-file-noselect-adv (func &rest args)
+  "Advice for 'find-file-noselect'.
+Call FUNC which is 'find-file-noselect with ARGS."
+  (condition-case var
+      (apply func args)
+    (error (progn
+             (PDEBUG "VAR: " var)
+             (if (string= (cadr var) "File already visited literally")
+                 (find-buffer-visiting (car args))
+               (error "%s" (cadr var)))))))
+
 (use-package files
   :config
   ;;Handle file-error and suggest to install missing packages...
   (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
-  (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large))
+  (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
+  (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv)
+)
 
 (defun yc/abort-if-file-too-large (size op-type filename  &optional OFFER-RAW)
   "Advice for `abort-if-file-too-large'.
