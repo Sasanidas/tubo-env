@@ -304,6 +304,16 @@ Call FUNC with ARGS."
      (nil . ("lock" "gpg"))
      ("lock" . (""))
      ("gpg" . (""))))
+
+  :config
+  (cond
+   ;; If fd exists, use it for git and generic projects. fd is a rust program
+   ;; that is significantly faster than git ls-files or find, and it respects
+   ;; .gitignore. This is recommended in the projectile docs.
+   ((executable-find "fd")
+    (setq-default projectile-generic-command "fd . -0 --type f --color=never"))
+   ((executable-find "rg")
+    (setq projectile-generic-command "rg -0 --files --follow --color=never --hidden")))
   )
 
 (use-package counsel-projectile
