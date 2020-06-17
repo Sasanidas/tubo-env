@@ -96,14 +96,9 @@
     (error "Can't find GNU debuger (gdb)"))
 
   (unless proc
-    (setq proc (cond
-                     ((region-active-p)
-                      (buffer-substring-no-properties (region-beginning)
-                                                      (region-end)))
-                     ((and (symbol-at-point)
-                           (symbol-name (symbol-at-point))
-                           (string-match-p (rx bow (+ digit) eow) (symbol-name (symbol-at-point))))
-                      (symbol-name (symbol-at-point))))))
+    (setq proc (if (region-active-p)
+                   (buffer-substring-no-properties (region-beginning)
+                                                   (region-end)))))
 
   (let (pid)
     (when proc
@@ -148,14 +143,10 @@
                         (group (+ digit)) (+ space)
                         (group (+? ascii)) (+ space)
                         (+? ascii) eol))
-        (init-input (cond
-                     ((region-active-p)
+        (init-input (if (region-active-p)
                       (buffer-substring-no-properties (region-beginning)
-                                                      (region-end)))
-                     ((and (symbol-at-point)
-                           (symbol-name (symbol-at-point))
-                           (string-match-p (rx bow (+ digit) eow) (symbol-name (symbol-at-point))))
-                      (symbol-name (symbol-at-point)))))
+                                                      (region-end))
+                       (number-at-point)))
         pid-list)
 
     (PDEBUG "PS-COMMAND: " ps-cmd)
