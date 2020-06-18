@@ -167,9 +167,8 @@ Call FUNC which is 'counsel-git-grep-action with X."
           (unless (eq ivy-exit 'done)
             (swiper--cleanup)
             (swiper--add-overlays (ivy--regex ivy-text)))
-          (display-buffer buffer)
+          (switch-to-buffer buffer );; (display-buffer buffer)
           )
-
         t))))
 
 

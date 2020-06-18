@@ -599,19 +599,18 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
      '(eshell-buffer-shorthand t)
      '(eshell-plain-echo-behavior t)))
   :config
-  (progn
-    (require 'esh-opt)
+  (require 'esh-opt)
 
-    ;; quick commands
-    (defalias 'eshell/e 'find-file-other-window)
-    (defalias 'eshell/d 'dired)
-    (setenv "PAGER" "cat")
+  ;; quick commands
+  (defalias 'eshell/e 'find-file-other-window)
+  (defalias 'eshell/d 'dired)
+  (setenv "PAGER" "cat")
 
-    ;; automatically truncate buffer after output
-    (when (boundp 'eshell-output-filter-functions)
-      (push 'eshell-truncate-buffer eshell-output-filter-functions))
+  ;; automatically truncate buffer after output
+  (when (boundp 'eshell-output-filter-functions)
+    (push 'eshell-truncate-buffer eshell-output-filter-functions))
 
-    (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)))
+  (add-hook 'comint-output-filter-functions 'comint-truncate-buffer))
 
 (use-package eshell+
   :commands (eshell/ldd eshell/restart_pg))
@@ -621,9 +620,7 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   :config
   (mapc (lambda (x) (push x eshell-visual-commands))
         '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
-          "spark-shell" "sbt" "watch"))
-  )
-
+          "spark-shell" "sbt" "watch")))
 
 
 (defun yc/open-eshell ()
