@@ -1360,6 +1360,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 
 (use-package logviewer
+  :commands (logviewer-special-handling-csv)
   :mode (((rx (or (: bow "messages" eow)
                   (:  "/" (+? nonl) "_log/" (+? nonl) "."
                       (or "txt" "log" "csv"))

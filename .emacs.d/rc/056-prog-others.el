@@ -411,7 +411,8 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
             (interactive)
             (if (executable-find "rustc")
                 (concat "rustc " file " && ./" (file-name-sans-extension file))
-              (error "Can't find executable: rustc"))))))))
+              (error "Can't find executable: rustc")))))))
+  :mode ((rx ".rs" buffer-end)))
 
 
 (use-package lua-mode
