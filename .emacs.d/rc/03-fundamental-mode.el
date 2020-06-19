@@ -157,18 +157,21 @@ Call FUNC which is 'counsel-git-grep-action with X."
               "LINE:" line-number)
       (when buffer
         (with-current-buffer buffer
+          (switch-to-buffer buffer );; (display-buffer buffer)
           (goto-char (point-min))
           (forward-line (1- (string-to-number line-number)))
+
           (when (re-search-forward (ivy--regex ivy-text t) (line-end-position) t)
             (when swiper-goto-start-of-match
               (goto-char (match-beginning 0))))
+
           (swiper--ensure-visible)
+          (recenter)
+
           (run-hooks 'counsel-grep-post-action-hook)
           (unless (eq ivy-exit 'done)
             (swiper--cleanup)
-            (swiper--add-overlays (ivy--regex ivy-text)))
-          (switch-to-buffer buffer );; (display-buffer buffer)
-          )
+            (swiper--add-overlays (ivy--regex ivy-text))))
         t))))
 
 

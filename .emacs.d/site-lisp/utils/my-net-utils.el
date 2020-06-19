@@ -73,8 +73,8 @@
     (cond ((and download-region-max-downloads ; add to the queue
                 (>= (length dlrgn/active-downloads)
                     download-region-max-downloads))
-           (overlay-put ov 'display "[waiting ...]")
-           (overlay-put ov 'dlrgn/url url)
+           (message "[waiting ...]")
+           (overlay-put  'dlrgn/url url)
            (add-to-list 'dlrgn/pending-downloads ov t))
           ((progn                       ; connection succeeded
              (overlay-put ov 'display "[connecting ...]")
@@ -121,10 +121,16 @@
            (overlay-put ov 'display "[saving ...]")
            ;; copied from "url-copy-file"
            (with-current-buffer buf
-             (let ((handle (mm-dissect-buffer t)))
-               (mm-save-part-to-file handle (overlay-get ov 'dlrgn/newname))
+             (let ((handle (mm-dissect-buffer t))
+                   (name (overlay-get ov 'dlrgn/newname)))
+               (mm-save-part-to-file handle name)
                (kill-buffer buf)
-               (mm-destroy-parts handle)))
+               (set-file-modes name
+                               (logior (file-modes name)
+                                       #o444))
+               ;; chmod: make it readable for others...
+               (mm-destroy-parts handle)
+               (kill-new (file-name-nondirectory name))))
            (delete-overlay ov)
            (message "download completed.")))
     ;; if any download is pending, start it
@@ -164,11 +170,16 @@
                   ((use-region-p)
                    (cons (region-beginning) (region-end)))
                   ((thing-at-point-bounds-of-url-at-point))
-                  (t (error "There is no region"))))
+                  (t nil)))
          (beg (car bounds))
          (end (cdr bounds))
-         (url (buffer-substring-no-properties beg end))
-         (dir (expand-file-name "~/Downloads/"))
+         (url (if bounds
+                  (buffer-substring-no-properties beg end)
+                (completing-read "INPUT URL: " nil)))
+         (initial (if (file-directory-p "images")
+                      "images"))
+         (dir (read-directory-name "Save file to: "
+                                   default-directory nil t initial))
          (file (convert-standard-filename
                 (url-unhex-string (car (last (split-string url "/" t))))))
          (newname (concat dir file))
@@ -176,7 +187,7 @@
                            (not (y-or-n-p "File already exists, overwrite? "))
                            (read-file-name "new filename : " dir file))
                       newname))
-         (ov (dlrgn/make-download beg end newname)))
+         (ov (dlrgn/make-download (or beg (point)) (or end (1+ (point))) newname)))
 
     (unless (file-exists-p dir)
       (make-directory dir t))

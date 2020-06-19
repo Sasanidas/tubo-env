@@ -657,11 +657,15 @@ info)."
 
     (PDEBUG "TEXT:" selected-text)
     (PDEBUG "DOCUMENT-PATH:" document-path)
-    (my-noter--create-new-note document-path page selected-text)
-    ;; (if position
-    ;;     (my-noter--switch-to-org-buffer t position)
-    ;;   (my-noter--create-new-note document-path page selected-text))
-    ))
+
+    (if current-prefix-arg
+        ;; when current prefix-arg is set, copy page info only..
+        (progn
+        (kill-new (format ":%s: %s\n:%s: %d\n"
+                          my-noter-property-doc-file document-path
+                          my-noter-property-note-location page))
+        (message "note info killed."))
+        (my-noter--create-new-note document-path page selected-text))))
 
 (define-obsolete-function-alias
   'my-noter--sync-pdf-page-current 'my-noter-sync-page-current "1.3.0")
@@ -884,7 +888,6 @@ Keybindings (org-mode buffer):
   (interactive)
 
   (if (eq major-mode 'org-mode)
-
       ;; Creating session from notes file.
       (progn
         ;; (when (org-before-first-heading-p)
@@ -893,15 +896,13 @@ Keybindings (org-mode buffer):
         (my-noter-notes-mode))
 
     ;; Creating the session from the annotated document
-    (let* ((buffer-file-name (or buffer-file-name
-                                 (if (eq major-mode 'nov-mode)
-                                     (bound-and-true-p nov-file-name))))
-           (document-path
-            (or buffer-file-name buffer-file-truename
+    (let* ((document-path
+            (or buffer-file-truename
+                (if (eq major-mode 'nov-mode)
+                    (bound-and-true-p nov-file-name))
                 (if (eq major-mode 'eww-mode)
                     (eww-current-url)
-                  (error "This buffer does not seem to be visiting any file"))
-                ))
+                  (error "This buffer does not seem to be visiting any file"))))
 
            (document-name (file-name-nondirectory document-path))
            (document-base (file-name-base document-name))
@@ -913,11 +914,6 @@ Keybindings (org-mode buffer):
                       default-directory
                     (file-name-directory buffer-file-truename))
                 default-directory)))
-
-           ;; NOTE: This is the path that is actually going to be used, and
-           ;; should be the same as `buffer-file-name', but is needed for the
-           ;; truename workaround
-           (document-used-path (expand-file-name document-name document-directory))
 
            (search-names (append my-noter-default-notes-file-names (list (concat document-base ".org"))))
            notes-files-annotating     ; List of files annotating document
@@ -1029,8 +1025,7 @@ Keybindings (org-mode buffer):
             (goto-char (point-max))
             (insert (if (save-excursion (beginning-of-line) (looking-at "[[:space:]]*$")) "" "\n")
                     "* " document-base)
-            (org-entry-put nil my-noter-property-doc-file
-                           document-used-path))
+            (org-entry-put nil my-noter-property-doc-file document-path))
           (setq notes-files-annotating notes-files)))
 
       (when (> (length (cl-delete-duplicates notes-files-annotating :test 'equal)) 1)
