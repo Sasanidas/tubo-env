@@ -10,6 +10,7 @@
  ;; ivy mode
 (use-package ivy
   :commands (ivy-read ivy-mode)
+  :pin melpa
   :ensure t
   :hook ((emacs-startup . ivy-mode))
   :config
@@ -21,7 +22,13 @@
   :bind ((;(kbd "C-c C-r")
           "" . ivy-resume)
          (;(kbd "M-r")
-          [134217842] . ivy-resume)))
+          [134217842] . ivy-resume))
+  ;; :bind (:map ivy-mode-map
+  ;;             (;; (kbd "M-[ 1 ; 5 l")
+  ;;              [134217819 49 59 53 108] . ivy-beginning-of-buffer)
+  ;;             (;; (kbd "M-[ 1 ; 5 n")
+  ;;              [134217819 49 59 53 110] . ivy-end-of-buffer))
+  )
 
 (defun yc/counsel-find-file ()
   "Advice for Y with ARGS."
@@ -175,34 +182,48 @@ Call FUNC which is 'counsel-git-grep-action with X."
         t))))
 
 
+(defun counsel-find-file-as-user (x)
+  "Find file X with root privileges."
+  (counsel-require-program counsel-root-command)
+  (let* ((host (file-remote-p x 'host))
+         (user-name (ivy-read "open file as user: " nil))
+         (file-name (format "/%s:%s@%s:%s"
+                            counsel-root-command
+                            user-name
+                            (or host "127.0.0.1")
+                            (expand-file-name
+                             (if host
+                                 (file-remote-p x 'localname)
+                               x)))))
+    (PDEBUG "FILE:" file-name)
+    ;; If the current buffer visits the same file we are about to open,
+    ;; replace the current buffer with the new one.
+    (if (eq (current-buffer) (get-file-buffer x))
+        (find-alternate-file file-name)
+      (find-file file-name))))
+
+(defun counsel-grep-in-dir (x)
+  "Grep in curtent dir X."
+  (PDEBUG "X: " x)
+  (interactive)
+  (yc/counsel-grep))
+
+
 (use-package counsel
   :commands (counsel-find-file
              counsel-recentf counsel-semantic-tags
              counsel-fzf counsel-imenu-categorize-functions
              counsel-grep-or-swiper
              counsel-git-grep)
+  :pin melpa
   :ensure t
   :custom
   (counsel-find-file-at-point t)
   (counsel-find-file-ignore-regexp (rx (or (: buffer-start (or "#" "."))
-                                            (: (or "#" "~")  buffer-end)
-                                            (: buffer-start ".ccls-cache" buffer-end)
-                                            )))
+                                           (: (or "#" "~")  buffer-end)
+                                           (: buffer-start ".ccls-cache" buffer-end)
+                                           )))
   (counsel-rg-base-command "rg -u --with-filename --no-heading --line-number --color never %s")
-  :config
-  (progn
-    (defalias 'git-grep 'counsel-git-grep)
-    (setq counsel-fzf-dir-function
-          (lambda ()
-            default-directory))
-
-    (if (executable-find "rg")
-        (setq counsel-grep-base-command
-              "rg -S --no-heading --line-number --color never %s %s"))
-
-    (advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
-    )
-
   :bind (("M-x" . counsel-M-x)
          ([remap yank-pop] . counsel-yank-pop)
          ([remap bookmark-bmenu-list] . counsel-bookmark)
@@ -225,7 +246,22 @@ Call FUNC which is 'counsel-git-grep-action with X."
               ("\C-r" . counsel-recentf)
               ("F" . 'counsel-fzf))
   :config
+  (defalias 'git-grep 'counsel-git-grep)
+  (setq counsel-fzf-dir-function
+        (lambda ()
+          default-directory))
+
+  (if (executable-find "rg")
+      (setq counsel-grep-base-command
+            "rg -S --no-heading --line-number --color never %s %s"))
+
+  (advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
   (advice-add 'counsel-git-grep-action :before-until #'yc/counsel-git-grep-action-adv)
+
+  (ivy-add-actions
+   'counsel-find-file
+   '(("u" counsel-find-file-as-user "open as other user")
+     ("g" counsel-grep-in-dir "grep in current directory")))
   )
 
 

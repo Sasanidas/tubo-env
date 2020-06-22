@@ -755,8 +755,6 @@ Call FUNC which is 'lsp with ARGS."
   (local-set-key (kbd "M-|") 'align)
   (local-set-key (kbd "M-n") 'senator-next-tag)
   (local-set-key (kbd "M-p") 'senator-previous-tag)
-  (local-set-key "\C-cb" 'semantic-mrub-switch-tags)
-  (local-set-key "\C-cj" 'semantic-ia-fast-jump)
   (local-set-key "\C-csD" 'uml/struct-to-dot)
   (local-set-key "\C-csd" 'uml/struct-to-puml)
   (local-set-key "\C-co"    'yc/open-header)

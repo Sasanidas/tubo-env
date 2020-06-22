@@ -156,13 +156,7 @@ plantuml is a cross-platform, open-source make system."
   )
 
 (use-package org
-  :commands (org-version org-load-modules-maybe)
   :custom
-  (org-agenda-files (list (expand-file-name "~/Work/org")
-                          (expand-file-name "~/Work/yangyingchao.github.io/org")))
-  (org-agenda-dim-blocked-tasks (quote invisible))
-  (org-agenda-skip-deadline-if-done t)
-  (org-agenda-skip-scheduled-if-done t)
   (org-confirm-babel-evaluate nil)
   (org-default-notes-file (expand-file-name "~/Work/org/notes.org"))
   (org-directory (expand-file-name "~/Work/org"))
@@ -234,9 +228,8 @@ plantuml is a cross-platform, open-source make system."
                [138]. org-meta-return)
               (;; ,(kbd "C-c j")
                "j". org-meta-return)
-              ("\C-cl" . org-store-link)
-              ("\C-ca" . org-agenda    )
-              ("\C-cb" . org-iswitchb  )
+
+
               (;;(kbd "M-m")
                [134217837] . yc/show-methods-dwim)
               )
@@ -253,9 +246,6 @@ unwanted space when exporting org-mode to html."
                             (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
                             "\\1\\2" orig-contents))
          (apply func args)))
-
-
-
 
 (use-package ox-latex
   :custom
@@ -323,8 +313,19 @@ Ignore error signal in `org-comment-line-break-function'."
 
 (global-set-key [(control f1)] 'open-mylist)
 
-(use-package org-agenda :bind ((;; ,(kbd "<C-S-f1>")
-                                [C-S-f1]. org-agenda)))
+(use-package ol
+  :bind (("\C-cl" . org-store-link)))
+
+(use-package org-agenda
+  :custom
+  (org-agenda-files (list (expand-file-name "~/Work/org")
+                          (expand-file-name "~/Work/yangyingchao.github.io/org")))
+  (org-agenda-dim-blocked-tasks (quote invisible))
+  (org-agenda-skip-deadline-if-done t)
+  (org-agenda-skip-scheduled-if-done t)
+
+  :bind(("\C-ca" . org-agenda)))
+
 (use-package org-capture :bind ((;; ,(kbd "<M-S-f10>")
                                  [M-S-f10]. org-capture))
   :config
