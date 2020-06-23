@@ -445,16 +445,19 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
 
 (defun yc/org-download-annotate-func (link)
   "Annotate LINK with the time of download."
-  (concat "#+CAPTION: \n"
-          (format "#+NAME: fig:%s\n"
-                  (replace-regexp-in-string
-                   (rx (+ space)) "_"
-                   (file-name-sans-extension (file-name-nondirectory link)) t t))
-          (if (ffap-url-p link)
-              (format "#+DOWNLOADED: %s @ %s\n"
-                      link
-                      (format-time-string "%Y-%m-%d %H:%M:%S"))
-            "")))
+  (let ((lable (format "fig:%s"
+                       (replace-regexp-in-string
+                        (rx (+ space)) "_"
+                        (file-name-sans-extension (file-name-nondirectory link)) t t))))
+
+    (kill-new (format "[[%s]]" lable))
+    (concat "#+CAPTION: \n"
+            (format "#+NAME: %s\n" lable)
+            (if (ffap-url-p link)
+                (format "#+DOWNLOADED: %s @ %s\n"
+                        link
+                        (format-time-string "%Y-%m-%d %H:%M:%S"))
+              ""))))
 
 (use-package org-download
   :pin melpa
