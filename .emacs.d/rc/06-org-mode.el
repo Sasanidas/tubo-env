@@ -443,6 +443,45 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
   :hook ((org-mode . org-bullets-mode)))
 
+(defun yc/org-download-annotate-func (link)
+  "Annotate LINK with the time of download."
+  (concat "#+CAPTION: \n"
+          (format "#+NAME: fig:%s\n"
+                  (replace-regexp-in-string
+                   (rx (+ space)) "_"
+                   (file-name-sans-extension (file-name-nondirectory link)) t t))
+          (if (ffap-url-p link)
+              (format "#+DOWNLOADED: %s @ %s\n"
+                      link
+                      (format-time-string "%Y-%m-%d %H:%M:%S"))
+            "")))
+
+(use-package org-download
+  :pin melpa
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  (org-download-heading-lvl nil)
+  (org-download-timestamp nil)
+
+  :config
+  (setq-default
+    org-download-screenshot-method
+    (cond
+     ((executable-find "screencapture") "screencapture -i %s")
+     ((executable-find "scrot") "scrot -s %s")
+     ((executable-find "gnome-screenshot") "gnome-screenshot -a -f %s")
+     (t "")))
+  (setq org-download-annotate-function 'yc/org-download-annotate-func
+        org-download-file-format-function 'identity)
+
+  :bind (:map org-mode-map
+              (;; (kbd "C-x ds")
+               "ds" . org-download-screenshot)
+              (;; (kbd "C-x du")
+               "du" . org-download-image))
+  )
+
 
 ;; Local Variables:
 ;; coding: utf-8

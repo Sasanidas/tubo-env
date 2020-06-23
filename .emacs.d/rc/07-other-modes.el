@@ -563,16 +563,17 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
 
 
 
-(use-package org-pdfview
-  :commands (org-pdfview-open)
-  :init
-  (progn
-    (yc/eval-after-load
-      "org"
-      (add-to-list 'org-file-apps
-                   '("\\.pdf\\'" . (lambda (file link)
-                                     (org-pdfview-open link))))))
-  )
+;; (defalias 'org-pdfview-open 'find-file)
+;; (use-package org-pdfview
+;;   :commands (org-pdfview-open)
+;;   :init
+;;   (progn
+;;     (yc/eval-after-load
+;;       "org"
+;;       (add-to-list 'org-file-apps
+;;                    '("\\.pdf\\'" . (lambda (file link)
+;;                                      (org-pdfview-open link))))))
+;;   )
 
 
 

@@ -1368,6 +1368,19 @@ inserts comment at the end of the line."
           (PDEBUG "Open with cmd: " app fn)
           (start-process "xdg-open" nil app fn))
       (error "Can't find proper app to open file %s" file))))
+
+(defun yc/layout-save-current ()
+  "Save current layout."
+  (interactive)
+
+  (unless (featurep 'layout-restore)
+    (require 'layout-restore))
+
+  (walk-windows (lambda (w)
+                  (interactive)
+                  (PDEBUG "w:" w)
+                  (select-window w)
+                  (layout-save-current))))
 
 
 (provide 'yc-utils)

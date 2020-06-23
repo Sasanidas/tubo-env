@@ -180,15 +180,14 @@ as \"/pdf/file/dir/\", \"./notes\" is interpreted as
           (insert-file-contents note-file)
           (save-excursion
             (goto-char (point-min))
-            (if (search-forward-regexp
+            (when (search-forward-regexp
                  (rx bol "#+NOTER_DOCUMENT: " (group (+? nonl)) eol) nil t)
-                (replace-match (concat "#+NOTER_DOCUMENT: " target-file))
-              (warn "INTERLEAVE not found in file: %s" note-file)))
+                (replace-match (concat "#+NOTER_DOCUMENT: " target-file))))
 
           (save-excursion
             (goto-char (point-min))
             (while (search-forward-regexp
-                    (format (rx bol ":NOTER_DOCUMENT: " (group (+? nonl) "%s") eol)
+                    (format (rx bol ":NOTER_DOCUMENT:" (+ space) (group (+? nonl) "%s") eol)
                             (file-name-nondirectory target-file))
                      nil t)
               (replace-match (concat ":NOTER_DOCUMENT: " target-file)))))
@@ -897,7 +896,7 @@ Keybindings (org-mode buffer):
 
     ;; Creating the session from the annotated document
     (let* ((document-path
-            (or buffer-file-truename
+            (or buffer-file-name
                 (if (eq major-mode 'nov-mode)
                     (bound-and-true-p nov-file-name))
                 (if (eq major-mode 'eww-mode)

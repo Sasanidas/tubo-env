@@ -158,29 +158,6 @@ Return output file name."
 
 
 
-(defvar yc/org-html--embed-img nil "Nil.")
-
-(defun yc/org-html--format-image (func source attributes info)
-  ""
-  (if yc/org-html--embed-img
-      (let* ((fn_ext_name (file-name-extension source))
-             (b64_cmd (format "base64 %s | tr -d '\n'" source))
-             (b64_content (shell-command-to-string b64_cmd)))
-
-        (unless (file-exists-p source) (error "File %s does not exist!" source))
-        (org-html-close-tag
-         "img"
-         (org-html--make-attribute-string
-          (org-combine-plists
-           (list :src (format "data:image/%s;base64, %s"fn_ext_name b64_content)
-                 :alt (if (string-match-p "^ltxpng/" source)
-                          (org-html-encode-plain-text
-                           (org-find-text-property-in-string 'org-latex-src source))
-                        (file-name-nondirectory source)))
-           attributes))
-         info))
-    (funcall func source attributes info)))
-
 (use-package ox-html
   :defer t
   :init
@@ -189,18 +166,7 @@ Return output file name."
      '(org-html-inline-image-rules
        '(("file" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
          ("http" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
-         ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")))))
-
-
-  (advice-add 'org-html--format-image :around #'yc/org-html--format-image)
-
-  ;; (defun yc/org-html-export-to-html (func &rest args)
-  ;;   "Advice for `org-html-export-to-html', with yc/org-html--embed-img set to t."
-  ;;   (let ((yc/org-html--embed-img t))
-  ;;     (apply func args)))
-
-  ;; (advice-add 'org-html-export-to-html :around #'yc/org-html-export-to-html)
-  )
+         ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'"))))))
 
 
 (defun yc/fetch-field (field)
