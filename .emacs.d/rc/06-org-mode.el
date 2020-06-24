@@ -78,6 +78,30 @@ plantuml is a cross-platform, open-source make system."
   (plantuml-default-exec-mode 'jar)
   (plantuml-indent-level 4))
 
+
+(use-package org-download
+  :pin melpa
+  :commands (org-download-image org-download-screenshot)
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  (org-download-heading-lvl nil)
+  (org-download-timestamp nil)
+
+  :config
+  (setq-default
+    org-download-screenshot-method
+    (cond
+     ((executable-find "screencapture") "screencapture -i %s")
+     ((executable-find "scrot") "scrot -s %s")
+     ((executable-find "gnome-screenshot") "gnome-screenshot -a -f %s")
+     (t "")))
+  (setq org-download-annotate-function 'yc/org-download-annotate-func
+        org-download-file-format-function 'identity)
+  )
+
+
+
  ;; *************************** Org Mode ********************************
 (use-package org-indent
   :commands (org-indent-mode))
@@ -157,6 +181,7 @@ plantuml is a cross-platform, open-source make system."
 
 (use-package org
   :custom
+  (org-image-actual-width nil)
   (org-confirm-babel-evaluate nil)
   (org-default-notes-file (expand-file-name "~/Work/org/notes.org"))
   (org-directory (expand-file-name "~/Work/org"))
@@ -232,8 +257,12 @@ plantuml is a cross-platform, open-source make system."
 
               (;;(kbd "M-m")
                [134217837] . yc/show-methods-dwim)
-              )
-  )
+
+              (;; (kbd "C-x ds")
+               "ds" . org-download-screenshot)
+              (;; (kbd "C-x du")
+               "du" . org-download-image)
+              ))
 
 (defun yc/org-html-paragraph-adv (func &rest args)
   "Advice for 'org-html-paragraph'.
@@ -458,33 +487,6 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
                         link
                         (format-time-string "%Y-%m-%d %H:%M:%S"))
               ""))))
-
-(use-package org-download
-  :pin melpa
-  :custom
-  (org-download-method 'directory)
-  (org-download-image-dir "images")
-  (org-download-heading-lvl nil)
-  (org-download-timestamp nil)
-
-  :config
-  (setq-default
-    org-download-screenshot-method
-    (cond
-     ((executable-find "screencapture") "screencapture -i %s")
-     ((executable-find "scrot") "scrot -s %s")
-     ((executable-find "gnome-screenshot") "gnome-screenshot -a -f %s")
-     (t "")))
-  (setq org-download-annotate-function 'yc/org-download-annotate-func
-        org-download-file-format-function 'identity)
-
-  :bind (:map org-mode-map
-              (;; (kbd "C-x ds")
-               "ds" . org-download-screenshot)
-              (;; (kbd "C-x du")
-               "du" . org-download-image))
-  )
-
 
 ;; Local Variables:
 ;; coding: utf-8

@@ -793,7 +793,8 @@ Call FUNC which is 'dired-find-file with ARGS."
     (setq-default dired-listing-switches "-alh")
     (advice-add 'dired-ediff :around #'yc/dired-ediff-adv)
     (advice-add 'dired-find-file :before-until #'yc/dired-find-file-adv)
-    (load-library "ls-lisp")))
+    (load-library "ls-lisp")
+    (define-key ctl-x-map "d" nil)))
 
 (use-package dired-x
   :commands (dired-jump)
