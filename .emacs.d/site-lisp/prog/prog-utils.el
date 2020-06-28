@@ -9,12 +9,17 @@
 (require 'ivy)
 
 
-(use-package dash-at-point
-  :commands (dash-at-point))
 
-(use-package zeal-at-point
-  :commands (zeal-at-point))
+(if (string= system-type "darwin")
+    (progn
+      (use-package dash-at-point
+        :commands (dash-at-point))
+      (defalias 'zeal-at-point 'dash-at-point)
+      )
 
+  (use-package zeal-at-point
+    :commands (zeal-at-point))
+  (defalias 'dash-at-point 'zeal-at-point))
 
 (defun yc/doc-at-point (&optional edit-search)
   "Call doc at point.."
@@ -350,6 +355,7 @@ variable.")))))
   "Pre-process current file.."
   (interactive)
   (lsp--cur-workspace-check)
+  (PDEBUG "default-directory:" default-directory)
   (-when-let* ((mode major-mode)
                (info (ccls-file-info))
                (args (seq-into (gethash "args" info) 'vector))
@@ -361,7 +367,7 @@ variable.")))))
                                 ((string= arg "-o") (cl-incf i))
                                 ((string-match-p "\\`-o.+" arg))
                                 ((string-match "\\`-working-directory=\\(.+\\)" arg)
-                                 (setq default-directory (match-string 1 arg)))
+                                 (setq working-directory (match-string 1 arg)))
                                 (t (push arg ret))))
                              (cl-incf i))
                            (nreverse ret))))
