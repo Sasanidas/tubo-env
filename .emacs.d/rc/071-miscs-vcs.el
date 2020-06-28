@@ -49,7 +49,7 @@
 
 (use-package magit
   :pin melpa
-  :commands (magit-blame-addition)
+  :commands (magit-blame-addition magit-revision-files)
   :bind (:map ctl-x-map
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
