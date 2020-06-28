@@ -401,26 +401,13 @@ ID, ACTION, CONTEXT."
 
 (use-package smartparens
   :pin melpa
-  :commands (smartparens-global-mode sp-local-pairs)
+  :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :ensure t
   :hook ((after-init . smartparens-global-mode))
   :custom
   (sp-escape-quotes-after-insert nil)
   :config
-  (progn
-    (sp-with-modes 'text-mode
-      (sp-local-pair "```" "```"))
-    (require 'smartparens-config)
-    (yc/eval-after-load
-      "org"
-      (sp-with-modes 'org-mode
-        (sp-local-pair "$" "$")
-        (sp-local-pair "（" "）")))
-
-    ;; c-mode config in smartparens-config is not valid...
-    (yc/eval-after-load
-      "cc-mode"
-      (require 'smartparens-c))))
+  (require 'smartparens-config))
 
  ; VLF: view large file.
 (use-package vlf
@@ -428,7 +415,6 @@ ID, ACTION, CONTEXT."
   :custom
   (vlf-batch-size 2000000) ;; 2 MB.
   )
-
 
 (defun yc/find-file-noselect-adv (func &rest args)
   "Advice for 'find-file-noselect'.

@@ -1280,9 +1280,12 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 (use-package text-mode
   :bind (:map text-mode-map
               ("\C-c\C-e" . yc/txt-to-png))
-  :init (progn
-          (defalias 'txt-mode 'text-mode)
-          ))
+  :config
+  (sp-with-modes 'text-mode
+    (sp-local-pair "```" "```"))
+
+  :init
+  (defalias 'txt-mode 'text-mode))
 
 (use-package artist-mode
   :bind (:map artist-mode-map

@@ -512,252 +512,248 @@ and is reversed for better performance.")
          )
 
   :config
-  (progn
+  (require 'smartparens-c)
+  (custom-set-variables
+   '(safe-local-variable-values
+     (quote
+      ((eval c-set-offset
+             (quote innamespace)
+             0)
+       (eval c-set-offset
+             (quote substatement-open)
+             0)))))
 
-    (custom-set-variables
-     '(safe-local-variable-values
-       (quote
-        ((eval c-set-offset
-               (quote innamespace)
-               0)
-         (eval c-set-offset
-               (quote substatement-open)
-               0)))))
+  ;; Customized doc-font
+  (cdsq tbdoc-font-lock-doc-comments
+    (let ((symbol "[a-zA-Z0-9_]+")
+          (header "^ \\* "))
+      `((,(concat header "\\("     symbol "\\):[ \t]*$")
+         1 ,c-doc-markup-face-name prepend nil)
+        (,(concat                  symbol     "()")
+         0 ,c-doc-markup-face-name prepend nil)
+        (,(concat header "\\(" "@" symbol "\\):")
+         1 ,c-doc-markup-face-name prepend nil)
+        (,(concat "[#%@]" symbol)
+         0 ,c-doc-markup-face-name prepend nil)
+        (,(concat "\\\\" symbol)
+         0 ,c-doc-markup-face-name prepend nil)
+        )))
 
-    ;; Customized doc-font
-    (cdsq tbdoc-font-lock-doc-comments
-      (let ((symbol "[a-zA-Z0-9_]+")
-            (header "^ \\* "))
-        `((,(concat header "\\("     symbol "\\):[ \t]*$")
-           1 ,c-doc-markup-face-name prepend nil)
-          (,(concat                  symbol     "()")
-           0 ,c-doc-markup-face-name prepend nil)
-          (,(concat header "\\(" "@" symbol "\\):")
-           1 ,c-doc-markup-face-name prepend nil)
-          (,(concat "[#%@]" symbol)
-           0 ,c-doc-markup-face-name prepend nil)
-          (,(concat "\\\\" symbol)
-           0 ,c-doc-markup-face-name prepend nil)
-          )))
+  (cdsq tbdoc-font-lock-doc-protection
+    `(("< \\(public\\|private\\|protected\\) >"
+       1 ,c-doc-markup-face-name prepend nil)))
 
-    (cdsq tbdoc-font-lock-doc-protection
-      `(("< \\(public\\|private\\|protected\\) >"
-         1 ,c-doc-markup-face-name prepend nil)))
-
-    (cdsq tbdoc-font-lock-keywords
-      `((,(lambda (limit)
-            (c-font-lock-doc-comments "/\\*\\*.*$" limit
-                                      tbdoc-font-lock-doc-comments)
-            (c-font-lock-doc-comments "/\\*!.*" limit
-                                      tbdoc-font-lock-doc-comments)
-            (c-font-lock-doc-comments "/\\*!-+" limit
-                                      tbdoc-font-lock-doc-comments)
-            (c-font-lock-doc-comments "/\\*!< " limit
-                                      tbdoc-font-lock-doc-comments)
-            (c-font-lock-doc-comments "/\\*< " limit
-                                      tbdoc-font-lock-doc-protection)
-            (c-font-lock-doc-comments "///.*$" limit
-                                      tbdoc-font-lock-doc-comments)))))
+  (cdsq tbdoc-font-lock-keywords
+    `((,(lambda (limit)
+          (c-font-lock-doc-comments "/\\*\\*.*$" limit
+                                    tbdoc-font-lock-doc-comments)
+          (c-font-lock-doc-comments "/\\*!.*" limit
+                                    tbdoc-font-lock-doc-comments)
+          (c-font-lock-doc-comments "/\\*!-+" limit
+                                    tbdoc-font-lock-doc-comments)
+          (c-font-lock-doc-comments "/\\*!< " limit
+                                    tbdoc-font-lock-doc-comments)
+          (c-font-lock-doc-comments "/\\*< " limit
+                                    tbdoc-font-lock-doc-protection)
+          (c-font-lock-doc-comments "///.*$" limit
+                                    tbdoc-font-lock-doc-comments)))))
 
  ;;;; This is a sample, real c-doc-comment-style will be set in "10-emacs-custome.el"
-    (defun c-lineup-arglist-tabs-only (ignored)
-      "Line up argument lists by tabs, not spaces"
-      (let* ((anchor (c-langelem-pos c-syntactic-element))
-             (column (c-langelem-2nd-pos c-syntactic-element))
-             (offset (- (1+ column) anchor))
-             (steps (floor offset c-basic-offset)))
-        (* (max steps 1)
-           c-basic-offset)))
+  (defun c-lineup-arglist-tabs-only (ignored)
+    "Line up argument lists by tabs, not spaces"
+    (let* ((anchor (c-langelem-pos c-syntactic-element))
+           (column (c-langelem-2nd-pos c-syntactic-element))
+           (offset (- (1+ column) anchor))
+           (steps (floor offset c-basic-offset)))
+      (* (max steps 1)
+         c-basic-offset)))
 
-    (c-add-style
-     "kernel"
-     `("linux"
-       (tab-width . 8)
-       (indent-tabs-mode . t)
-       (c-offsets-alist
-        (arglist-cont-nonempty
-         c-lineup-gcc-asm-reg
-         c-lineup-arglist-tabs-only))))
+  (c-add-style
+   "kernel"
+   `("linux"
+     (tab-width . 8)
+     (indent-tabs-mode . t)
+     (c-offsets-alist
+      (arglist-cont-nonempty
+       c-lineup-gcc-asm-reg
+       c-lineup-arglist-tabs-only))))
 
-    (c-add-style "llvm.org"
-                 '("gnu"
-                   (fill-column . 80)
-                   (c++-indent-level . 2)
-                   (c-basic-offset . 2)
-                   (indent-tabs-mode . nil)
-                   (c-offsets-alist . ((arglist-intro . ++)
-                                       (innamespace . 0)
-                                       (member-init-intro . ++)))))
+  (c-add-style "llvm.org"
+               '("gnu"
+                 (fill-column . 80)
+                 (c++-indent-level . 2)
+                 (c-basic-offset . 2)
+                 (indent-tabs-mode . nil)
+                 (c-offsets-alist . ((arglist-intro . ++)
+                                     (innamespace . 0)
+                                     (member-init-intro . ++)))))
 
-    ;; "Based on Google C/C++ Programming Style"
-    (c-add-style
-     "tubo"
-     `("bsd"
-       (c-recognize-knr-p . nil)
-       (c-basic-offset . 4)
-       (tab-width . 4)
-       (indent-tabs-mode . nil)
-       (comment-column . 40)
-       (c-hanging-braces-alist . ((defun-open after)
-                                  (defun-close before after)
-                                  (class-open after)
-                                  (class-close before after)
-                                  (namespace-open after)
-                                  (inline-open after)
-                                  (inline-close before after)
-                                  (block-open after)
-                                  (block-close . c-snug-do-while)
-                                  (extern-lang-open after)
-                                  (extern-lang-close after)
-                                  (statement-case-open after)
-                                  (substatement-open after)))
-       (c-hanging-colons-alist . ((case-label)
-                                  (label after)
-                                  (access-label after)
-                                  (member-init-intro before)
-                                  (inher-intro)))
-       (c-hanging-semi&comma-criteria
-        . (c-semi&comma-no-newlines-for-oneline-inliners
-           c-semi&comma-inside-parenlist
-           c-semi&comma-no-newlines-before-nonblanks))
-       (c-indent-comments-syntactically-p . nil)
-       (c-cleanup-list . (brace-else-brace
-                          brace-elseif-brace
-                          brace-catch-brace
-                          empty-defun-braces
-                          defun-close-semi
-                          list-close-comma
-                          scope-operator))
-       (c-offsets-alist . ((func-decl-cont . ++)
-                           (member-init-intro . +)
-                           (member-init-cont  . c-lineup-multi-inher)
-                           (inher-intro . ++)
-                           (comment-intro . 0)
-                           (arglist-close . c-lineup-arglist)
-                           (topmost-intro . 0)
-                           (block-open . 0)
-                           (inline-open . 0)
-                           (substatement-open . 0)
-                           (statement-cont
-                            . c-lineup-assignments)
-                           (label . /)
-                           (case-label . 0)
-                           (statement-case-open . 0)
-                           (statement-case-intro . +) ; case w/o {
-                           (access-label . -)
-                           (inextern-lang . 0)
-                           (innamespace . 0)))
-       (c-doc-comment-style . ((c-mode . tbdoc)
-                               (c++-mode . tbdoc)
-                               (objc-mode . tbdoc)
-                               (java-mode . tbdoc)
-                               (awk-mode . autodoc)
-                               (other . tbdoc)))))
+  ;; "Based on Google C/C++ Programming Style"
+  (c-add-style
+   "tubo"
+   `("bsd"
+     (c-recognize-knr-p . nil)
+     (c-basic-offset . 4)
+     (tab-width . 4)
+     (indent-tabs-mode . nil)
+     (comment-column . 40)
+     (c-hanging-braces-alist . ((defun-open after)
+                                (defun-close before after)
+                                (class-open after)
+                                (class-close before after)
+                                (namespace-open after)
+                                (inline-open after)
+                                (inline-close before after)
+                                (block-open after)
+                                (block-close . c-snug-do-while)
+                                (extern-lang-open after)
+                                (extern-lang-close after)
+                                (statement-case-open after)
+                                (substatement-open after)))
+     (c-hanging-colons-alist . ((case-label)
+                                (label after)
+                                (access-label after)
+                                (member-init-intro before)
+                                (inher-intro)))
+     (c-hanging-semi&comma-criteria
+      . (c-semi&comma-no-newlines-for-oneline-inliners
+         c-semi&comma-inside-parenlist
+         c-semi&comma-no-newlines-before-nonblanks))
+     (c-indent-comments-syntactically-p . nil)
+     (c-cleanup-list . (brace-else-brace
+                        brace-elseif-brace
+                        brace-catch-brace
+                        empty-defun-braces
+                        defun-close-semi
+                        list-close-comma
+                        scope-operator))
+     (c-offsets-alist . ((func-decl-cont . ++)
+                         (member-init-intro . +)
+                         (member-init-cont  . c-lineup-multi-inher)
+                         (inher-intro . ++)
+                         (comment-intro . 0)
+                         (arglist-close . c-lineup-arglist)
+                         (topmost-intro . 0)
+                         (block-open . 0)
+                         (inline-open . 0)
+                         (substatement-open . 0)
+                         (statement-cont
+                          . c-lineup-assignments)
+                         (label . /)
+                         (case-label . 0)
+                         (statement-case-open . 0)
+                         (statement-case-intro . +) ; case w/o {
+                         (access-label . -)
+                         (inextern-lang . 0)
+                         (innamespace . 0)))
+     (c-doc-comment-style . ((c-mode . tbdoc)
+                             (c++-mode . tbdoc)
+                             (objc-mode . tbdoc)
+                             (java-mode . tbdoc)
+                             (awk-mode . autodoc)
+                             (other . tbdoc)))))
 
-    ;; Coding style for MySql
-    (c-add-style
-     "mysql"
-     '("tubo"
-       (c-basic-offset . 2)
-       (indent-tabs-mode . nil)
-       (c-comment-only-line-offset . 0)
-       (tab-width . 2)
-       (c-offsets-alist . ((statement-block-intro . +)
-                           (knr-argdecl-intro . 0)
-                           (substatement-open . 0)
-                           (label . -)
-                           (statement-cont . +)
-                           (arglist-intro . c-lineup-arglist-intro-after-paren)
-                           (arglist-close . c-lineup-arglist)
-                           (innamespace . 0)
-                           (inline-open . 0)
-                           (statement-case-open . +)))))
+  ;; Coding style for MySql
+  (c-add-style
+   "mysql"
+   '("tubo"
+     (c-basic-offset . 2)
+     (indent-tabs-mode . nil)
+     (c-comment-only-line-offset . 0)
+     (tab-width . 2)
+     (c-offsets-alist . ((statement-block-intro . +)
+                         (knr-argdecl-intro . 0)
+                         (substatement-open . 0)
+                         (label . -)
+                         (statement-cont . +)
+                         (arglist-intro . c-lineup-arglist-intro-after-paren)
+                         (arglist-close . c-lineup-arglist)
+                         (innamespace . 0)
+                         (inline-open . 0)
+                         (statement-case-open . +)))))
 
-    (c-add-style
-     "postgres"
-     '("tubo"
-       (c-basic-offset . 4)
-       (c-auto-align-backslashes . nil)
-       (indent-tabs-mode . t)
-       (c-comment-only-line-offset . 0)
-       (tab-width . 4)
-       (fill-column . 78)
-       (c-offsets-alist . ((statement-block-intro . +)
-                           (knr-argdecl-intro . 0)
-                           (substatement-open . 0)
-                           (case-label . +)
-                           (label . -)
-                           (statement-cont . +)
-                           (arglist-intro . c-lineup-arglist-intro-after-paren)
-                           (arglist-close . c-lineup-arglist)
-                           (innamespace . 0)
-                           (inline-open . 0)
-                           (statement-case-open . 0)))))
-
-
-
-    (custom-set-variables
-     '(c-doc-comment-style
-       (quote ((c-mode . tbdoc)
-               (c++-mode . tbdoc)
-               (objc-mode . tbdoc)
-               (java-mode . javadoc)
-               (pike-mode . autodoc)))))
-
-    ;; special keyword for `c++-mode'.
-    (font-lock-add-keywords
-     'c++-mode
-     `((,(rx bow (group "NEW") (+ space)
-             (group (+? (or alnum "_"))) eow)
-        (1 font-lock-keyword-face)
-        (2 font-lock-type-face))
-       (,(rx bow (group
-                  (or "NEW" "DELETE"
-                      "DEC_ALWAYS_INLINE"
-                      "ALWAYS_INLINE"
-                      "NO_INLINE" "MAY_ALIAS"
-                      )) eow)
-        (1 font-lock-keyword-face))
-       (,(rx bow (group (+ (or upper "_" digit))) (* blank) "(")
-        (1 font-lock-builtin-face))
-       ))
-
-    (font-lock-add-keywords
-     'c-mode
-     `((,(rx bow (group (+ (or upper "_" digit))) (* blank) "(")
-        (1 font-lock-builtin-face))))
+  (c-add-style
+   "postgres"
+   '("tubo"
+     (c-basic-offset . 4)
+     (c-auto-align-backslashes . nil)
+     (indent-tabs-mode . t)
+     (c-comment-only-line-offset . 0)
+     (tab-width . 4)
+     (fill-column . 78)
+     (c-offsets-alist . ((statement-block-intro . +)
+                         (knr-argdecl-intro . 0)
+                         (substatement-open . 0)
+                         (case-label . +)
+                         (label . -)
+                         (statement-cont . +)
+                         (arglist-intro . c-lineup-arglist-intro-after-paren)
+                         (arglist-close . c-lineup-arglist)
+                         (innamespace . 0)
+                         (inline-open . 0)
+                         (statement-case-open . 0)))))
 
 
 
-    ;; C++
-    (yc/add-compile-unit 'c++ 66
-      (progn
-        (PDEBUG "ext:" ext)
-        (when (or (equal ext "cc")
-                  (equal ext "cpp"))
-          (lambda ()
-            (format "%s %s %s -std=gnu++11 -g -o %s"
-                    (yc/get-env "CXX" 'executable-find
-                                "clang++" "g++" "mingw-g++")
-                    (or (getenv "CPPFLAGS")"-Wall  ")
-                    file
-                    (file-name-sans-extension file))))))
+  (custom-set-variables
+   '(c-doc-comment-style
+     (quote ((c-mode . tbdoc)
+             (c++-mode . tbdoc)
+             (objc-mode . tbdoc)
+             (java-mode . javadoc)
+             (pike-mode . autodoc)))))
 
-    ;; C
-    (yc/add-compile-unit 'c 65
-      (when (or (equal ext "c")
-                (equal ext "C"))
+  ;; special keyword for `c++-mode'.
+  (font-lock-add-keywords
+   'c++-mode
+   `((,(rx bow (group "NEW") (+ space)
+           (group (+? (or alnum "_"))) eow)
+      (1 font-lock-keyword-face)
+      (2 font-lock-type-face))
+     (,(rx bow (group
+                (or "NEW" "DELETE"
+                    "DEC_ALWAYS_INLINE"
+                    "ALWAYS_INLINE"
+                    "NO_INLINE" "MAY_ALIAS"
+                    )) eow)
+      (1 font-lock-keyword-face))
+     (,(rx bow (group (+ (or upper "_" digit))) (* blank) "(")
+      (1 font-lock-builtin-face))
+     ))
+
+  (font-lock-add-keywords
+   'c-mode
+   `((,(rx bow (group (+ (or upper "_" digit))) (* blank) "(")
+      (1 font-lock-builtin-face))))
+
+
+
+  ;; C++
+  (yc/add-compile-unit 'c++ 66
+    (progn
+      (PDEBUG "ext:" ext)
+      (when (or (equal ext "cc")
+                (equal ext "cpp"))
         (lambda ()
-          (interactive)
-          (format "%s -o %s %s %s -g -std=gnu99"
-                  (yc/get-env "CC" 'executable-find
-                              "clang" "gcc" "mingw-gcc")
-                  (file-name-sans-extension file)
-                  (or (getenv "CPPFLAGS") "-Wall")
-                  file) )))
+          (format "%s %s %s -std=gnu++11 -g -o %s"
+                  (yc/get-env "CXX" 'executable-find
+                              "clang++" "g++" "mingw-g++")
+                  (or (getenv "CPPFLAGS")"-Wall  ")
+                  file
+                  (file-name-sans-extension file))))))
 
-    )
-  )
+  ;; C
+  (yc/add-compile-unit 'c 65
+    (when (or (equal ext "c")
+              (equal ext "C"))
+      (lambda ()
+        (interactive)
+        (format "%s -o %s %s %s -g -std=gnu99"
+                (yc/get-env "CC" 'executable-find
+                            "clang" "gcc" "mingw-gcc")
+                (file-name-sans-extension file)
+                (or (getenv "CPPFLAGS") "-Wall")
+                file)))))
 
 
  ;; lsp-support for C family.

@@ -1,4 +1,6 @@
 # -*- mode: snippet -*-
+# name: binary
+# key: bin
 # --
 Byte/     3       |       2       |       1       |       0       |
 ***/              |               |               |               |

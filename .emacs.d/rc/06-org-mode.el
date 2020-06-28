@@ -216,6 +216,12 @@ plantuml is a cross-platform, open-source make system."
   :config
   (progn
     (require 'ox-plus)
+
+    (sp-with-modes 'org-mode
+      (sp-local-pair "$" "$")
+      (sp-local-pair "（" "）")
+      (sp-local-pair "“" "“"))
+
     (setq org-comment-string "ORG_COMMENT")
 
     (org-indent-mode 1)

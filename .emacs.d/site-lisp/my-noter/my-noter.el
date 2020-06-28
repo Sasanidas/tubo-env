@@ -599,7 +599,12 @@ this is the end of the buffer"
 
     (with-current-buffer my-noter-org-buffer
       (widen)
-      (outline-show-entry)
+
+      (condition-case var
+          (progn
+            (outline-show-entry)
+            )
+        (error (message "%s" var)))
 
       (org-insert-heading '(4))
       (insert (org-trim (replace-regexp-in-string "\n" " " title)))
@@ -970,7 +975,8 @@ Keybindings (org-mode buffer):
                  (catch 'break
                    (let ((current-directory document-directory)
                          file-name)
-                     (while t
+                     (PDEBUG "CUR-DIR:" current-directory)
+                     (while current-directory
                        (setq file-name (expand-file-name notes-file-name current-directory))
                        (when (file-exists-p file-name)
                          (setq file-name (propertize file-name 'display
@@ -982,10 +988,12 @@ Keybindings (org-mode buffer):
 
                        (push file-name list-of-possible-targets)
 
+                       (PDEBUG "KKKK: " current-directory)
                        (when (string= current-directory
                                       (setq current-directory
                                             (file-name-directory (directory-file-name current-directory))))
                          (throw 'break nil)))))
+
                  (setq list-of-possible-targets (nreverse list-of-possible-targets))
 
                  ;; NOTE(nox): Create list of targets from search path
