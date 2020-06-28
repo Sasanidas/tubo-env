@@ -1,12 +1,51 @@
-;;; 051-miscs-vcs.el -- Brief introduction here.
+;;; 071-miscs-vcs.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
 ;;; Commentary:
 
 ;;; Code:
+(use-package mule :commands (recode-region))
 
  ;; ************************** magit ****************************
+(use-package magit-repos
+  :custom
+  (magit-repository-directories `((,(expand-file-name "~") . 0)))
+  :bind (:map ctl-x-map
+              ("gL" . magit-list-repositories)))
+
+(use-package magit-files
+  :pin melpa
+  :defer t
+  :config
+  (progn
+    (define-key magit-file-mode-map "\C-xg" nil)))
+
+
+(use-package magit-log :bind (:map ctl-x-map ("gl" . magit-log-buffer-file)))
+(use-package git-timemachine :bind (:map ctl-x-map ("gt" . git-timemachine)))
+(use-package magit-counsel
+  :bind (:map ctl-x-map
+              ("gc" . counsel-magit-checkout)
+              ("gU" . counsel-magit-checkout-file)))
+
+(use-package magit-auto-revert
+  :commands (magit-auto-revert-mode))
+
+
+(use-package git-commit
+  :defer t
+  :hook (git-commit-mode . (lambda ()
+                        (setq fill-column 72)
+                        (turn-on-flyspell)
+                        (goto-char (point-min))
+                        (PDEBUG "CURR-POINT: " (point))))
+  :config
+  (progn
+    (substitute-key-definition
+     'kill-buffer  'git-commit-abort git-commit-mode-map)
+    (substitute-key-definition
+     'ido-kill-buffer  'git-commit-abort git-commit-mode-map)))
 
 (use-package magit
   :pin melpa
@@ -70,101 +109,16 @@
     ;;   ?x "Strategy options" "--strategy-option=" #'read-from-minibuffer)
     (magit-auto-revert-mode 1)))
 
-(use-package magit-files
-  :pin melpa
-  :defer t
-  :config
-  (progn
-    (define-key magit-file-mode-map "\C-xg" nil)
-    ;; (magit-define-popup-action 'magit-file-popup
-    ;;   ?f "Find file"  'magit-find-file-other-window)
-)
-  )
-
-
-(use-package magit-log :bind ((;; ,(kbd "C-x g l")
-                               "gl". magit-log-buffer-file)))
-(use-package git-timemachine
-  :bind ((;; ,(kbd "C-x g t")
-          "gt". git-timemachine)))
-
-(use-package magit-counsel
-  :bind ((;; ,(kbd "C-x g c")
-          "gc".  counsel-magit-checkout)
-         (;; ,(kbd "C-x g C")
-          "gC". counsel-magit-checkout-file)))
-
-
-(defun yc/magit-stash-format-patch (func stash)
-  "Advice for `magit-stash-format-patch'.
-Call FUNC with ARGS."
-  (let* ((dir (format "%s/patches/" (magit-toplevel)))
-         (tmp (unless (file-directory-p dir)
-                (mkdir dir)))
-         (default-directory dir)
-         (output (concat dir (magit-rev-format "0001-%f.patch" stash))))
-
-    (funcall func stash)
-    (message "Patch save as %s." output)))
-
-(yc/eval-after-load
-  "magit-stash"
-  (advice-add 'magit-stash-format-patch :around #'yc/magit-stash-format-patch))
-
-
-(use-package magit-git
-  :commands (magit-git-string magit-revision-files))
-
-(use-package magit-process
-  :commands (magit-process-file))
-
-(defun yc/git-copy-file-path ()
-  "Copy path of current visited file."
-  (interactive)
-  (let ((url (magit-git-string "config" "remote.origin.url"))
-        (root (magit-toplevel)))
-
-    (unless url (error "Not in a git repo"))
-
-    (kill-new
-     (concat (replace-regexp-in-string
-              (rx "git@github.com:" (group (+? nonl)) ".git")
-              "https://github.com/\\1"
-              url)
-             "/blob/master/"
-             (and root (file-relative-name buffer-file-name root))
-             ))))
-
-(use-package magit-auto-revert
-  :commands (magit-auto-revert-mode))
-
-(use-package mule :commands (recode-region))
-
-(use-package git-commit
-  :defer t
-  :hook (git-commit-mode . (lambda ()
-                        (setq fill-column 72)
-                        (turn-on-flyspell)
-                        (goto-char (point-min))
-                        (PDEBUG "CURR-POINT: " (point))
-                        ))
-  :config
-  (progn
-    (substitute-key-definition
-     'kill-buffer  'git-commit-abort git-commit-mode-map)
-    (substitute-key-definition
-     'ido-kill-buffer  'git-commit-abort git-commit-mode-map)))
-
  ;; svn
 
 (use-package dsvn
   :commands (svn-status))
 
-(provide '051-miscs-vcs)
+(provide '071-miscs-vcs)
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 051-miscs-vcs.el ends here
+;;; 071-miscs-vcs.el ends here

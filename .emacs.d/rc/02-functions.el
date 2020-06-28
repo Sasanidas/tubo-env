@@ -285,7 +285,8 @@ If CLICK is t, calculate time cost."
 (defun yc/setup-font ()
   (when window-system
     (let ((font (catch 'p-found
-                  (dolist (p '(("Monaco" . 13)
+                  (dolist (p '(;;("Menlo" . 14)
+                               ("Monaco" . 13)
                                ("Cascadia Mono" . 11)
                                ("Inconsolata" . 14 )))
 

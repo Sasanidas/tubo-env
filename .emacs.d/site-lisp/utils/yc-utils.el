@@ -1381,6 +1381,26 @@ inserts comment at the end of the line."
                   (PDEBUG "w:" w)
                   (select-window w)
                   (layout-save-current))))
+
+(autoload 'magit-git-string "magit-git")
+
+(defun yc/git-copy-file-path ()
+  "Copy path of current visited file."
+  (interactive)
+  (let ((url (magit-git-string "config" "remote.origin.url"))
+        (root (magit-toplevel)))
+
+    (unless url (error "Not in a git repo"))
+
+    (kill-new
+     (concat (replace-regexp-in-string
+              (rx "git@github.com:" (group (+? nonl)) ".git")
+              "https://github.com/\\1"
+              url)
+             "/blob/master/"
+             (and root (file-relative-name buffer-file-name root))
+             ))))
+
 
 
 (provide 'yc-utils)
