@@ -772,6 +772,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
                                     "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
                                     "cmake_build_Release/"  "cmake_build_RelWithDebInfo/")))
 
+    ;;  Use compile database file which is newer...
     (setq ccls-initialization-options nil)
 
     (when root-file
@@ -792,13 +793,25 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
         (PDEBUG "Before advice" ccls-initialization-options)
 
         (unless (member :compilationDatabaseDirectory ccls-initialization-options)
-          (let ((compile-dir
-                 (catch 'p-found
-                   (dolist (build '("."  "build/" "build_Debug/"
-                                    "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
-                                    "cmake_build_Release/"  "cmake_build_RelWithDebInfo/"))
-                     (when (file-exists-p (format "%s/%s/compile_commands.json" root-dir build))
-                       (throw 'p-found build))))))
+          (let (compile-dir last-mod-time)
+
+            (dolist (dir '("."  "build/" "build_Debug/"
+                             "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
+                             "cmake_build_Release/"
+                             "cmake_build_RelWithDebInfo/"))
+              (let* ((file (format "%s/%s/compile_commands.json" root-dir dir))
+                     (mod-time (if (file-exists-p file)
+                                   (file-attribute-modification-time
+                                    (file-attributes file)))))
+
+                (when (and mod-time
+                         (or (not compile-dir) ;; not set..
+                             (time-less-p last-mod-time mod-time) ;; file is newer
+                             ))
+                  (PDEBUG (format "Using newer database %s, generated at: %s"
+                                  file (format-time-string "%D %T" mod-time)))
+                  (setq compile-dir dir
+                        last-mod-time mod-time))))
 
             (when compile-dir
               (push compile-dir ccls-initialization-options)
