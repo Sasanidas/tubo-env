@@ -121,35 +121,19 @@ This setting may be overridden in a document with the function
 (defcustom my-noter-default-notes-file-names '("Notes.org")
   "List of possible names for the default notes file, in increasing order of priority."
   :group 'my-noter
-  :type '(repeat string))
+  :type 'string)
 
-(defcustom my-noter-notes-search-path '("~/Documents/Database/org")
+(defcustom my-noter-notes-search-path "~/Documents/Database/org/"
   "List of paths to check (non recursively) when searching for a notes file."
   :group 'my-noter
-  :type '(repeat string))
-
-(defcustom my-noter-org-notes-dir-list '("~/org/my-noter_notes" ".")
-  "List of directories to look into when opening notes org from a pdf file.
-
-The notes file is assumed to have the exact
-same base name as the pdf file (just that the file extension is
-.org instead of .pdf).
-
-If the notes org file is not found, it is created in the
-directory returned on doing `car' of this list (first element of
-the list).
-
-The notes file is searched in order from the first list element
-till the last; the search is aborted once the file is found.
-
-If a list element is \".\" or begins with \"./\", that portion is
-replaced with the pdf directory name.  e.g. \".\" is interpreted
-as \"/pdf/file/dir/\", \"./notes\" is interpreted as
-\"/pdf/file/dir/notes/\"."
-  :type '(repeat directory)
-  :group 'my-noter)
+  :type 'string)
 
  ;; Functions
+(defun my-noter/open-note ()
+  "Open a note"
+  (interactive)
+  (let ((default-directory my-noter-notes-search-path) )
+    (yc/counsel-find-file)))
 
 (defun my-noter/do-dispatch-file (item)
   "Dispatch single ITEM."
@@ -925,15 +909,14 @@ Keybindings (org-mode buffer):
            )
 
       ;; NOTE(nox): Check the search path
-      (dolist (path my-noter-notes-search-path)
-        (dolist (name search-names)
-          (let ((file-name (expand-file-name name path)))
+      (dolist (name search-names)
+          (let ((file-name (expand-file-name name my-noter-notes-search-path)))
             (when (file-exists-p file-name)
               (push file-name notes-files)
               (when (my-noter/check-if-document-is-annotated-on-file
                      document-path file-name)
                 (PDEBUG "Annotated file:" file-name)
-                (push file-name notes-files-annotating))))))
+                (push file-name notes-files-annotating)))))
 
       ;; NOTE(nox): `search-names' is in reverse order, so we only need to (push ...)
       ;; and it will end up in the correct order
@@ -997,16 +980,15 @@ Keybindings (org-mode buffer):
                  (setq list-of-possible-targets (nreverse list-of-possible-targets))
 
                  ;; NOTE(nox): Create list of targets from search path
-                 (dolist (path my-noter-notes-search-path)
-                   (when (file-exists-p path)
-                     (let ((file-name (expand-file-name notes-file-name path)))
-                       (unless (member file-name list-of-possible-targets)
-                         (when (file-exists-p file-name)
-                           (setq file-name (propertize file-name 'display
-                                                       (concat file-name
-                                                               (propertize " -- Exists!"
-                                                                           'face '(foreground-color . "green"))))))
-                         (push file-name list-of-possible-targets)))))
+                 (when (file-exists-p my-noter-notes-search-path)
+                   (let ((file-name (expand-file-name notes-file-name path)))
+                     (unless (member file-name list-of-possible-targets)
+                       (when (file-exists-p file-name)
+                         (setq file-name (propertize file-name 'display
+                                                     (concat file-name
+                                                             (propertize " -- Exists!"
+                                                                         'face '(foreground-color . "green"))))))
+                       (push file-name list-of-possible-targets))))
 
                  (setq target (completing-read "Where do you want to save it? " list-of-possible-targets
                                                nil t))
@@ -1016,8 +998,7 @@ Keybindings (org-mode buffer):
                  (setq notes-files (list target))))
             (1
              (push (read-file-name "Select note file: "
-                                   (expand-file-name
-                                    (car my-noter-notes-search-path)))
+                                   (expand-file-name my-noter-notes-search-path))
                    notes-files))
             (t nil)))
 
