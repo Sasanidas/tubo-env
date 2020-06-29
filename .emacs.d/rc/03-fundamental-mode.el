@@ -355,6 +355,7 @@ Call FUNC with ARGS."
   )
 
 (use-package counsel-projectile
+  :pin melpa
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files)
   :functions (counsel-projectile-find-file-action)
   :commands (counsel-projectile-find-file)

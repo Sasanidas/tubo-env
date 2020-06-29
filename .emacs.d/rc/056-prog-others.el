@@ -98,6 +98,7 @@
       (start-process "powershell-help" nil "devhelp" "-s" function))))
 
 (use-package yaml-mode
+  :pin melpa
   :mode (rx (or ".clang-format" (: ".y" (? "a" ) "ml")) eol)
   :hook ((yaml-mode .           (lambda ()
             (unless (buffer-file-name)

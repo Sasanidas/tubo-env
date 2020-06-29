@@ -1043,6 +1043,7 @@ Call FUNC which is 'dired-compress with ARGS."
     (vimish-fold-toggle)))
 
 (use-package vimish-fold
+  :pin melpa
   :commands (vimish-fold vimish-fold-toggle vimish-fold-delete)
   :bind ((;; ,(kbd "C-c hr")
           "hr". yc/vimish-fold-toggle)))
