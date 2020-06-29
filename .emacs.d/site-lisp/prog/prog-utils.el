@@ -7,26 +7,29 @@
 (require '02-functions)
 (require 'cl)
 (require 'ivy)
+(require 'swiper)
+(require 'imenu)
 
 
 
-(if (string= system-type "darwin")
-    (progn
-      (use-package dash-at-point
-        :commands (dash-at-point))
-      (defalias 'zeal-at-point 'dash-at-point)
-      )
+;; (if (string= system-type "darwin")
+;;     (progn
+;;       (use-package dash-at-point
+;;         :commands (dash-at-point))
+;;       (defalias 'zeal-at-point 'dash-at-point)
+;;       )
 
-  (use-package zeal-at-point
-    :commands (zeal-at-point))
-  (defalias 'dash-at-point 'zeal-at-point))
+;;   (use-package zeal-at-point
+;;     :commands (zeal-at-point))
+;;   (defalias 'dash-at-point 'zeal-at-point))
 
 (defun yc/doc-at-point (&optional edit-search)
   "Call doc at point.."
   (interactive "P")
-  (if (string= system-type "darwin")
-      (dash-at-point edit-search)
-    (zeal-at-point edit-search)))
+  ;; (if (string= system-type "darwin")
+  ;;     (dash-at-point edit-search)
+  ;;   (zeal-at-point edit-search))
+  )
 
 (defun yc/remove-empty-lines (&optional pos)
   "Remove empty lines around this position..."
@@ -229,55 +232,9 @@ variable.")))))
 (defun yc/switch-h-cpp ()
   "Switch between headers and source files."
   (interactive)
-  (let* ((tag (semantic-stickyfunc-tag-to-stick))
-         (arg-exp "")
-         ;; func args
-         ;; exp-list
-         )
-
-    ;; TODO: parse and save location info...
-    ;; (defun get-type-name (tag)
-    ;;   "Get type name of TAG."
-    ;;   (cond
-    ;;    ((stringp tag) tag)
-    ;;    ((semantic-tag-p tag) (semantic-tag-name tag))
-    ;;    (t "")))
-
-    ;; ;; prepare tags
-    ;; (when (and tag (equal (semantic-tag-class tag) 'function))
-    ;;   (setq func (semantic-tag-name tag)
-    ;;         args (semantic-tag-get-attribute tag :arguments)))
-
-    ;; ;; prepare exp-list which will be used to re-search
-    ;; (when (and func args)
-    ;;   (let (arg-list)
-    ;;     (dolist (arg args)
-    ;;       (setq arg-list (cons (get-type-name (semantic-tag-type arg)) arg-list )))
-    ;;     (while arg-list
-    ;;       (let ((tmp-list (copy-list arg-list)))
-    ;;         (add-to-list
-    ;;          'exp-list (format "%s[[:space:]]*([[:space:]]*%s.*?)"
-    ;;                            func (s-join ".*?,[[:space:]]*"
-    ;;                                         (nreverse tmp-list) )) t))
-    ;;       (pop arg-list))))
-
-    ;; (if func (add-to-list 'exp-list (format "%s[[:space:]]*(.*?)" func) t))
-
-    ;; core of switch..
-    (condition-case error
+      (condition-case error
         (eassist-switch-h-cpp)
-      (error (projectile-find-other-file)))
-
-    ;; ;; TODO: try to find proper position to goto.
-    ;; (when exp-list
-    ;;   (let (pos)
-    ;;     (while (and exp-list (not pos))
-    ;;       (save-excursion
-    ;;         (goto-char (point-min))
-    ;;         (setq pos (re-search-forward (pop exp-list) nil t))))
-    ;;     (if pos
-    ;;         (goto-char (1- pos)))))
-    ))
+      (error (projectile-find-other-file))))
 
 ;; ================================== CPP-H switch end =========================
 
@@ -655,9 +612,9 @@ It will do several things:
   "Add overlays for RE regexp in visible part of the current buffer.
 BEG and END, when specified, are the point bounds.
 WND, when specified is the window."
-  (let ((ov               (make-overlay
-                           (line-beginning-position)
-                           (1+ (line-end-position)))))
+  (let ((ov  (make-overlay
+              (line-beginning-position)
+              (1+ (line-end-position)))))
     (overlay-put ov 'face 'swiper-line-face)
     (push ov yc/imenu--overlays)
     ))
@@ -738,6 +695,8 @@ PREFIX is used to create the key."
                                     (propertize prefix 'face 'ivy-grep-info)
                                     ": ")))
                                (let ((name (car elm)))
+                                 (PDEBUG "SS" (get-text-property 0 'face name)
+                                         "KK" (yc/imenu--get-symbol-face prefix))
                                  (if (get-text-property 0 'face name)
                                      name
                                    (propertize name 'face (yc/imenu--get-symbol-face prefix))
@@ -753,20 +712,20 @@ PREFIX is used to create the key."
 
 (cdsq yc/lsp--symbol-face
   '(;; (1 . "File")
-    (2 . 'font-lock-constant-face) ;; "Module"
-    (3 . 'font-lock-constant-face) ;; "Namespace"
+    (2 . font-lock-constant-face) ;; "Module"
+    (3 . font-lock-constant-face) ;; "Namespace"
     ;; (4 . "Package")
-    (5 . 'font-lock-type-face) ;;"Class"
-    (6 . 'font-lock-function-name-face) ;; "Method"
-    (7 . 'font-lock-variable-name-face) ;; "Property"
-    (8 . 'font-lock-variable-name-face)
-    (9 . 'font-lock-function-name-face) ;; "Constructor"
-    (10 . 'font-lock-constant-face) ;; "Enum"
-    (11 . 'font-lock-function-name-face) ;; "Interface"
-    (12 . 'font-lock-function-name-face) ;; Function
-    (13 . 'font-lock-variable-name-face) ;; Variables
-    (14 . 'font-lock-constant-face)      ;; Constant
-    (15 . 'font-lock-string-face)        ;;
+    (5 . font-lock-type-face) ;;"Class"
+    (6 . font-lock-function-name-face) ;; "Method"
+    (7 . font-lock-variable-name-face) ;; "Property"
+    (8 . font-lock-variable-name-face)
+    (9 . font-lock-function-name-face) ;; "Constructor"
+    (10 . font-lock-constant-face) ;; "Enum"
+    (11 . font-lock-function-name-face) ;; "Interface"
+    (12 . font-lock-function-name-face) ;; Function
+    (13 . font-lock-variable-name-face) ;; Variables
+    (14 . font-lock-constant-face)      ;; Constant
+    (15 . font-lock-string-face)        ;;
     ;; (16 . "Number")
     ;; (17 . "Boolean")
     ;; (18 . "Array")
@@ -774,7 +733,7 @@ PREFIX is used to create the key."
     ;; (20 . "Key")
     ;; (21 . "Null")
     ;; (22 . "Enum Member")
-    (23 . 'font-lock-type-face) ;; "Struct"
+    (23 . font-lock-type-face) ;; "Struct"
     ;; (24 . "Event")
     ;; (25 . "Operator")
     ;; (26 . "Type Parameter")
@@ -792,22 +751,22 @@ PREFIX is used to create the key."
 
 (cdsq yc/imenu--symbol-face
   '(
-    ("Packages" . 'font-lock-constant-face)
-    ("Module" . 'font-lock-constant-face)
-    ("Class" . 'font-lock-type-face) ;;"Class"
-    ("Module" . 'font-lock-constant-face) ;;"Class"
-    (6 . 'font-lock-function-name-face) ;; "Method"
-    ("Variables" . 'font-lock-variable-name-face) ;; "Property"
-    ("Variable" . 'font-lock-variable-name-face) ;; "Property"
-    (8 . 'font-lock-variable-name-face)
-    (9 . 'font-lock-function-name-face) ;; "Constructor"
-    (10 . 'font-lock-constant-face) ;; "Enum"
-    ("Functions" . 'font-lock-function-name-face) ;; "Interface"
-    ("Function" . 'font-lock-function-name-face) ;; "Interface"
-    (12 . 'font-lock-function-name-face) ;; Function
-    (13 . 'font-lock-variable-name-face) ;; Variables
-    (14 . 'font-lock-constant-face)      ;; Constant
-    (15 . 'font-lock-string-face)        ;;
+    ("Packages" . font-lock-constant-face)
+    ("Module" . font-lock-constant-face)
+    ("Class" . 'ont-lock-type-face) ;;"Class"
+    ("Module" . font-lock-constant-face) ;;"Class"
+    (6 . font-lock-function-name-face) ;; "Method"
+    ("Variables" . font-lock-variable-name-face) ;; "Property"
+    ("Variable" . font-lock-variable-name-face) ;; "Property"
+    (8 . font-lock-variable-name-face)
+    (9 . font-lock-function-name-face) ;; "Constructor"
+    (10 . font-lock-constant-face) ;; "Enum"
+    ("Functions" . font-lock-function-name-face) ;; "Interface"
+    ("Function" . font-lock-function-name-face) ;; "Interface"
+    (12 . font-lock-function-name-face) ;; Function
+    (13 . font-lock-variable-name-face) ;; Variables
+    (14 . font-lock-constant-face)      ;; Constant
+    (15 . font-lock-string-face)        ;;
     ;; (16 . "Number")
     ;; (17 . "Boolean")
     ;; (18 . "Array")
@@ -815,7 +774,7 @@ PREFIX is used to create the key."
     ;; (20 . "Key")
     ;; (21 . "Null")
     ;; (22 . "Enum Member")
-    (23 . 'font-lock-type-face) ;; "Struct"
+    (23 . font-lock-type-face) ;; "Struct"
     ;; (24 . "Event")
     ;; (25 . "Operator")
     ;; (26 . "Type Parameter")
@@ -933,30 +892,6 @@ If NO-CACHED is true, do not use cached value."
         (PDEBUG "TAGS from imenu"))
     tags))
 
-(defun yc/tags-from-semantic ()
-  "Get tags from semantic."
-  (interactive)
-  (if (semantic-active-p)
-      (let ((items
-             (mapcar
-              (lambda (x)
-                (let ((str (counsel-semantic-format-tag x)))
-                  (put-text-property
-                   0 1 'swiper-line-number (semantic-tag-start x) str)
-                  str
-                  ))
-              (counsel-semantic-tags))) )
-
-        (if (called-interactively-p 'interactive)
-            (let ((yc/debug-log-limit -1))
-              (PDEBUG "IMENU-ITEMS: " items)))
-
-        (if items
-            (PDEBUG "TAGS from semantic"))
-
-        items)))
-
-
 (defun yc/tags-from-lsp ()
   "Get tags from imenu.
 If NO-CACHED is true, do not use cached value."
@@ -1016,13 +951,7 @@ If NO-CACHED is true, do not use cached value."
       (PDEBUG "Refreshing tags..." )
       (setq yc/document-tags-tick (buffer-chars-modified-tick)
             yc/cached-tags
-            ;;;; For now, tags are sorted by their position..
-            ;;;
-            ;; (or (yc/tags-from-lsp)
-            ;; (yc/tags-from-semantic)
-            ;; (yc/tags-from-imenu))
             (sort (or (yc/tags-from-lsp)
-                      (yc/tags-from-semantic)
                       (yc/tags-from-imenu))
                   (lambda (x y)
                     (PDEBUG "X" x)
@@ -1037,6 +966,9 @@ If NO-CACHED is true, do not use cached value."
 
     (unless yc/cached-tags
       (error "Failed to get tags"))
+
+    (let ((yc/debug-log-limit -1))
+      (PDEBUG "AAAA: " yc/cached-tags))
 
     (let ((position (point))
           res)
