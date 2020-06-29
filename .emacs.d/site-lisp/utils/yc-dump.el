@@ -56,7 +56,8 @@
 
     (with-current-buffer (eshell)
       (insert (format "cd %s; " source-directory))
-      (insert "./autogen.sh && ./configure ")
+      (insert "export CFLAGS=\"-march=native\";")
+      (insert "./autogen.sh && CFLAGS=\"-march=native\" ./configure ")
       (insert system-configuration-options)
       (eshell-send-input))))
 
