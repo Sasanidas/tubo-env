@@ -71,8 +71,9 @@
   "Byte compile Lisp file."
   (interactive)
   (when (eq major-mode 'emacs-lisp-mode)
-    (if (string-match-p (rx ".emacs.d/rc/" (+ nonl) ".el")
-                      buffer-file-name)
+    (if (or (string-match-p (rx ".emacs.d/rc/" (+ nonl) ".el")
+                            buffer-file-name)
+            (not (string-match-p (rx (+? nonl) ".el") buffer-file-name)))
       (PDEBUG "Byte compile ignored for file: " buffer-file-name)
     (byte-compile-file buffer-file-name))))
 

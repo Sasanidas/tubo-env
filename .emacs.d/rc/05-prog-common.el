@@ -458,9 +458,6 @@ Return t if succeeded, or nil otherwise.")
   :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml))
 
  ;; lsp
-(use-package lsp-ui-imenu
-  :commands (lsp-ui-imenu-enable))
-
 (defvar yc/lsp-warned-mode-list nil "List of modes already been warn for disabling LSP.")
 
 (defcustom yc/lsp-server-dir (expand-file-name "~/.local/lsp/")
@@ -695,27 +692,6 @@ Call FUNC which is 'lsp with ARGS."
       (funcall mode-specific-func root-file))
 
     (PDEBUG "leave")))
-
-
-
-
-;; lsp extras
-(use-package lsp-ui
-  :defer t
-  :pin melpa
-  :ensure t
-  :custom
-  (lsp-ui-sideline-enable nil)
-  (lsp-ui-sideline-ignore-duplicate t)
-  :hook ((lsp-mode . lsp-ui-mode))
-  )
-
-(use-package lsp-ui-doc
-  :commands (lsp-ui-doc-glance)
-  :custom
-  (lsp-ui-doc-enable nil)
-  )
-
 
 (use-package company-lsp
   :ensure t
