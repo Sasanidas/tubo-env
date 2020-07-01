@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: dsq
-# key: dsq
-# --
-(dsq ${1:sym} ${2:val})

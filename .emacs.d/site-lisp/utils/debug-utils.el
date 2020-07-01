@@ -146,7 +146,8 @@
         (init-input (if (region-active-p)
                       (buffer-substring-no-properties (region-beginning)
                                                       (region-end))
-                       (number-at-point)))
+                      (aif (number-at-point)
+                          (number-to-string it))))
         pid-list)
 
     (PDEBUG "PS-COMMAND: " ps-cmd)
@@ -185,7 +186,21 @@
   (interactive)
   (attach-pg-proc "wal"))
 
+
 
+(defun yc/kill-gdb-buffers ()
+  "Kill all buffers used by dead gdb."
+  (interactive)
+  (mapc
+   (lambda (buffer)
+     (when (string-match-p
+            (rx "*gdb" (+ space) (+ digit) (+ space) "shell*")
+            (buffer-name buffer)
+            )
+       (unless (get-buffer-process buffer)
+         (kill-buffer buffer))))
+
+   (buffer-list)))
 
 (provide 'debug-utils)
 

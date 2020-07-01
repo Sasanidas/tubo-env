@@ -8,6 +8,23 @@
 (use-package mule :commands (recode-region))
 
  ;; ************************** magit ****************************
+
+(use-package git-commit
+  :defer t
+  :hook (git-commit-mode . (lambda ()
+                        (setq fill-column 72)
+                        (turn-on-flyspell)
+                        (goto-char (point-min))
+                        (PDEBUG "CURR-POINT: " (point))))
+  :config
+  (progn
+    (substitute-key-definition
+     'kill-buffer  'git-commit-abort git-commit-mode-map)
+    (substitute-key-definition
+     'ido-kill-buffer  'git-commit-abort git-commit-mode-map))
+  :custom
+  (git-commit-summary-max-length 72))
+
 (use-package magit-repos
   :custom
   (magit-repository-directories `((,(expand-file-name "~") . 0)))
@@ -33,19 +50,13 @@
   :commands (magit-auto-revert-mode))
 
 
-(use-package git-commit
-  :defer t
-  :hook (git-commit-mode . (lambda ()
-                        (setq fill-column 72)
-                        (turn-on-flyspell)
-                        (goto-char (point-min))
-                        (PDEBUG "CURR-POINT: " (point))))
-  :config
-  (progn
-    (substitute-key-definition
-     'kill-buffer  'git-commit-abort git-commit-mode-map)
-    (substitute-key-definition
-     'ido-kill-buffer  'git-commit-abort git-commit-mode-map)))
+(defun yc/counsel-git-grep ()
+  "Description."
+  (interactive)
+  (let ((m (point-marker))
+        (init (aif (symbol-at-point) (symbol-name it))))
+    (counsel-git-grep init)
+    (yc/push-stack m)))
 
 (use-package magit
   :pin melpa
@@ -53,7 +64,8 @@
   :bind (:map ctl-x-map
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
-              ("gb" . magit-blame-addition))
+              ("gb" . magit-blame-addition)
+              ("gg" . 'yc/counsel-git-grep))
   :custom
   (magit-revert-buffers t)
   (magit-commit-show-diff nil)
@@ -61,7 +73,8 @@
   (magit-revision-insert-related-refs t)
   (magit-revision-show-gravatars nil)
   (magit-revision-headers-format "Author:     %aN <%aE>\nDate: %ad\n")
-  (git-commit-summary-max-length 72)
+  (magit-no-confirm nil)
+  (magit-delete-by-moving-to-trash nil)
   (magit-log-arguments '("-n256" "--graph" "--decorate" "--color"))
   (magit-patch-arguments (quote ("--output-directory=patches")))
   (magit-merge-arguments

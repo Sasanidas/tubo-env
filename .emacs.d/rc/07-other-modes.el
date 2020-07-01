@@ -248,8 +248,17 @@
           "V" . yc/debug-variable)
 
          (;(kbd "M-W")
-          [134217815] . yc/kill-file-ln))
-  )
+          [134217815] . yc/kill-file-ln)
+
+         (;; (kbd "C-x ^")
+          "^" . yc/enlarge-window)
+         (;; (kbd "C-x v")
+          "v" . yc/shrink-window)
+
+         (;;(kbd "C-x >")
+          ">" . yc/enlarge-window-horizontal)
+         (;; (kbd "C-x <")
+          "<" . yc/shrink-window-horizontal)))
 
 (use-package yc-dump
   :commands (yc/dump-emacs yc/config-emacs))

@@ -6,7 +6,7 @@
 ;;  Mode to highlight console logs.
 ;;; Code:
 (require '02-functions)
-(dsq console-font-lock-keywords
+(cdsq console-font-lock-keywords
   `(
     (,(rx bol (group (+? nonl) (or "$" "#")) (+ space))
      (1 font-lock-builtin-face))

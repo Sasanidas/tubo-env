@@ -31,17 +31,6 @@
               ("\C-cu" .  unscreamify-cmake-buffer)))
 
 
-(define-skeleton skeleton-cmake-include
-  "generate include()" ""
-  > "include ("
-  (completing-read
-   "module name:"
-   (string-split (yc/command-output-to-string "cmake" "--help-module-list")))
-  ")")
-
-(define-abbrev-table 'cmake-mode-abbrev-table
-  '(("inc" "inc" skeleton-cmake-include 1)))
-
 (cdsq yc/cmake-command-template
   (mapconcat 'identity
              '("cmake"

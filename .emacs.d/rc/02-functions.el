@@ -17,29 +17,14 @@ This is macro to generate macro, and put it to proper indentation."
   `(progn
      (put (quote ,name) 'lisp-indent-function 'defun)
      (defmacro ,name ,@args)))
-(put 'yc/defmacro 'lisp-indent-function 'defun)
 
-(yc/defmacro csq (sym val)
-  "Customize or Set value of SYM to VAL."
-  `(funcall (or (get ',sym 'custom-set)
-                'set-default)
-            ',sym ,val))
+(put 'yc/defmacro 'lisp-indent-function 'defun)
 
 (yc/defmacro cdsq (sym val &optional doc)
   "Customize, Define or Set value of SYM to VAL, with DOC as document."
   `(if (boundp ',sym)
-       (csq ,sym ,val)
-     (defvar ,sym ,val ,doc)))
-
-(yc/defmacro dsq (sym val &optional doc)
-  "Define or Set value of  value of SYM to VAL, with DOC as document."
-  `(if (boundp ',sym)
        (setq ,sym ,val)
      (defvar ,sym ,val ,doc)))
-
-(yc/defmacro check-symbol (sym)
-  "Return value or nil"
-  `(if (boundp ',sym) ,sym nil))
 
 (yc/defmacro aif (test-form then-form &rest else-forms)
   "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
@@ -106,23 +91,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                         (message "Configuration for %s finished in %.2f seconds" ,name
                                  (float-time (time-since ts ))))))))
 
-(defun yc/setenv (env)
-  "Set environment variable."
-  (setenv (car env) (cdr env)))
-
-(yc/defmacro yc/with-env (env-list &rest body)
-  "description"
-  (interactive)
-  `(let (orig-env)
-     (dolist (env ,env-list)
-       (add-to-list 'orig-env (cons (car env) (getenv (car env))) t)
-       (yc/setenv env))
-     ,@body
-     (dolist (env orig-env)
-       (yc/setenv env))))
-
  ;; Functions
-
 (defun yc/get-key-code (key &optional recursive)
   "Return code of KEY."
   (cond
@@ -157,46 +126,11 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
             (t (signal 'wrong-type-argument (list 'array key))))
       (define-key keymap key nil))))
 
-;;;; Make current-buffer 10 lines higher.
-(defun my-adjust-window (arg)
-  "Adjust window quickly."
-  (interactive)
-  (enlarge-window (* arg 10)))
-
-(defun my-adjust-window-horizontal (arg)
-  "Adjust window quickly."
-  (interactive)
-  (enlarge-window (* arg 10) t))
 
 (define-key ctl-x-map "v" nil)
-(global-set-key (kbd "C-x ^") (lambda () (interactive)
-                                (my-adjust-window 1)))
-(global-set-key (kbd "C-x v") (lambda () (interactive)
-                                (my-adjust-window -1)))
-(global-set-key (kbd "C-x V") (lambda () (interactive)
-                               (my-adjust-window -1)))
-(global-set-key (kbd "C-x >") (lambda () (interactive)
-                                (my-adjust-window-horizontal 1)))
-(global-set-key (kbd "C-x <") (lambda () (interactive)
-                                (my-adjust-window-horizontal -1)))
 
 ;;;; functions to setup platform depadent settings.
 (defalias 'string-split 'split-string)
-
-(defun try-require (feature)
-  "Attempt to load a library or module named FEATURE.
-Return true if the library given as argument is successfully loaded.
-If not, instead of an error, just add the package to a list of missing packages.
-If CLICK is t, calculate time cost."
-  (let* ((package (if (stringp feature) feature (symbol-name feature)))
-        loaded)
-    (condition-case msg
-        (progn
-          (unless (featurep feature)
-            (require feature))
-          (setq loaded t))
-      (error "Failed to load %s -- %s" package msg))
-    loaded))
 
 
 (defcustom available-width '(78 82 86 92 98)
@@ -326,7 +260,6 @@ Call FUNC with ARGS."
 
 
 
-
 (defun s-join (separator strings)
   "Join all the strings in STRINGS with SEPARATOR in between."
   (mapconcat 'identity strings separator))
@@ -348,35 +281,6 @@ Call FUNC with ARGS."
 (defun s-trim (s)
   "Remove whitespace at the beginning and end of S."
   (s-trim-left (s-trim-right s)))
-
-(defun yc/command-output-to-string (&rest args)
-  "Execute a command and return result as string.
-args should be a list, but to make caller's life easier, it can accept one atom instead of a
-  list."
-  (let* ((cmd (car args))
-         (args (cdr args))
-         (cmd-output (with-output-to-string
-                       (with-current-buffer standard-output
-                         (apply #'process-file
-                                cmd
-                                nil (list t t) nil
-                                (if (listp (car args))
-                                    (car args)
-                                  args))))))
-    (s-trim (ansi-color-apply cmd-output))))
-
-(defun yc/replace-string (content from to)
-  "description"
-  (interactive)
-  (with-temp-buffer
-    (insert content)
-    (goto-char (point-min))
-    (while (search-forward from nil t)
-      (replace-match to nil t))
-    (buffer-substring (point-min) (point-max))))
-
-(defalias 'yc/string-replace 'yc/replace-string)
-(defalias 'len 'length)
 
 (yc/set-keys
  (list
