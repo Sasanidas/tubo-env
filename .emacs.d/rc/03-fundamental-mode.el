@@ -382,33 +382,28 @@ Call FUNC with ARGS."
          ("C-x M-d" . counsel-projectile-find-dir)))
 
 
-(defun sp-lisp-invalid-hyperlink-p (id action context)
-  "Test if there is an invalid hyperlink in a Lisp docstring.
-ID, ACTION, CONTEXT."
-  (when (eq action 'navigate)
-    ;; Ignore errors due to us being at the start or end of the
-    ;; buffer.
-    (ignore-errors
-      (or (and (looking-at "\\sw\\|\\s_")
-               (save-excursion
-                 (backward-char 2)
-                 (looking-at "\\sw\\|\\s_")))
-          (and (save-excursion
-                 (backward-char 1)
-                 (looking-at "\\sw\\|\\s_"))
-               (save-excursion
-                 (forward-char 1)
-                 (looking-at "\\sw\\|\\s_")))))))
-
 (use-package smartparens
   :pin melpa
-  :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :ensure t
+  :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :hook ((after-init . smartparens-global-mode))
   :custom
   (sp-escape-quotes-after-insert nil)
+  :custom-face
+  (sp-pair-overlay-face ((t nil)))
   :config
-  (require 'smartparens-config))
+  (require 'smartparens-config)
+  :bind (:map smartparens-mode-map
+              (;; (kbd "C-M-n")
+               [134217742] . sp-forward-sexp)
+
+              (;; (kbd "C-M-p")
+               [134217744] . sp-backward-sexp)
+
+              (;; (kbd "C-M-k")
+               [134217739] . sp-kill-sexp)
+              (;; (kbd "C-M-w")
+               [134217751] . sp-copy-sexp)))
 
  ; VLF: view large file.
 (use-package vlf
@@ -433,8 +428,7 @@ Call FUNC which is 'find-file-noselect with ARGS."
   ;;Handle file-error and suggest to install missing packages...
   (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
   (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
-  (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv)
-)
+  (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv))
 
 (defun yc/abort-if-file-too-large (size op-type filename  &optional OFFER-RAW)
   "Advice for `abort-if-file-too-large'.
@@ -479,7 +473,6 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 :bind ((;; ,(kbd "C-x C-b")
         "". ibuffer)))
 
-
 
 (autoload 'switch-window "switch-window" ""  t)
 (defun yc/switch-window (&optional reverse)
@@ -510,9 +503,6 @@ With REVERSE is t, switch to previous window."
              s-ends-with? s-ends-with-p
              s-starts-with? s-blank? s-split))
 
-(defalias 's-empty? 's-blank?)
-
-
 (use-package session
   :ensure t
   :commands (session-initialize)
@@ -532,25 +522,18 @@ With REVERSE is t, switch to previous window."
   :hook ((emacs-startup . super-save-mode))
   :custom
   (super-save-auto-save-when-idle t)
-  (auto-save-default nil)
-  )
+  (auto-save-default nil))
 
 ;; Tabs and spaces
 (use-package ws-butler
   :commands (ws-butler-mode)
   :ensure t
-  :init
-  (progn
-    (custom-set-faces
-     '(sp-pair-overlay-face ((t nil)))))
-  :hook (
-         (prog-mode .  ws-butler-mode))
+  :hook ((prog-mode .  ws-butler-mode))
   :custom
   (tab-always-indent 'complete)
   (tab-width 4)
   (c-basic-offset 4)
-  (indent-tabs-mode nil)
-  )
+  (indent-tabs-mode nil))
 
 
 (use-package undo-tree
