@@ -493,6 +493,39 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
                         link
                         (format-time-string "%Y-%m-%d %H:%M:%S"))
               ""))))
+
+
+(use-package org-roam
+  :pin melpa
+  :custom
+  (org-roam-directory (expand-file-name "~/Documents/Database/org/"))
+  (org-roam-graph-viewer `,(cond
+                            ((executable-find "firefox") (executable-find "firefox"))
+                            ((eq system-type 'darwin) "/usr/bin/open")
+                            (t nil)))
+  (org-roam-completion-system 'ivy))
+
+
+(defun yc/my-noter-mode-hook ()
+  "Description."
+  (unless (layout-restore)
+    (PDEBUG "BUF" (current-buffer))
+    (PDEBUG "FILE:" buffer-file-name)
+    ;; (when (s-ends-with? ".pdf" buffer-file-name)
+    ;;   (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
+    (dolist (win (window-list))
+      (select-window win)
+      (layout-save-current)))
+  ;; (my-noter-sync-pdf-page-next)
+  )
+
+(use-package my-noter
+  :commands (my-noter
+             my-noter/dispatch-file my-noter/dispatch-directory
+             my-noter/find-file)
+  :hook ((my-noter-mode . yc/my-noter-mode-hook))
+  :custom
+  (my-noter-disable-narrowing t))
 
 ;; Local Variables:
 ;; coding: utf-8

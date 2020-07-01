@@ -480,37 +480,7 @@
  ;; nov, epub reader
 
 (use-package nov
-  :mode ((rx ".epub") . nov-mode)
-  )
-
-
-;; in org file: [[pdfview:/path/to/myfile.pdf::42][My file Description]]
-
-
-;; https://github.com/rudolfochrist/interleave
-(use-package my-noter
-  :commands (my-noter
-             my-noter/dispatch-file my-noter/dispatch-directory
-             my-noter/get-note-file)
-  :hook ((my-noter-mode . yc/my-noter-mode-hook)
-         )
-  :custom
-  (my-noter-disable-narrowing t)
-  :defer t)
-
-(defun yc/my-noter-mode-hook ()
-  "Description."
-  (unless (layout-restore)
-    (PDEBUG "BUF" (current-buffer))
-    (PDEBUG "FILE:" buffer-file-name)
-    ;; (when (s-ends-with? ".pdf" buffer-file-name)
-    ;;   (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
-    (dolist (win (window-list))
-      (select-window win)
-      (layout-save-current))
-    )
-  ;; (my-noter-sync-pdf-page-next)
-  )
+  :mode ((rx ".epub") . nov-mode))
 
  ;; PDF
 (use-package pdf-tools

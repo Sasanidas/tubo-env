@@ -18,6 +18,8 @@
 (require 'doc-view)
 (require 'image-mode)
 
+(require 'org-roam)
+
 (autoload 'ffap-url-p "ffap" ""  nil)
 (autoload 'eww-current-url "eww" "get current url."  nil)
 (autoload 'dired-get-marked-files "dired" ""  nil)
@@ -129,11 +131,7 @@ This setting may be overridden in a document with the function
   :type 'string)
 
  ;; Functions
-(defun my-noter/open-note ()
-  "Open a note"
-  (interactive)
-  (let ((default-directory my-noter-notes-search-path) )
-    (yc/counsel-find-file)))
+(defalias 'my-noter/find-file 'org-roam-find-file)
 
 (defun my-noter/do-dispatch-file (item)
   "Dispatch single ITEM."
@@ -875,6 +873,9 @@ Keybindings (org-mode buffer):
   "Start `my-noter' session."
   (interactive)
 
+  (unless org-roam-mode
+    (org-roam-mode 1))
+
   (if (eq major-mode 'org-mode)
       ;; Creating session from notes file.
       (progn
@@ -981,7 +982,7 @@ Keybindings (org-mode buffer):
 
                  ;; NOTE(nox): Create list of targets from search path
                  (when (file-exists-p my-noter-notes-search-path)
-                   (let ((file-name (expand-file-name notes-file-name path)))
+                   (let ((file-name (expand-file-name notes-file-name (expand-file-name "org" my-noter/root-directory))))
                      (unless (member file-name list-of-possible-targets)
                        (when (file-exists-p file-name)
                          (setq file-name (propertize file-name 'display

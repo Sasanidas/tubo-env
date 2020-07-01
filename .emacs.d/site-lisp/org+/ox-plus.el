@@ -124,8 +124,8 @@ Return output file name."
   (interactive)
   (PDEBUG "Adding DIR: " dir)
   (when (file-directory-p dir)
-    (let ((bdir (file-name-base dir)))
-
+    (let ((bdir (file-name-base dir))
+          (auto-sitemap (not (file-exists-p (concat dir "/.no-auto-sitemap")))))
       (unless static-only
         (add-to-list 'org-publish-project-alist
                      `(,(format "org-%s" bdir)
@@ -137,8 +137,7 @@ Return output file name."
                        :section-numbers nil
                        :with-toc t
                        :makeindex nil
-                       :auto-sitemap t
-                       :auto-preamble t
+                       :auto-sitemap ,auto-sitemap
                        :sitemap-filename "index.org"
                        :html-preamble t
                        :html-head-extra ,my-html-head-extra
@@ -230,7 +229,6 @@ Finally, title will be removed."
                  :with-toc t
                  :makeindex nil
                  :auto-sitemap nil
-                 :auto-preamble t
                  :sitemap-filename "index.org"
                  :html-preamble t)))
 
@@ -249,7 +247,6 @@ Finally, title will be removed."
           :with-toc t
           :makeindex nil
           :auto-sitemap t
-          :auto-preamble t
           :html-head-extra ,my-html-head-extra-top
           :html-link-home ,my-link-home
           :sitemap-filename "index.org"
@@ -268,7 +265,6 @@ Finally, title will be removed."
            :with-toc t
            :makeindex nil
            :auto-sitemap nil
-           :auto-preamble t
            :html-head-extra ,my-html-head-extra-top
            :html-link-home ,my-link-home
            :sitemap-filename "index.org"
@@ -317,7 +313,6 @@ Finally, title will be removed."
                  :with-toc nil
                  :makeindex nil
                  :auto-sitemap t
-                 :auto-preamble t
                  :sitemap-filename "index.org"
                  :html-preamble t)
               org-publish-project-alist
