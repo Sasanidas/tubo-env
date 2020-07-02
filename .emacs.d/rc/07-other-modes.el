@@ -212,6 +212,7 @@
              yc/get-env
              yc/uef
              yc/touch-file
+             yc/git-copy-file-path
              )
 
   :bind ((;(kbd "C-x J")

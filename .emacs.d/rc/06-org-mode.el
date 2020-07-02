@@ -79,6 +79,54 @@ plantuml is a cross-platform, open-source make system."
   (plantuml-indent-level 4))
 
 
+(defun yc/org-download-annotate-func (link)
+  "Annotate LINK with the time of download."
+  (let ((lable (format "fig:%s"
+                       (replace-regexp-in-string
+                        (rx (+ space)) "_"
+                        (file-name-sans-extension (file-name-nondirectory link)) t t))))
+
+    (kill-new (format "[[%s]]" lable))
+    (concat "#+CAPTION: \n"
+            (format "#+NAME: %s\n" lable)
+            (if (ffap-url-p link)
+                (format "#+DOWNLOADED: %s @ %s\n"
+                        link
+                        (format-time-string "%Y-%m-%d %H:%M:%S"))
+              ""))))
+
+(defun yc/org-download-screenshot-adv (func &rest args)
+  "Advice for 'org-download-screenshot'.
+Call FUNC which is 'org-download-screenshot with ARGS.
+Change default filename before applying original function."
+  (let ((org-download-screenshot-file
+         (expand-file-name (format-time-string "screenshot@%Y-%m-%d_%H:%M:%S.png")
+                           temporary-file-directory)))
+    (apply func args)))
+
+
+(defun yc/org-download--image/url-retrieve-adv (link filename)
+  "Advice for 'org-download--image/url-retrieve'.
+Call FUNC which is 'org-download--image/url-retrieve with ARGS."
+(url-retrieve
+   link
+   (lambda (status filename buffer)
+     (org-download--write-image status filename)
+     (cond ((org-download-org-mode-p)
+            (with-current-buffer buffer
+              (org-download--display-inline-images)))
+           ((eq major-mode 'dired-mode)
+            (let ((inhibit-message t))
+              (with-current-buffer (dired (file-name-directory filename))
+                (revert-buffer nil t)))))
+     (with-current-buffer buffer
+       (org-download--display-inline-images))
+     )
+   (list
+    (expand-file-name filename)
+    (current-buffer))
+   nil t))
+
 (use-package org-download
   :pin melpa
   :commands (org-download-image org-download-screenshot)
@@ -87,6 +135,8 @@ plantuml is a cross-platform, open-source make system."
   (org-download-image-dir "images")
   (org-download-heading-lvl nil)
   (org-download-timestamp nil)
+  (org-download-image-html-width 1024)
+  (org-download-image-org-width 1024)
 
   :config
   (setq-default
@@ -98,8 +148,11 @@ plantuml is a cross-platform, open-source make system."
      (t "")))
   (setq org-download-annotate-function 'yc/org-download-annotate-func
         org-download-file-format-function 'identity)
-  )
 
+  (advice-add 'org-download-screenshot :around #'yc/org-download-screenshot-adv)
+  (advice-add 'org-download--image/url-retrieve :override
+              #'yc/org-download--image/url-retrieve-adv)
+  )
 
 
  ;; *************************** Org Mode ********************************
@@ -179,12 +232,250 @@ plantuml is a cross-platform, open-source make system."
   (modify-syntax-entry ?= "(=")
   )
 
+(defun yc/org-html-paragraph-adv (func &rest args)
+  "Advice for 'org-html-paragraph'.
+Call FUNC which is 'org-html-paragraph with ARGS."
+       "Join consecutive Chinese lines into a single long line without
+unwanted space when exporting org-mode to html."
+       (let ((orig-contents (cadr args))
+             (reg-han "[[:multibyte:]]"))
+         (setf (cadr args) (replace-regexp-in-string
+                            (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
+                            "\\1\\2" orig-contents))
+         (apply func args)))
+
+
+(defun yc/org-latex-special-block-adv (func &rest args)
+  "Advice for 'org-latex-special-block'.
+Call FUNC which is 'org-latex-special-block with ARGS."
+  (if (string= (org-element-property :type (car args)) "NOTES")
+      (cadr args)
+    (apply func args)))
+
+
+(defun org-summary-todo (n-done n-not-done)
+  "Switch entry to DONE when all subentries are done, to TODO otherwise."
+  (let (org-log-done org-log-states)   ; turn off logging
+    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+(defun yc/org-open-at-point-adv (func &rest args)
+  "Advice for 'org-open-at-point'.
+Call FUNC which is 'org-open-at-point with ARGS."
+  (let ((m (point-marker)))
+    (progn
+      (apply func args)
+      (yc/push-stack m))))
+
+
+
+(defun yc/org-comment-line-break-function (func &rest args)
+  "Wrapper of: `org-comment-line-break-function'.
+Ignore error signal in `org-comment-line-break-function'."
+  (condition-case var
+      (apply func args)
+    (error nil)))
+
+
+
+(use-package ol
+  :bind (("\C-cl" . org-store-link)))
+
+(use-package org-agenda
+  :custom
+  (org-agenda-files (list (expand-file-name "~/Work/org")
+                          (expand-file-name "~/Work/yangyingchao.github.io/org")))
+  (org-agenda-dim-blocked-tasks (quote invisible))
+  (org-agenda-skip-deadline-if-done t)
+  (org-agenda-skip-scheduled-if-done t)
+
+  :bind(("\C-ca" . org-agenda)))
+
+(use-package org-capture :bind ((;; ,(kbd "<M-S-f10>")
+                                 [M-S-f10]. org-capture))
+  :config
+  (custom-set-variables
+   `(org-capture-templates
+     `(("t" "Todo" entry (file+headline ,(format "%s/gtd.org" org-directory) "Tasks")
+        "\n* TODO %?\n  %i\n  %a")
+       ("p" "Project" entry (file+headline ,(format "%s/gtd.org" org-directory) "Project")
+        "
+** NOTE %?\n %i\n %a" )
+       ("n" "New" entry (file+datetree ,(format "%s/inbox.org" org-directory) "Inbox")
+        "* %?\nEntered on %U\n  %i\n  %a")
+       ("i" "Idea" entry (file+headline ,(format "%s/gtd.org" org-directory)"Idea")
+        "* %?\nEntered on %U\n  %i\n  %a")
+       ("w" "Web site" entry
+        (file "")
+        "* %a :website:\n\n%U %?\n\n%:initial")))))
+
+
+(defun yc/org-update-yank ()
+  "Update yanked text, removing or adding proper spaces."
+  (interactive)
+  (save-excursion
+    ;; 测试 AAA --> 测试 AAA
+    (goto-char (point-min))
+    (while (search-forward-regexp (rx (group (not ascii))  (* blank) (group  ascii)) nil t)
+      (replace-match "\\1 \\2" nil nil))
+
+    ;;  AAA测试 -->  AAA 测试
+    (goto-char (point-min))
+    (while (search-forward-regexp (rx  (group  ascii) (* blank) (group (not ascii))) nil t)
+      (replace-match "\\1 \\2" nil nil))
+
+    ;; remove leading space
+    (goto-char (point-min))
+    (while (search-forward-regexp (rx  bol (+ blank)) nil t)
+      (replace-match "")))
+
+  ;; remove trailing space
+  (delete-trailing-whitespace))
+
+(defun yc/org-ctrl-c-ctrl-c-adv (&rest args)
+  "Advice for 'org-ctrl-c-ctrl-c'.
+Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
+
+  (PDEBUG "ENTER2: " (current-buffer))
+
+  (when window-system
+    (org-redisplay-inline-images)))
+
+
+
+
+(defun yc/org-roam-store-link-adv (arg &optional interactive?)
+  "Advice for 'org-roam-store-link'.
+Call FUNC which is 'org-roam-store-link with ARGS."
+  (org-store-link arg interactive?))
+
+(use-package org-roam
+  :pin melpa
+  :commands (org-roam-buffer-toggle-display org-roam-insert)
+
+  :custom
+  (org-roam-directory (expand-file-name "~/Documents/Database/org/"))
+  (org-roam-graph-viewer `,(cond
+                            ((executable-find "firefox") (executable-find "firefox"))
+                            ((eq system-type 'darwin) "/usr/bin/open")
+                            (t nil)))
+  (org-roam-completion-system 'ivy)
+  :hook ((org-mode . (lambda () (unless org-roam-mode (org-roam-mode 1)))))
+  :bind (:map org-roam-backlinks-mode-map
+              ("q" . org-roam-buffer-deactivate))
+
+  :config
+  (advice-add 'org-roam-store-link :override #'yc/org-roam-store-link-adv))
+
+
+ ;; auto-insert for org-mode.
+
+(defun auto-insert--org-mode (&optional fn)
+  "Update for `org-mode'.
+ Update file name, replace '-' or '_' with whitespace."
+  (interactive)
+  (auto-update-defaults)
+
+  (let* ((fn (or fn (file-name-sans-extension (file-name-nondirectory buffer-file-name))))
+         (bname (if (string-match
+                     (rx bol
+                         (repeat 4 digit) "-"   ;; year
+                         (repeat 1 2 digit) "-" ;; month
+                         (repeat 1 2 digit)     ;; day
+                         "-" (group (* anything)) eol)
+                     fn)
+                    (match-string 1 fn)
+                  fn))
+         (replacement (replace-regexp-in-string (regexp-quote "-") " " bname t t )))
+
+    (yc/auto-update-template "FILE_NO_EXT_MINUS" replacement))
+
+
+  ;; create directory for images...
+  (unless (file-directory-p "images")
+    (mkdir "images"))
+
+  (let* (tex)
+    (when (executable-find "latex")
+      (cond
+       ((executable-find "convert")
+        (setq tex "tex:imagemagick"))
+       ((executable-find "dvipng")
+        (setq tex "tex:dvipng"))
+       (t
+        (warn "latex installed, but can be used to convert math, imagemagick or dvipng is needed...")
+        )))
+
+    (if tex
+        (progn
+          (yc/auto-update-template "TEX" tex)
+          (yc/auto-update-template "TEX_PREVIEW" "latexpreview"))
+
+      (progn
+        (yc/auto-update-template "TEX" "")
+        (yc/auto-update-template "TEX_PREVIEW" "")))))
+
+(defun counsel/org-link-target ()
+  "List files under point??"
+  (interactive)
+  (let* ((text (buffer-substring-no-properties (point-at-bol) (point))))
+    (if (string-match (rx "[[" (group (+ nonl)) eol) text)
+        (let* ((dir (match-string 1 text))
+               (target (counsel-list-directory dir nil 'identity)))
+
+          (insert (file-name-nondirectory target)))
+      (error "Can't find target for %s" text))))
+
+(use-package org-bullets
+  :pin melpa
+  :commands (org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
+  :hook ((org-mode . org-bullets-mode)))
+
+(use-package ox-latex
+  :custom
+
+  (org-latex-compiler "xelatex")
+  (org-latex-default-figure-position "htbp";; "H"
+                                     )
+  (org-latex-prefer-user-labels t)
+  (org-latex-hyperref-template
+   "\\hypersetup{
+ pdfauthor={%a},
+ pdftitle={%t},
+ pdfkeywords={%k},
+ pdfsubject={%d},
+ pdfcreator={%c},
+ pdflang={%L},
+ colorlinks={true},
+CJKbookmarks={true},
+linkcolor={black},
+urlcolor={blue},
+menucolor={blue}}
+")
+  :config
+  (advice-add 'org-latex-special-block :around #'yc/org-latex-special-block-adv))
+
+
+(defun yc/org-publish-needed-p-adv (func &rest args)
+  "Advice for 'org-publish-needed-p'.
+Call FUNC which is 'org-publish-needed-p with ARGS.
+Restore to current location after executing."
+  (save-excursion
+    (apply func args)))
+
+(use-package ox-publish
+  :commands (org-publish-needed-p)
+  :config
+  (advice-add 'org-publish-needed-p :around #'yc/org-publish-needed-p-adv))
+
+
 (use-package org
   :custom
   (org-image-actual-width nil)
   (org-confirm-babel-evaluate nil)
-  (org-default-notes-file (expand-file-name "~/Work/org/notes.org"))
-  (org-directory (expand-file-name "~/Work/org"))
+  (org-default-notes-file (expand-file-name "~/Documents/Database/org/notes.org"))
+  (org-directory (expand-file-name "~/Documents/Database/org/"))
   (org-export-time-stamp-file nil)
   (org-hide-leading-stars t)
   (org-html-head-include-default-style nil)
@@ -268,242 +559,13 @@ plantuml is a cross-platform, open-source make system."
                "ds" . org-download-screenshot)
               (;; (kbd "C-x du")
                "du" . org-download-image)
+
+              (;; (kbd "C-x n t")
+               "nt" . org-roam-buffer-toggle-display)
+              (;; (kbd "C-x n i")
+               "ni" . org-roam-insert)
+
               ))
-
-(defun yc/org-html-paragraph-adv (func &rest args)
-  "Advice for 'org-html-paragraph'.
-Call FUNC which is 'org-html-paragraph with ARGS."
-       "Join consecutive Chinese lines into a single long line without
-unwanted space when exporting org-mode to html."
-       (let ((orig-contents (cadr args))
-             (reg-han "[[:multibyte:]]"))
-         (setf (cadr args) (replace-regexp-in-string
-                            (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
-                            "\\1\\2" orig-contents))
-         (apply func args)))
-
-(use-package ox-latex
-  :custom
-
-  (org-latex-compiler "xelatex")
-  (org-latex-default-figure-position "htbp";; "H"
-                                     )
-  (org-latex-prefer-user-labels t)
-  (org-latex-hyperref-template
-   "\\hypersetup{
- pdfauthor={%a},
- pdftitle={%t},
- pdfkeywords={%k},
- pdfsubject={%d},
- pdfcreator={%c},
- pdflang={%L},
- colorlinks={true},
-CJKbookmarks={true},
-linkcolor={black},
-urlcolor={blue},
-menucolor={blue}}
-")
-  :config
-  (progn
-    (advice-add 'org-latex-special-block :around #'yc/org-latex-special-block-adv)
-    )
-  )
-
-(defun yc/org-latex-special-block-adv (func &rest args)
-  "Advice for 'org-latex-special-block'.
-Call FUNC which is 'org-latex-special-block with ARGS."
-  (if (string= (org-element-property :type (car args)) "NOTES")
-      (cadr args)
-    (apply func args)))
-
-
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-log-states)   ; turn off logging
-    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
-
-(defun yc/org-open-at-point-adv (func &rest args)
-  "Advice for 'org-open-at-point'.
-Call FUNC which is 'org-open-at-point with ARGS."
-  (let ((m (point-marker)))
-    (progn
-      (apply func args)
-      (yc/push-stack m))))
-
-
-
-(defun yc/org-comment-line-break-function (func &rest args)
-  "Wrapper of: `org-comment-line-break-function'.
-Ignore error signal in `org-comment-line-break-function'."
-  (condition-case var
-      (apply func args)
-    (error nil)))
-
-(defun open-mylist ()
-  "Open my gtd file."
-  (interactive)
-  (unless (boundp 'ord-dir)
-    (load-library "ox-plus"))
-  (find-file (concat org-directory "/gtd.org")))
-
-(global-set-key [(control f1)] 'open-mylist)
-
-(use-package ol
-  :bind (("\C-cl" . org-store-link)))
-
-(use-package org-agenda
-  :custom
-  (org-agenda-files (list (expand-file-name "~/Work/org")
-                          (expand-file-name "~/Work/yangyingchao.github.io/org")))
-  (org-agenda-dim-blocked-tasks (quote invisible))
-  (org-agenda-skip-deadline-if-done t)
-  (org-agenda-skip-scheduled-if-done t)
-
-  :bind(("\C-ca" . org-agenda)))
-
-(use-package org-capture :bind ((;; ,(kbd "<M-S-f10>")
-                                 [M-S-f10]. org-capture))
-  :config
-  (custom-set-variables
-   `(org-capture-templates
-     `(("t" "Todo" entry (file+headline ,(format "%s/gtd.org" org-directory) "Tasks")
-        "\n* TODO %?\n  %i\n  %a")
-       ("p" "Project" entry (file+headline ,(format "%s/gtd.org" org-directory) "Project")
-        "
-** NOTE %?\n %i\n %a" )
-       ("n" "New" entry (file+datetree ,(format "%s/inbox.org" org-directory) "Inbox")
-        "* %?\nEntered on %U\n  %i\n  %a")
-       ("i" "Idea" entry (file+headline ,(format "%s/gtd.org" org-directory)"Idea")
-        "* %?\nEntered on %U\n  %i\n  %a")
-       ("w" "Web site" entry
-        (file "")
-        "* %a :website:\n\n%U %?\n\n%:initial")))))
-
-
-(defun yc/org-update-yank ()
-  "Update yanked text, removing or adding proper spaces."
-  (interactive)
-  (save-excursion
-    ;; 测试 AAA --> 测试 AAA
-    (goto-char (point-min))
-    (while (search-forward-regexp (rx (group (not ascii))  (* blank) (group  ascii)) nil t)
-      (replace-match "\\1 \\2" nil nil))
-
-    ;;  AAA测试 -->  AAA 测试
-    (goto-char (point-min))
-    (while (search-forward-regexp (rx  (group  ascii) (* blank) (group (not ascii))) nil t)
-      (replace-match "\\1 \\2" nil nil))
-
-    ;; remove leading space
-    (goto-char (point-min))
-    (while (search-forward-regexp (rx  bol (+ blank)) nil t)
-      (replace-match "")))
-
-  ;; remove trailing space
-  (delete-trailing-whitespace))
-
-(defun yc/org-ctrl-c-ctrl-c-adv (&rest args)
-  "Advice for 'org-ctrl-c-ctrl-c'.
-Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
-
-  (PDEBUG "ENTER2: " (current-buffer))
-
-  (when window-system
-    (org-redisplay-inline-images)))
-
-
-
- ;; auto-insert for org-mode.
-
-(defun auto-insert--org-mode (&optional fn)
-  "Update for `org-mode'.
- Update file name, replace '-' or '_' with whitespace."
-  (interactive)
-  (auto-update-defaults)
-
-  (let* ((fn (or fn (file-name-sans-extension (file-name-nondirectory buffer-file-name))))
-         (bname (if (string-match
-                     (rx bol
-                         (repeat 4 digit) "-"   ;; year
-                         (repeat 1 2 digit) "-" ;; month
-                         (repeat 1 2 digit)     ;; day
-                         "-" (group (* anything)) eol)
-                     fn)
-                    (match-string 1 fn)
-                  fn))
-         (replacement (replace-regexp-in-string (regexp-quote "-") " " bname t t )))
-
-    (yc/auto-update-template "FILE_NO_EXT_MINUS" replacement))
-
-
-  ;; create directory for images...
-  (unless (file-directory-p "images")
-    (mkdir "images"))
-
-  (let* (tex)
-    (when (executable-find "latex")
-      (cond
-       ((executable-find "convert")
-        (setq tex "tex:imagemagick"))
-       ((executable-find "dvipng")
-        (setq tex "tex:dvipng"))
-       (t
-        (warn "latex installed, but can be used to convert math, imagemagick or dvipng is needed...")
-        )))
-
-    (if tex
-        (progn
-          (yc/auto-update-template "TEX" tex)
-          (yc/auto-update-template "TEX_PREVIEW" "latexpreview"))
-
-      (progn
-        (yc/auto-update-template "TEX" "")
-        (yc/auto-update-template "TEX_PREVIEW" "")))))
-
-(defun counsel/org-link-target ()
-  "List files under point??"
-  (interactive)
-  (let* ((text (buffer-substring-no-properties (point-at-bol) (point))))
-    (if (string-match (rx "[[" (group (+ nonl)) eol) text)
-        (let* ((dir (match-string 1 text))
-               (target (counsel-list-directory dir nil 'identity)))
-
-          (insert (file-name-nondirectory target)))
-      (error "Can't find target for %s" text))))
-
-(use-package org-bullets
-  :pin melpa
-  :commands (org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
-  :hook ((org-mode . org-bullets-mode)))
-
-(defun yc/org-download-annotate-func (link)
-  "Annotate LINK with the time of download."
-  (let ((lable (format "fig:%s"
-                       (replace-regexp-in-string
-                        (rx (+ space)) "_"
-                        (file-name-sans-extension (file-name-nondirectory link)) t t))))
-
-    (kill-new (format "[[%s]]" lable))
-    (concat "#+CAPTION: \n"
-            (format "#+NAME: %s\n" lable)
-            (if (ffap-url-p link)
-                (format "#+DOWNLOADED: %s @ %s\n"
-                        link
-                        (format-time-string "%Y-%m-%d %H:%M:%S"))
-              ""))))
-
-
-(use-package org-roam
-  :pin melpa
-  :custom
-  (org-roam-directory (expand-file-name "~/Documents/Database/org/"))
-  (org-roam-graph-viewer `,(cond
-                            ((executable-find "firefox") (executable-find "firefox"))
-                            ((eq system-type 'darwin) "/usr/bin/open")
-                            (t nil)))
-  (org-roam-completion-system 'ivy))
 
 
 (defun yc/my-noter-mode-hook ()
@@ -523,6 +585,10 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   :commands (my-noter
              my-noter/dispatch-file my-noter/dispatch-directory
              my-noter/find-file)
+  :bind (:map ctl-x-map
+              ("nf" . my-noter/find-file)
+              ("nn" . my-noter))
+
   :hook ((my-noter-mode . yc/my-noter-mode-hook))
   :custom
   (my-noter-disable-narrowing t))

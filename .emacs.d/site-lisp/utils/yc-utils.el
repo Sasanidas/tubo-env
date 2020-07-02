@@ -1451,6 +1451,22 @@ args should be a list, but to make caller's life easier, it can accept one atom 
   (interactive)
   (enlarge-window (- (yc/adjust-window-calc-lines)) t))
 
+(defun yc/git-copy-file-path ()
+  "Copy path of current visited file."
+  (interactive)
+  (let ((url (magit-git-string "config" "remote.origin.url"))
+        (root (magit-toplevel)))
+
+    (unless url (error "Not in a git repo"))
+
+    (kill-new
+     (concat (replace-regexp-in-string
+              (rx "git@github.com:" (group (+? nonl)) ".git")
+              "https://github.com/\\1"
+              url)
+             "/blob/master/"
+             (and root (file-relative-name buffer-file-name root))
+             ))))
 
 (provide 'yc-utils)
 

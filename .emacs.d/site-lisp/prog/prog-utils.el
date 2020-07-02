@@ -970,6 +970,7 @@ If NO-CACHED is true, do not use cached value."
     (let ((yc/debug-log-limit -1))
       (PDEBUG "AAAA: " yc/cached-tags))
 
+    ;; TODO: should recenter to a tag near current position...
     (let ((position (point))
           res)
       (unwind-protect

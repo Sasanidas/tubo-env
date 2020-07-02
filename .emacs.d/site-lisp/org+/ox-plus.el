@@ -8,6 +8,7 @@
 
 (require '01-generics)
 (require '02-functions)
+
 (autoload 'yc/file-exists-p "yc-utils" ""  t)
 
 (defcustom my-link-home  "http://localhost"  "Link to homepage."
@@ -137,6 +138,7 @@ Return output file name."
                        :section-numbers nil
                        :with-toc t
                        :makeindex nil
+                       :sitemap-title ,(format "Index For org-%s" bdir)
                        :auto-sitemap ,auto-sitemap
                        :sitemap-filename "index.org"
                        :html-preamble t
@@ -247,6 +249,7 @@ Finally, title will be removed."
           :with-toc t
           :makeindex nil
           :auto-sitemap t
+          :sitemap-title ,(format "Top Index")
           :html-head-extra ,my-html-head-extra-top
           :html-link-home ,my-link-home
           :sitemap-filename "index.org"
