@@ -714,12 +714,6 @@ inserts comment at the end of the line."
             (interactive)
             (yc/counsel-grep))
       "grep")
-     ("n" (lambda (x)
-            (interactive)
-                          (let ((file (concat (expand-file-name dir) "/" x)) )
-                (counsel-find-file file)))
-      "create")
-
      ))
 
   (ivy-read "Find file: "

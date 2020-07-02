@@ -348,6 +348,12 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
 Call FUNC which is 'org-roam-store-link with ARGS."
   (org-store-link arg interactive?))
 
+(defun yc/grep-roam-files (x)
+  "Description X."
+  (interactive)
+  (let ((default-directory (expand-file-name "~/Documents/Database/org/")))
+    (yc/counsel-grep)))
+
 (use-package org-roam
   :pin melpa
   :commands (org-roam-buffer-toggle-display org-roam-insert)
@@ -364,6 +370,12 @@ Call FUNC which is 'org-roam-store-link with ARGS."
               ("q" . org-roam-buffer-deactivate))
 
   :config
+
+  (ivy-add-actions
+   'org-roam--completing-read
+   '(("g" yc/grep-roam-files "grep in current directory")))
+
+
   (advice-add 'org-roam-store-link :override #'yc/org-roam-store-link-adv))
 
 
@@ -566,7 +578,6 @@ Restore to current location after executing."
                "ni" . org-roam-insert)
 
               ))
-
 
 (defun yc/my-noter-mode-hook ()
   "Description."
