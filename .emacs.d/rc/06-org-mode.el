@@ -396,6 +396,17 @@ Call FUNC which is 'org-roam-store-link with ARGS."
   (let ((default-directory (expand-file-name "~/Documents/Database/org/")))
     (yc/counsel-grep)))
 
+(defun yc/org-roam-db--update-file-adv (func &optional file-name)
+  "Advice for 'org-roam-db--update'.
+Call FUNC which is 'org-roam-db--update with ARGS."
+  (run-with-idle-timer
+   5 nil
+   (lambda (f &optional x)
+     (PDEBUG "update db for file: " x)
+     (funcall f x)
+     (PDEBUG "after updating db."))
+   func file-name))
+
 (use-package org-roam
   :pin melpa
   :commands (org-roam-buffer-toggle-display org-roam-insert)
@@ -412,12 +423,11 @@ Call FUNC which is 'org-roam-store-link with ARGS."
               ("q" . org-roam-buffer-deactivate))
 
   :config
-
   (ivy-add-actions
    'org-roam--completing-read
    '(("g" yc/grep-roam-files "grep in current directory")))
 
-
+  (advice-add 'org-roam-db--update-file :around #'yc/org-roam-db--update-file-adv)
   (advice-add 'org-roam-store-link :override #'yc/org-roam-store-link-adv))
 
 
@@ -483,7 +493,7 @@ Call FUNC which is 'org-roam-store-link with ARGS."
   :pin melpa
   :commands (org-bullets-mode)
   :custom
-  (org-bullets-bullet-list '("●" "◇" "✚" "✜" "☯" "◆" ))
+  (org-bullets-bullet-list '( "●" "◎" "○" "✚" "✜" "☯" "◆" ))
   :hook ((org-mode . org-bullets-mode)))
 
 (use-package ox-latex

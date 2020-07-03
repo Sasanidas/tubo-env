@@ -665,6 +665,10 @@ info)."
   "Open page for currently visible notes."
   (interactive)
   (my-noter--switch-to-org-buffer)
+
+  (unless (org-entry-get-with-inheritance my-noter-property-note-location)
+    (error "No page in current section"))
+
   (let ((page (string-to-number
                (org-entry-get-with-inheritance my-noter-property-note-location)))
         (doc-path (my-noter--headline-doc-path (current-buffer))))
