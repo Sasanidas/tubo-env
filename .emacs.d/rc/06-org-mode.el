@@ -105,9 +105,37 @@ Change default filename before applying original function."
     (apply func args)))
 
 
+(defun yc/get-image-width (filename)
+  "Returns width of file FILENAME in pixel."
+  (unless (file-exists-p filename)
+    (error "File %s does not exist!" filename))
+  (with-temp-buffer
+    (insert-image-file filename)
+    (car (image-size
+          (image-get-display-property) t))))
+
+(defun yc/org-download-insert-link-adv (func link filename)
+  "Advice for 'org-download-insert-link'.
+Call FUNC which is 'org-download-insert-link with ARGS."
+  (let* ((width (if (fboundp 'image-size)
+                    ;; if function `image-size' is avaiable,  we can do some calculation.
+                    (if (file-exists-p filename)
+                        ;; if file exists, calculate width to be used.
+                        (let ((actual-width (yc/get-image-width filename)))
+                          (if (> actual-width 1024)
+                              1024 0))
+                      ;; or, set to -1, and update it later.
+                      -1)
+                  ;; otherwise, return 0 to disable this feature.
+                  0))
+           (org-download-image-html-width width)
+           (org-download-image-org-width width))
+    (PDEBUG "width: " width)
+    (funcall func link filename)))
+
 (defun yc/org-download--image/url-retrieve-adv (link filename)
-  "Advice for 'org-download--image/url-retrieve'.
-Call FUNC which is 'org-download--image/url-retrieve with ARGS."
+  "advice for 'org-download--image/url-retrieve'.
+call func which is 'org-download--image/url-retrieve with args."
 (url-retrieve
    link
    (lambda (status filename buffer)
@@ -120,12 +148,25 @@ Call FUNC which is 'org-download--image/url-retrieve with ARGS."
               (with-current-buffer (dired (file-name-directory filename))
                 (revert-buffer nil t)))))
      (with-current-buffer buffer
-       (org-download--display-inline-images))
+       (let* ((width (round (yc/get-image-width filename)))
+              (width-str (concat (number-to-string (if (> width 1024) 1024 width)) "px")) )
+         (save-excursion
+           (let ((end (point)))
+             (forward-line -4)
+             (PDEBUG "W:" (point) end (buffer-substring-no-properties (point) end))
+             (narrow-to-region (point) end)
+             (while (search-forward "-1px" nil t)
+               (replace-match width-str nil t)))
+           (widen)))
+
+       (org-download--display-inline-images)
+       )
      )
    (list
     (expand-file-name filename)
     (current-buffer))
    nil t))
+
 
 (use-package org-download
   :pin melpa
@@ -150,6 +191,8 @@ Call FUNC which is 'org-download--image/url-retrieve with ARGS."
         org-download-file-format-function 'identity)
 
   (advice-add 'org-download-screenshot :around #'yc/org-download-screenshot-adv)
+  (advice-add 'org-download-insert-link :around
+              #'yc/org-download-insert-link-adv)
   (advice-add 'org-download--image/url-retrieve :override
               #'yc/org-download--image/url-retrieve-adv)
   )
@@ -282,8 +325,7 @@ Ignore error signal in `org-comment-line-break-function'."
 
 (use-package org-agenda
   :custom
-  (org-agenda-files (list (expand-file-name "~/Work/org")
-                          (expand-file-name "~/Work/yangyingchao.github.io/org")))
+  (org-agenda-files (list (expand-file-name "~/Documents/Database/org/")))
   (org-agenda-dim-blocked-tasks (quote invisible))
   (org-agenda-skip-deadline-if-done t)
   (org-agenda-skip-scheduled-if-done t)
@@ -513,6 +555,9 @@ Restore to current location after executing."
    '(("HIGH" . (:foreground "red" :weight bold)) ("MEDIUM" . org-warning)
      ("LOW" . (:foreground "blue" :weight bold))))
 
+  (org-return-follows-link t) ;; make RET follow links
+
+
   :hook ((org-after-todo-statistics . org-summary-todo)
          (org-mode . yc/org-mode-hook))
 
@@ -597,12 +642,41 @@ Restore to current location after executing."
              my-noter/dispatch-file my-noter/dispatch-directory
              my-noter/find-file)
   :bind (:map ctl-x-map
-              ("nf" . my-noter/find-file)
+              ("nF" . my-noter/find-file)
               ("nn" . my-noter))
 
   :hook ((my-noter-mode . yc/my-noter-mode-hook))
   :custom
   (my-noter-disable-narrowing t))
+
+(defun yc/deft-auto-populate-title-maybe-adv (file)
+  "Advice for 'deft-auto-populate-title-maybe'.
+Call FUNC which is 'deft-auto-populate-title-maybe with ARGS."
+  (with-temp-file file
+    (org-mode)
+    (auto-insert))
+  )
+
+(use-package deft
+  :pin melpa
+  :custom
+  (deft-recursive t)
+  (deft-directory (expand-file-name "~/Documents/Database/org/"))
+  (deft-file-naming-rules '((noslash . "_")
+                            (nospace . "-")
+                            (case-fn . downcase)))
+  (deft-extensions '("org" "md" "txt"))
+  (deft-use-filename-as-title nil)
+  (deft-use-filter-string-for-filename t)
+
+  :bind (:map ctl-x-map
+              ("nf" . deft))
+  :config
+(advice-add 'deft-auto-populate-title-maybe :override #'yc/deft-auto-populate-title-maybe-adv)
+
+
+  )
+
 
 ;; Local Variables:
 ;; coding: utf-8

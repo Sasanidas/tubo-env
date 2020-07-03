@@ -375,7 +375,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (update-debug-vars t))
 
 (defun debug-off ()
-  "Turn on debug mode."
+  "Turn off debug mode."
   (interactive)
   (update-debug-vars nil))
 
@@ -1351,10 +1351,11 @@ inserts comment at the end of the line."
          (cl-case major-mode
            ('dired-mode (dired-get-marked-files))
            (t (list (or file (buffer-file-name))))))
-        (app (case system-type
-               ('darwin "open")
-               ('gnu/linux "xdg-open")
-               (t nil))))
+        (app
+         (cond
+          ((eq system-type 'darwin) "open")
+          ((eq system-type 'gnu/linux) "xdg-open")
+          (t nil))))
     (unless flist
       (error "Not file to operate"))
     (if app
