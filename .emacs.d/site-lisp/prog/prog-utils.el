@@ -880,7 +880,9 @@ If NO-CACHED is true, do not use cached value."
                                      imenu-auto-rescan-maxout))
          (items (imenu--make-index-alist t))
          (items (delete (assoc "*Rescan*" items) items))
-         (items (counsel-imenu-categorize-functions items))
+         (items (if (eq major-mode 'emacs-lisp-mode)
+                    (counsel-imenu-categorize-functions items)
+                  items))
          (tags (yc/counsel-imenu-get-candidates items)))
 
     (if (called-interactively-p 'interactive)

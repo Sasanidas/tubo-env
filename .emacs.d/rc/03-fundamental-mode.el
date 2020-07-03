@@ -7,6 +7,16 @@
 
 ;;; Code:
 
+
+(use-package helpful
+  :pin melpa
+  :commands (helpful-callable helpful-variable)
+  :bind ((;; (kbd "C-h c")
+          "c" . helpful-key)
+         (;; (kbd "C-h p")
+          "p" . helpful-at-point)
+         ))
+
  ;; ivy mode
 (use-package ivy
   :commands (ivy-read ivy-mode)
@@ -15,114 +25,32 @@
   :hook ((emacs-startup . ivy-mode))
   :config
   (progn
-    (setq ivy-use-virtual-buffers t
-          ivy-count-format "%d/%d "
+    (setq ivy-use-virtual-buffers t        ;; Enable bookmarks and recentf
+          ivy-count-format "%d/%d "        ;; Display count displayed and total
           enable-recursive-minibuffers t
-          ivy-height 20))
+          ivy-height 20                    ;; Number of result lines to display
+          ivy-initial-inputs-alist nil     ;; No regexp by default
+          ivy-wrap t                       ;; wrap candidates
+
+          ))
   :bind ((;(kbd "C-c C-r")
           "" . ivy-resume)
          (;(kbd "M-r")
-          [134217842] . ivy-resume))
-  ;; :bind (:map ivy-mode-map
-  ;;             (;; (kbd "M-[ 1 ; 5 l")
-  ;;              [134217819 49 59 53 108] . ivy-beginning-of-buffer)
-  ;;             (;; (kbd "M-[ 1 ; 5 n")
-  ;;              [134217819 49 59 53 110] . ivy-end-of-buffer))
-  )
+          [134217842] . ivy-resume)))
 
-(defun yc/counsel-find-file ()
-  "Advice for Y with ARGS."
-  (interactive)
+;;;; Ivy-rich
+;; More friendly display transformer for Ivy
+(use-package ivy-rich
+  :pin melpa
+  :ensure t
+  :hook (ivy-mode . ivy-rich-mode)
+  :custom
+  ;; For better performance
+  (ivy-rich-parse-remote-buffer nil)
+  (ivy-rich-path-style 'abbrev)
+  :config
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
 
-  (unless (featurep 'counsel)
-    (require 'counsel))
-
-  (let* ((symbol (substring-no-properties (symbol-name (symbol-at-point))))
-         (filename (aif (ffap-guess-file-name-at-point)
-                       (if (string-match-p (rx (+? nonl) "://" (+ nonl)) it)
-                           it
-                         (expand-file-name it))))
-         (collection (if (ffap-url-p filename) nil 'read-file-name-internal))
-         (url (ffap-url-p filename))
-         (find-file-func (if current-prefix-arg 'find-file-literally
-                           'find-file))
-         line column)
-
-
-    (when (and filename
-               (not url))
-
-      ;; if we are in dired-mode, filename is expanded to fullpath, which is not what I want.
-      (when (equal major-mode 'dired-mode)
-        (PDEBUG "TRIMMING: " filename)
-
-        (setq filename (file-name-nondirectory
-                        (if (s-ends-with-p "/" filename)
-                            (substring-no-properties filename 0 -1)
-                          filename)))
-        )
-
-      (cond
-       ;; try match filename directly.
-       ((string-match (rx (group (+? nonl)) ":" (group (+ digit)) ":" (group (+ digit)))
-                      filename)
-        (setq line   (match-string 2 filename)
-              column (match-string 3 filename)
-              filename (match-string 1 filename)))
-       ((string-match (rx (group (+? nonl)) ":" (group (+ digit)))
-                      filename)
-        (setq line   (match-string 2 filename)
-              filename (match-string 1 filename)))
-
-       ;; otherwise, try match from buffer content.
-       (t
-        (save-excursion
-          (goto-char (point-at-bol))
-          (PDEBUG "PT: " (point))
-
-          (if (looking-at (format (rx (*? nonl) "%s:" (group (+ digit))
-                                      ":" (group (+ digit)))  filename))
-              (progn
-                (setq line (match-string 1)
-                      column (match-string 2))
-                )
-            (if (looking-at (format (rx (*? nonl) "%s:" (group (+ digit)))
-                                                filename))
-                (setq line (match-string 1))))))))
-
-    (PDEBUG "FILENAME: " filename
-      "URL:       " url
-      "COLLECTION:" collection
-      "LINE:      " line
-      "COLUMN:    " column)
-
-    (ivy-read "Find file: " collection
-              :matcher #'counsel--find-file-matcher
-              :initial-input filename
-              :action
-              (lambda (x)
-                (PDEBUG "X: " x)
-                (if url
-                    (funcall ffap-url-fetcher url)
-                  (with-ivy-window
-                    (if (and counsel-find-file-speedup-remote
-                             (file-remote-p ivy--directory))
-                        (let ((find-file-hook nil))
-                          (funcall find-file-func (expand-file-name x ivy--directory)))
-                      (funcall find-file-func (expand-file-name x ivy--directory))
-                      (when (and line buffer-file-name
-                                 (string= buffer-file-name filename))
-                        (goto-char (point-min))
-                        (forward-line (1- (string-to-number line)))
-                        (when column
-                          (goto-char (point-at-bol))
-                          (forward-char (1- (string-to-number column)))
-                          ))))))
-              :preselect (counsel--preselect-file)
-              :require-match 'confirm-after-completion
-              :history 'file-name-history
-              :keymap counsel-find-file-map
-              :caller 'counsel-find-file)))
 
 (defun yc/counsel-grep (&optional deep)
   "Description."
@@ -208,7 +136,6 @@ Call FUNC which is 'counsel-git-grep-action with X."
   (interactive)
   (yc/counsel-grep))
 
-
 (use-package counsel
   :commands (counsel-find-file
              counsel-recentf counsel-semantic-tags
@@ -222,8 +149,12 @@ Call FUNC which is 'counsel-git-grep-action with X."
   (counsel-find-file-ignore-regexp (rx (or (: buffer-start (or "#" "."))
                                            (: (or "#" "~")  buffer-end)
                                            (: buffer-start ".ccls-cache" buffer-end)
+                                           (: ".elc")
                                            )))
   (counsel-rg-base-command "rg -u --with-filename --no-heading --line-number --color never %s")
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+
   :bind (("M-x" . counsel-M-x)
          ([remap yank-pop] . counsel-yank-pop)
          ([remap bookmark-bmenu-list] . counsel-bookmark)
@@ -242,7 +173,7 @@ Call FUNC which is 'counsel-git-grep-action with X."
          ([remap occur] . counsel-grep-or-swiper)
          )
   :bind (:map ctl-x-map
-              ("\C-f" . yc/counsel-find-file)
+              ("\C-f" . counsel-find-file)
               ("\C-r" . counsel-recentf)
               ("F" . 'counsel-fzf))
   :config
@@ -260,8 +191,11 @@ Call FUNC which is 'counsel-git-grep-action with X."
 
   (ivy-add-actions
    'counsel-find-file
-   '(("u" counsel-find-file-as-user "open as other user")
-     ("g" counsel-grep-in-dir "grep in current directory")))
+   '(("u" counsel-find-file-as-user "Open as other user")
+     ("g" counsel-grep-in-dir "Grep in current directory")
+     ("l" find-file-literally "Open literally")
+     ("v" vlf "Open with VLF")
+     ))
   )
 
 
@@ -309,7 +243,10 @@ Call FUNC with ARGS."
 (use-package amx
   :ensure t
   :defer t
-  )
+  :commands amx-mode
+  :hook (ivy-mode . amx-mode)
+  :custom
+  (amx-history-length 20))
 
 
  ;; Projectile...
@@ -569,6 +506,7 @@ With REVERSE is t, switch to previous window."
 
 (use-package layout-restore
   :commands (layout-save-current layout-restore))
+
 
 ;; Local Variables:
 ;; coding: utf-8
