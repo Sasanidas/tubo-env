@@ -503,16 +503,14 @@ Call FUNC which is 'org-roam-db--update with ARGS."
           (insert (file-name-nondirectory target)))
       (error "Can't find target for %s" text))))
 
-(use-package org-bullets
+(use-package org-superstar
   :pin melpa
-  :commands (org-bullets-mode)
+  :hook ((org-mode . org-superstar-mode))
   :custom
-  (org-bullets-bullet-list '( "●" "◎" "○" "✚" "✜" "☯" "◆" ))
-  :hook ((org-mode . org-bullets-mode)))
+  (org-superstar-headline-bullets-list '( "●"  "◎" "○" "✸" "✿" "✤" "✜" "◆" "▶")))
 
 (use-package ox-latex
   :custom
-
   (org-latex-compiler "xelatex")
   (org-latex-default-figure-position "htbp";; "H"
                                      )
