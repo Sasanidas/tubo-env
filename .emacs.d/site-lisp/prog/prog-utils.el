@@ -9,6 +9,7 @@
 (require 'ivy)
 (require 'swiper)
 (require 'imenu)
+(require 'counsel)
 
 
 
@@ -931,6 +932,34 @@ If NO-CACHED is true, do not use cached value."
 
     tags))
 
+(defun yc/tags-from-outline ()
+  "Get tags from outline."
+  (interactive)
+  (let (tags)
+    (when (member major-mode '(org-mode markdown-mode latex-mode))
+      (PDEBUG "Refreshing tags from outline..." )
+
+      (condition-case var
+          (let* ((settings (cdr (assq major-mode counsel-outline-settings)))
+                 (outlines (counsel-outline-candidates settings)))
+            (PDEBUG "OUTLINES:" outlines)
+            (dolist (item outlines)
+              (let ((key (car item)))
+                (push (cons key
+                            (put-text-property
+                             0 1 'swiper-line-number
+                             (marker-position (cdr item)) key)) tags)
+                )))
+
+        (error (PDEBUG "ERROR: " var)))
+
+      (if (called-interactively-p 'interactive)
+          (let ((yc/debug-log-limit 4096))
+            (PDEBUG "LSP-ITEMS: " tags))))
+    (if tags
+        (PDEBUG "TAGS from outline"))
+    (nreverse tags)))
+
 (defun yc/show-methods-dwim ()
   "Show methods found in current file, using any possible way.."
   (interactive)
@@ -938,8 +967,6 @@ If NO-CACHED is true, do not use cached value."
   ;; for unsupported modes, simply use imenu.
   (if (member major-mode '(pdf-view-mode))
       (imenu-choose-buffer-index)
-
-    ;; other modes, try to handle it via ivy.
 
     ;; reset tags-tick to force refresh tags.
     (if current-prefix-arg
@@ -953,8 +980,11 @@ If NO-CACHED is true, do not use cached value."
       (PDEBUG "Refreshing tags..." )
       (setq yc/document-tags-tick (buffer-chars-modified-tick)
             yc/cached-tags
-            (sort (or (yc/tags-from-lsp)
-                      (yc/tags-from-imenu))
+            (sort
+             (or (yc/tags-from-lsp)
+                 (yc/tags-from-outline)
+                 (yc/tags-from-imenu))
+
                   (lambda (x y)
                     (PDEBUG "X" x)
                     (PDEBUG "Y" x)
@@ -970,7 +1000,7 @@ If NO-CACHED is true, do not use cached value."
       (error "Failed to get tags"))
 
     (let ((yc/debug-log-limit -1))
-      (PDEBUG "AAAA: " yc/cached-tags))
+      (PDEBUG "CACHED_TAGS: " yc/cached-tags))
 
     ;; TODO: should recenter to a tag near current position...
     (let ((position (point))
