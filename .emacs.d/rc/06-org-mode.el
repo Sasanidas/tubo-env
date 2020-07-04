@@ -330,7 +330,13 @@ Ignore error signal in `org-comment-line-break-function'."
   (org-agenda-skip-deadline-if-done t)
   (org-agenda-skip-scheduled-if-done t)
 
-  :bind(("\C-ca" . org-agenda)))
+  :bind(("\C-ca" . org-agenda))
+  :config
+    (dolist (item (directory-files org-directory t))
+      (unless (or (not (file-directory-p item))
+                  (member (file-name-base item) '(".git" "slides" "images" "assets" "references" "." "..")))
+        (add-to-list 'org-agenda-files item)))
+  )
 
 (use-package org-capture :bind ((;; ,(kbd "<M-S-f10>")
                                  [M-S-f10]. org-capture))
@@ -384,6 +390,7 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
 
 
 
+(defvar-local yc/org-post-save-timer nil)
 
 (defun yc/org-roam-store-link-adv (arg &optional interactive?)
   "Advice for 'org-roam-store-link'.
@@ -399,13 +406,18 @@ Call FUNC which is 'org-roam-store-link with ARGS."
 (defun yc/org-roam-db--update-file-adv (func &optional file-name)
   "Advice for 'org-roam-db--update'.
 Call FUNC which is 'org-roam-db--update with ARGS."
-  (run-with-idle-timer
-   5 nil
-   (lambda (f &optional x)
-     (PDEBUG "update db for file: " x)
-     (funcall f x)
-     (PDEBUG "after updating db."))
-   func file-name))
+  (if yc/org-post-save-timer
+      (cancel-timer yc/org-post-save-timer))
+
+  (setq yc/org-post-save-timer
+        (run-with-idle-timer
+         5 nil
+         (lambda (f &optional x)
+           (PDEBUG "update db for file: " x)
+           (funcall f x)
+           (PDEBUG "after updating db.")
+           (setq yc/org-post-save-timer nil))
+         func file-name)))
 
 (use-package org-roam
   :pin melpa
@@ -561,6 +573,7 @@ Restore to current location after executing."
   ;; PENDING: Pending for some reason, maybe scheduled but not started because task dependency.
   (org-todo-keywords (quote ((sequence "TODO(t)" "WAITING(w)" "DOING(g)"
                                        "DONE(d)" "CANCELED(c)" "PENDING(p)" ))))
+  (org-tag-alist '(("question" . ?q) ("noexport" . ?n)))
   (org-tag-faces
    '(("HIGH" . (:foreground "red" :weight bold)) ("MEDIUM" . org-warning)
      ("LOW" . (:foreground "blue" :weight bold))))
