@@ -78,6 +78,8 @@ plantuml is a cross-platform, open-source make system."
   (plantuml-default-exec-mode 'jar)
   (plantuml-indent-level 4))
 
+(use-package ffap
+  :commands (ffap-url-p))
 
 (defun yc/org-download-annotate-func (link)
   "Annotate LINK with the time of download."
@@ -149,7 +151,7 @@ call func which is 'org-download--image/url-retrieve with args."
                 (revert-buffer nil t)))))
      (with-current-buffer buffer
        (let* ((width (round (yc/get-image-width filename)))
-              (width-str (concat (number-to-string (if (> width 1024) 1024 width)) "px")) )
+              (width-str (concat (number-to-string (if (> width 960) 960 width)) "px")) )
          (save-excursion
            (let ((end (point)))
              (forward-line -4)
