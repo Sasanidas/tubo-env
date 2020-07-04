@@ -1081,28 +1081,7 @@ inserts comment at the end of the line."
 
       (write-file filename))
 
-    (message "File saved to: %s" filename)
-    )
-  )
-
-
-(defun yc/debug-variable ()
-  "Print variable in debug.."
-  (interactive)
-  (let ((enable-recursive-minibuffers t)
-        (YC-DEBUG t)
-        (yc/debug-log-limit -1))
-    (ivy-read "Describe variable: " obarray
-              :predicate #'counsel--variable-p
-              :require-match t
-              :history 'counsel-describe-symbol-history
-              :preselect (ivy-thing-at-point)
-              :sort t
-              :action (lambda (x)
-                        (PDEBUG "VAR: " x
-                          "\nVAL: " (symbol-value (intern x)))
-                        (display-buffer "*YC-DEBUG*"))
-              :caller 'counsel-describe-variable)))
+    (message "File saved to: %s" filename)))
 
  ;; function to set up compilers.
 
@@ -1462,6 +1441,20 @@ args should be a list, but to make caller's life easier, it can accept one atom 
              "/blob/master/"
              (and root (file-relative-name buffer-file-name root))
              ))))
+
+(defun yc/open-eshell ()
+  "DOCSTRING."
+  (interactive)
+  (let ((ebuffer (get-buffer "*eshell*"))
+        (dir (expand-file-name default-directory)))
+    (if ebuffer
+        (progn
+          (set-buffer ebuffer)
+          (eshell/cd dir)
+          (eshell-send-input)
+          (switch-to-buffer ebuffer))
+      (eshell))))
+
 
 (provide 'yc-utils)
 

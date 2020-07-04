@@ -189,7 +189,6 @@
              xmind/convert-to-org
              yc/add-subdirs-to-load-path
              yc/copy-current-buffername yc/reload-emacs
-             yc/debug-variable
              yc/decode-hex-color
              yc/encode-hex-color
              yc/eval-and-insert
@@ -226,8 +225,10 @@
           [33554447] . zl-newline-up)
          (;; (kbd "")
           [143] . zl-newline-up)
+
          ([mouse-4] . down-slightly)
          ([mouse-5] . up-slightly)
+
          (;; (kbd "<C-return>")
           [C-return] . yc/insert-line-number)
          (;(kbd "<M-K>")
@@ -259,7 +260,12 @@
          (;;(kbd "C-x >")
           ">" . yc/enlarge-window-horizontal)
          (;; (kbd "C-x <")
-          "<" . yc/shrink-window-horizontal)))
+          "<" . yc/shrink-window-horizontal)
+
+         ([f5] . yc/open-eshell)
+         )
+
+  )
 
 (use-package yc-dump
   :commands (yc/dump-emacs yc/config-emacs))
@@ -351,7 +357,13 @@
   :custom
   (shr-use-fonts nil)
   (shr-use-colors t)
-  )
+  (shr-blocked-images
+      (rx
+       (or (: "https://www.postgresql.org"
+              (or
+               "/media/img/about/press/elephant.png"
+               "/media/img/atpostgresql.png"
+               "/media/img/git.png"))))))
 
 (use-package browse-url
   :commands (browse-url-generic)
@@ -366,98 +378,19 @@
                                       (executable-find "firefox")
                                       (executable-find "firefox-bin")
                                       "/usr/bin/xdg-open"))
-                                    (t nil)))
-  )
-
-(defun eww-open-current-page ()
-  "Call eww to open current file."
-  (interactive)
-  (let ((bn (buffer-file-name)))
-    (if (string= (file-name-extension bn) "org")
-        (setq fname (concat (file-name-sans-extension bn) ".html"
-                            ))
-      (setq fname bn))
-    (message "Loading %s" fname)
-    (eww-open-file fname)))
-
-(defun eww-open-current-page-in-gui ()
-  "Opens the current URL in Mozilla Firefox."
-  (interactive)
-  (browse-url-generic (eww-current-url)))
-
-(defun yc/eww-hilight-region (&optional refresh)
-  "Highlight region between BEG and END."
-  (interactive "P")
-
-  (unless (region-active-p)
-    (error "Region not active"))
-
-  (let* ((url (eww-current-url))
-         (pos (point))
-         (beg (region-beginning))
-         (end (region-end))
-         (source-file (if (string-match (rx "file://" (group (+ nonl)))  url)
-                          (match-string 1 url)))
-         (text (s-replace "\n" ".?" (buffer-substring-no-properties beg end)))
-         (r-match-text (format
-                        (rx (group (or "<p" (: "<li" (*? nonl) ">")) (*? nonl))
-                            (group "%s")
-                            (group (*? nonl) (or "</p>" "</li>")))
-                        text
-                        )))
-
-    (unless source-file
-      (error "This works for local html files only"))
-
-    (PDEBUG "URL: " url "SOURCE-FILE: " source-file
-      "TEXT: " text)
-
-    (deactivate-mark)
-    (with-temp-file source-file
-      (insert-file-contents source-file)
-      (goto-char (point-min))
-
-      (if (search-forward-regexp r-match-text nil t)
-          (let ((id (if (executable-find "uuidgen")
-                        (downcase (s-trim (shell-command-to-string "uuidgen")))
-                      (unless (fboundp 'org-id-uuid)
-                        (require 'org-id))
-                      (org-id-uuid)))
-                (text (match-string 2)))
-            (kill-new (format "[[%s#%s][%s]]" url id text))
-            (replace-match (concat "\\1<span id=\""
-                                   id
-                                   "\" style=\"background-color: rgb(255, 255, 11);\">\\2</span>\\3")"\\1<span style=\"background-color: rgb(255, 255, 11);\">\\2</span>\\3")
-            )
-
-        (error "Search fails: %s" r-match-text)))
-
-    (if refresh
-        (progn
-          (eww-reload)
-          (goto-char pos)
-          (recenter))
-      (overlay-put (make-overlay beg end) 'face 'swiper-line-face))))
+                                    (t nil))))
 
 (use-package eww
   :defer t
   :hook ((eww-mode . yc/disable-trailling-spaces))
   :bind (:map eww-mode-map
-              ("\C-co" . eww-open-current-page-in-gui)
+              ("\C-co" . eww-browse-with-external-browser)
 
               (;; ,(kbd "<M-left>")
                [M-left]. eww-back-url)
               (;; ,(kbd "<M-right>")
                [M-right]. eww-forward-url)
-
               ;; URL copy: bind to "w"
-
-              (;; ,(kbd "<C-f8>")
-               [C-f8] . eww)
-              (;; ,(kbd "<C-S-f8>")
-               [C-S-f8]. eww-open-current-page)
-              ;; (;(kbd "M-l")
-              ;;  [134217836] . yc/eww-hilight-region)
               ))
 
 (use-package my-net-utils
@@ -466,17 +399,6 @@
           "". yc/download-url)
          (;;(kbd "C-x C-o")
           "" . yc/open-url)))
-
-;;  ;; ********************** autocompressings *********************
-;; ;; Now add bzip2 support and turn auto compression back on.
-;; (add-to-list 'jka-compr-compression-info-list
-;;              ["\\.dia\\'"
-;;               "compressing" "gzip" ("-c" "-q")
-;;               "uncompressing" "gzip" ("-c" "-q" "-d")
-;;               t t ""]
-;;              )
-
-;; (jka-compr-update)
 
  ;; nov, epub reader
 
@@ -540,31 +462,13 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
             (kill-new image-name))))
     (apply func args)))
 
-
-
-
-;; (defalias 'org-pdfview-open 'find-file)
-;; (use-package org-pdfview
-;;   :commands (org-pdfview-open)
-;;   :init
-;;   (progn
-;;     (yc/eval-after-load
-;;       "org"
-;;       (add-to-list 'org-file-apps
-;;                    '("\\.pdf\\'" . (lambda (file link)
-;;                                      (org-pdfview-open link))))))
-;;   )
-
-
 
 (use-package stringtemplate-mode  :mode "\\.st\\'")
 
 
-
 (use-package eshell
   :commands (eshell-command)
-  :bind (([f5] . yc/open-eshell)
-         (;; ,(kbd "<C-f5>")
+  :bind ((;; ,(kbd "<C-f5>")
           [C-f5]. eshell))
   :hook ((eshell-mode . (lambda ()
                           (setq eshell-path-env (getenv "PATH")))))
@@ -602,21 +506,6 @@ Call FUNC which is 'pdf-view-extract-region-image with ARGS."
   (mapc (lambda (x) (push x eshell-visual-commands))
         '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
           "spark-shell" "sbt" "watch")))
-
-
-(defun yc/open-eshell ()
-  "DOCSTRING."
-  (interactive)
-  (let ((ebuffer (get-buffer "*eshell*"))
-        (dir (expand-file-name default-directory)))
-    (if ebuffer
-        (progn
-          (set-buffer ebuffer)
-          (eshell/cd dir)
-          (eshell-send-input)
-          (switch-to-buffer ebuffer))
-      (eshell))))
-
 
  ;; comint hook
 (use-package comint
