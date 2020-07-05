@@ -49,7 +49,11 @@
   (ivy-rich-parse-remote-buffer nil)
   (ivy-rich-path-style 'abbrev)
   :config
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (plist-put ivy-rich-display-transformers-list 'counsel-bookmark
+           '(:columns
+             ((ivy-rich-candidate (:width 30))
+              (ivy-rich-bookmark-info (:face font-lock-doc-face))))))
 
 
 (defun yc/counsel-grep (&optional deep)

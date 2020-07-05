@@ -392,7 +392,6 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (end-of-line)
   (newline-and-indent))
 
-
 (defun zl-newline-up nil
   (interactive)
   (beginning-of-line)
@@ -765,8 +764,7 @@ inserts comment at the end of the line."
                                                   nil
                                                   t))
                           (t nil))))
-    project-root)
-  )
+    project-root))
 
 (defun edit-project ()
   "Edit project configurations."

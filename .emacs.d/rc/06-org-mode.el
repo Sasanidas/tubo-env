@@ -390,61 +390,6 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (when window-system
     (org-redisplay-inline-images)))
 
-
-
-(defvar-local yc/org-post-save-timer nil)
-
-(defun yc/org-roam-store-link-adv (arg &optional interactive?)
-  "Advice for 'org-roam-store-link'.
-Call FUNC which is 'org-roam-store-link with ARGS."
-  (org-store-link arg interactive?))
-
-(defun yc/grep-roam-files (x)
-  "Description X."
-  (interactive)
-  (let ((default-directory (expand-file-name "~/Documents/Database/org/")))
-    (yc/counsel-grep)))
-
-(defun yc/org-roam-db--update-file-adv (func &optional file-name)
-  "Advice for 'org-roam-db--update'.
-Call FUNC which is 'org-roam-db--update with ARGS."
-  (if yc/org-post-save-timer
-      (cancel-timer yc/org-post-save-timer))
-
-  (setq yc/org-post-save-timer
-        (run-with-idle-timer
-         5 nil
-         (lambda (f &optional x)
-           (PDEBUG "update db for file: " x)
-           (funcall f x)
-           (PDEBUG "after updating db.")
-           (setq yc/org-post-save-timer nil))
-         func file-name)))
-
-(use-package org-roam
-  :pin melpa
-  :commands (org-roam-buffer-toggle-display org-roam-insert)
-
-  :custom
-  (org-roam-directory (expand-file-name "~/Documents/Database/org/"))
-  (org-roam-graph-viewer `,(cond
-                            ((executable-find "firefox") (executable-find "firefox"))
-                            ((eq system-type 'darwin) "/usr/bin/open")
-                            (t nil)))
-  (org-roam-completion-system 'ivy)
-  :hook ((org-mode . (lambda () (unless org-roam-mode (org-roam-mode 1)))))
-  :bind (:map org-roam-backlinks-mode-map
-              ("q" . org-roam-buffer-deactivate))
-
-  :config
-  (ivy-add-actions
-   'org-roam--completing-read
-   '(("g" yc/grep-roam-files "grep in current directory")))
-
-  (advice-add 'org-roam-db--update-file :around #'yc/org-roam-db--update-file-adv)
-  (advice-add 'org-roam-store-link :override #'yc/org-roam-store-link-adv))
-
-
  ;; auto-insert for org-mode.
 
 (defun auto-insert--org-mode (&optional fn)
@@ -647,7 +592,7 @@ Restore to current location after executing."
 
               ))
 
-(defun yc/my-noter-mode-hook ()
+(defun yc/tnote-mode-hook ()
   "Description."
   (unless (layout-restore)
     (PDEBUG "BUF" (current-buffer))
@@ -657,28 +602,29 @@ Restore to current location after executing."
     (dolist (win (window-list))
       (select-window win)
       (layout-save-current)))
-  ;; (my-noter-sync-pdf-page-next)
+  ;; (tnote-sync-pdf-page-next)
   )
 
-(use-package my-noter
-  :commands (my-noter
-             my-noter/dispatch-file my-noter/dispatch-directory
-             my-noter/find-file)
+(use-package tnote
+  :commands (tnote
+             tnote/dispatch-file tnote/dispatch-directory
+             tnote/find-note)
   :bind (:map ctl-x-map
-              ("nF" . my-noter/find-file)
-              ("nn" . my-noter))
+              ("nn" . tnote)
+              ("nf" . tnote/find-note))
 
-  :hook ((my-noter-mode . yc/my-noter-mode-hook))
+  :hook ((tnote-mode . yc/tnote-mode-hook))
   :custom
-  (my-noter-disable-narrowing t))
+  (tnote-disable-narrowing t))
+
+ ;; deft
 
 (defun yc/deft-auto-populate-title-maybe-adv (file)
   "Advice for 'deft-auto-populate-title-maybe'.
 Call FUNC which is 'deft-auto-populate-title-maybe with ARGS."
   (with-temp-file file
     (org-mode)
-    (auto-insert))
-  )
+    (auto-insert)))
 
 (use-package deft
   :pin melpa
@@ -695,11 +641,7 @@ Call FUNC which is 'deft-auto-populate-title-maybe with ARGS."
   :bind (:map ctl-x-map
               ("nf" . deft))
   :config
-(advice-add 'deft-auto-populate-title-maybe :override #'yc/deft-auto-populate-title-maybe-adv)
-
-
-  )
-
+  (advice-add 'deft-auto-populate-title-maybe :override #'yc/deft-auto-populate-title-maybe-adv))
 
 ;; Local Variables:
 ;; coding: utf-8
