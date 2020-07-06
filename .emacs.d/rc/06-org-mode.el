@@ -124,8 +124,8 @@ Call FUNC which is 'org-download-insert-link with ARGS."
                     (if (file-exists-p filename)
                         ;; if file exists, calculate width to be used.
                         (let ((actual-width (yc/get-image-width filename)))
-                          (if (> actual-width 1024)
-                              1024 0))
+                          (if (> actual-width 960)
+                              960 0))
                       ;; or, set to -1, and update it later.
                       -1)
                   ;; otherwise, return 0 to disable this feature.
@@ -178,8 +178,8 @@ call func which is 'org-download--image/url-retrieve with args."
   (org-download-image-dir "images")
   (org-download-heading-lvl nil)
   (org-download-timestamp nil)
-  (org-download-image-html-width 1024)
-  (org-download-image-org-width 1024)
+  (org-download-image-html-width 960)
+  (org-download-image-org-width 960)
 
   :config
   (setq-default
@@ -417,25 +417,9 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (unless (file-directory-p "images")
     (mkdir "images"))
 
-  (let* (tex)
-    (when (executable-find "latex")
-      (cond
-       ((executable-find "convert")
-        (setq tex "tex:imagemagick"))
-       ((executable-find "dvipng")
-        (setq tex "tex:dvipng"))
-       (t
-        (warn "latex installed, but can be used to convert math, imagemagick or dvipng is needed...")
-        )))
-
-    (if tex
-        (progn
-          (yc/auto-update-template "TEX" tex)
-          (yc/auto-update-template "TEX_PREVIEW" "latexpreview"))
-
-      (progn
-        (yc/auto-update-template "TEX" "")
-        (yc/auto-update-template "TEX_PREVIEW" "")))))
+  (if (executable-find "latex")
+      (yc/auto-update-template "TEX_PREVIEW" "latexpreview")
+    (yc/auto-update-template "TEX_PREVIEW" "")))
 
 (defun counsel/org-link-target ()
   "List files under point??"
@@ -614,34 +598,7 @@ Restore to current location after executing."
               ("nf" . tnote/find-note))
 
   :hook ((tnote-mode . yc/tnote-mode-hook))
-  :custom
-  (tnote-disable-narrowing t))
-
- ;; deft
-
-(defun yc/deft-auto-populate-title-maybe-adv (file)
-  "Advice for 'deft-auto-populate-title-maybe'.
-Call FUNC which is 'deft-auto-populate-title-maybe with ARGS."
-  (with-temp-file file
-    (org-mode)
-    (auto-insert)))
-
-(use-package deft
-  :pin melpa
-  :custom
-  (deft-recursive t)
-  (deft-directory (expand-file-name "~/Documents/Database/org/"))
-  (deft-file-naming-rules '((noslash . "_")
-                            (nospace . "-")
-                            (case-fn . downcase)))
-  (deft-extensions '("org" "md" "txt"))
-  (deft-use-filename-as-title nil)
-  (deft-use-filter-string-for-filename t)
-
-  :bind (:map ctl-x-map
-              ("nf" . deft))
-  :config
-  (advice-add 'deft-auto-populate-title-maybe :override #'yc/deft-auto-populate-title-maybe-adv))
+  )
 
 ;; Local Variables:
 ;; coding: utf-8

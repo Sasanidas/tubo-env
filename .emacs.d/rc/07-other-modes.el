@@ -418,9 +418,8 @@
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
               ("r" . pdf-history-forward)
-              ("i" . my-noter))
+              ("i" . tnote))
   :config
-  (advice-add 'pdf-view-extract-region-image :around #'yc/pdf-view-extract-region-image-adv)
   (unless (file-executable-p pdf-info-epdfinfo-program)
     (message "Tool %s does not exist, compiling ...")
     (pdf-tools-install)))
@@ -437,30 +436,6 @@ Useful to run after `pdf-tools' updates."
     (pdf-info-kill))
   (delete-file pdf-info-epdfinfo-program)
   (pdf-tools-install :no-query-p))
-
-(defun yc/pdf-view-extract-region-image-adv (func &rest args)
-  "Advice for 'pdf-view-extract-region-image'.
-Call FUNC which is 'pdf-view-extract-region-image with ARGS."
-  (PDEBUG "ARGS:" args)
-
-  (if buffer-file-name
-      (let* ((checksum (shell-command-to-string
-                       (format "md5sum \"%s\" | awk '{print $1}'"
-                               buffer-file-name)))
-            (page (format "%d" (pdf-view-current-page)))
-            (image-name (concat (s-trim checksum) "-P" page ".png"))
-            (note-file (my-noter/get-note-file buffer-file-name))
-            )
-
-        (apply func args)
-        (with-current-buffer (get-buffer "*PDF image*")
-          (rename-buffer image-name t)
-          (when (file-exists-p note-file)
-            (write-file (concat (file-name-directory note-file)
-                                "images/" image-name))
-            (kill-buffer)
-            (kill-new image-name))))
-    (apply func args)))
 
 
 (use-package stringtemplate-mode  :mode "\\.st\\'")

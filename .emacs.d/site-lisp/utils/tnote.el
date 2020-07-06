@@ -174,6 +174,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
             (setq result (cons file result)))))
         result)))
 
+
 (defun tnote/parse-title (file)
   "Get title from FILE."
   (let* ((content
@@ -184,35 +185,40 @@ recursively, that is, when `tnote/recursive' is non-nil.")
     (PDEBUG "FILE:" file "CONTENT: " content)
     ;; returns either parsed title, or base name.
     (or (s-trim (replace-regexp-in-string
-             (rx bol (* space)
-                 (or
-                  (+ "%") ;; line beg with %
-                  "#+TITLE:" ;; org-mode title
-                  (+ (or "#" "*" space)) ;; line beg with #, * and/or space
-                  "Title:" ;; MultiMarkdown metadata
-                   )
-                 (* space))
-             "" content))
-        (file-name-base file))))
+                         (rx bol (* space)
+                             (or
+                              (+ "%") ;; line beg with %
+                              "#+TITLE:" ;; org-mode title
+                              (+ (or "#" "*" space)) ;; line beg with #, * and/or space
+                              "Title:" ;; MultiMarkdown metadata
+                              )
+                             (* space))
+                         "" content))
+                (file-name-base file))))
+
+(defun tnote/search-via-tags (&optional x)
+  "Open org-agenda view, X is ignored."
+  (interactive)
+  (PDEBUG "X: " x)
+  (org-tags-view))
 
 (yc/eval-after-load
   "ivy-rich"
   (plist-put ivy-rich-display-transformers-list 'tnote/find-note
            '(:columns
-             ((tnote/parse-title (:width 0.8)) ;; change function to extract TITIL...
+             ((tnote/parse-title (:width 0.8))
               (ivy-rich-file-last-modified-time (:face font-lock-comment-face))
-              ;; (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))
               ))))
+
 
 (yc/eval-after-load
   "ivy"
 
   (ivy-add-actions
    'tnote/find-note
-   '(("u" counsel-find-file-as-user "Open as other user")
-     ("g" counsel-grep-in-dir "Grep in current directory")
+   '(("g" counsel-grep-in-dir "Grep in current directory")
      ("l" find-file-literally "Open literally")
-     ("v" vlf "Open with VLF"))))
+     ("t" tnote/search-via-tags "Find via tags"))))
 
 ;;;###autoload
 (defun tnote/find-note ()
@@ -221,7 +227,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
   ;; nothing is cached for now, using a hash table may help improving performance.
   (interactive)
   (let ((files (tnote/find-files (tnote/get-notes-dir))))
-    (ivy-read "Find note:" files
+    (ivy-read "Find note: " files
               :action 'find-file
               :caller 'tnote/find-note)))
 
@@ -255,16 +261,17 @@ recursively, that is, when `tnote/recursive' is non-nil.")
           (save-excursion
             (goto-char (point-min))
             (when (search-forward-regexp
-                 (rx bol "#+NOTER_DOCUMENT: " (group (+? nonl)) eol) nil t)
-                (replace-match (concat "#+NOTER_DOCUMENT: " target-file))))
+                   (format (rx bol "#+%s: " (group (+? nonl)) eol) tnote/property-doc-file) nil t)
+                (replace-match (concat "#+" tnote/property-doc-file ": " target-file))))
 
           (save-excursion
             (goto-char (point-min))
             (while (search-forward-regexp
-                    (format (rx bol ":NOTER_DOCUMENT:" (+ space) (group (+? nonl) "%s") eol)
+                    (format (rx bol ":%s:" (+ space) (group (+? nonl) "%s") eol)
+                            tnote/property-doc-file
                             (file-name-nondirectory target-file))
                      nil t)
-              (replace-match (concat ":NOTER_DOCUMENT: " target-file)))))
+              (replace-match (concat ":" tnote/property-doc-file ": " target-file)))))
       (aif (get-buffer (file-name-nondirectory note-file))
           (with-temp-buffer it
                             (save-excursion
@@ -405,12 +412,6 @@ taken as columns."
   :group 'tnote
   :type '(choice integer
                  (const nil)))
-
-(defcustom tnote/disable-narrowing nil
-  "Disable narrowing in notes/org buffer."
-  :group 'tnote
-  :type 'boolean)
-
 ;;; suppress "functions are not known to be defined" warnings
 (declare-function pdf-view-next-page "pdf-view.el")
 (declare-function pdf-view-previous-page "pdf-view.el")
@@ -429,7 +430,7 @@ taken as columns."
       (widen)
       (save-excursion
         (goto-char (point-min))
-        (when (re-search-forward "^#\\+noter_document: \\(.*\\)" nil :noerror)
+        (when (re-search-forward (format "^#\\+%s: \\(.*\\)" tnote/property-doc-file) nil :noerror)
           (match-string 1))))))
 
 (defun tnote/-headline-doc-path (buffer)
@@ -460,15 +461,16 @@ SPLIT-WINDOW is a function that actually splits the window, so it must be either
             )
     (unless doc-file-name
       (setq doc-file-name
-            (read-file-name "No NOTER_DOCUMENT property found. Please specify path: " nil nil t))
+            (read-file-name (format "No %s property found. Please specify path: "
+                                    tnote/property-doc-file) nil nil t))
 
       ;; Check whether we have any entry at point with `org-entry-properties' before
       ;; prompting if the user wants multi-pdf.
       (if (and (org-entry-properties) (y-or-n-p "Is this multi-pdf? "))
-          (org-entry-put (point) "NOTER_DOCUMENT" doc-file-name)
+          (org-entry-put (point) tnote/property-doc-file doc-file-name)
         (save-excursion
           (goto-char (point-min))
-          (insert "#+NOTER_DOCUMENT: " doc-file-name))))
+          (insert "#+" tnote/property-doc-file ": " doc-file-name))))
 
     (delete-other-windows)
     (funcall split-window)
@@ -480,7 +482,6 @@ SPLIT-WINDOW is a function that actually splits the window, so it must be either
     (aif (ffap-url-p doc-file-name)
         (eww it)
         (find-file (expand-file-name doc-file-name)))
-
 
     (tnote/doc-mode 1)
     doc-file-name))
@@ -507,29 +508,12 @@ this is the beginning of the buffer."
   (tnote/-goto-parent-headline tnote/property-doc-file)
   )
 
-(defun tnote/-narrow-to-subtree (&optional force)
-  "Narrow buffer to the current subtree.
-
-If `tnote/disable-narrowing' is non-nil this
-function does nothing.
-
-When FORCE is non-nil `tnote/disable-narrowing' is
-ignored."
-  (when (and (not (org-before-first-heading-p))
-             (or (not tnote/disable-narrowing)
-                 force))
-    (org-narrow-to-subtree)))
-
 (defun tnote/-go-to-page-note (page)
   "Look up the notes for the current pdf PAGE.
 
 Effectively resolves the headline with the tnote_page_note
 property set to PAGE and returns the point.
-
-If `tnote/disable-narrowing' is non-nil then the buffer gets
-re-centered to the page heading.
-
-It (possibly) narrows the subtree when found."
+"
   (PDEBUG "PAGE:" page)
   (with-current-buffer tnote/org-buffer
     (let (point
@@ -537,9 +521,6 @@ It (possibly) narrows the subtree when found."
       (save-excursion
         (widen)
         (tnote/-goto-search-position)
-        ;; (when tnote/multi-pdf-notes-file
-        ;;   ;; only search the current subtree for notes. See. Issue #16
-        ;;   (tnote/-narrow-to-subtree t))
         (when (re-search-forward (format "^\[ \t\r\]*\:noter_page\: %s$"
                                          page)
                                  nil t)
@@ -547,14 +528,13 @@ It (possibly) narrows the subtree when found."
           ;; multi-pdf notes search. Kinda ugly I know. Maybe a macro helps?
           (widen)
           (org-back-to-heading t)
-          (tnote/-narrow-to-subtree)
           (org-show-subtree)
           (org-cycle-hide-drawers t)
           (setq point (point))))
       ;; When narrowing is disabled, and the notes/org buffer is
       ;; visible recenter to the current headline. So even if not
       ;; narrowed the notes buffer scrolls allong with the PDF.
-      (when (and tnote/disable-narrowing point window)
+      (when (and point window)
         (with-selected-window window
           (goto-char point)
           (recenter)))
@@ -630,8 +610,6 @@ If POSITION is non-nil move point to it."
     (goto-char position))
   (when insert-newline-maybe
     (save-restriction
-      (when tnote/disable-narrowing
-        (tnote/-narrow-to-subtree t))
       (tnote/-goto-insert-position))
     ;; Expand again. Sometimes the new content is outside the narrowed
     ;; region.
@@ -766,7 +744,6 @@ info)."
         (doc-path (tnote/-headline-doc-path (current-buffer))))
     (when (and (integerp page)
                (> page 0)) ; The page number needs to be a positive integer
-      (tnote/-narrow-to-subtree)
       (tnote/-switch-to-doc-buffer)
 
       (PDEBUG "CURNET-BUFF:" (current-buffer)
@@ -793,7 +770,6 @@ This show the previous notes and synchronizes the PDF to the right page number."
   (widen)
   (tnote/-goto-parent-headline tnote/property-note-location)
   (org-backward-heading-same-level 1)
-  (tnote/-narrow-to-subtree)
   (org-show-subtree)
   (org-cycle-hide-drawers t)
   (let ((page (string-to-number
@@ -821,7 +797,6 @@ This shows the next notes and synchronizes the PDF to the right page number."
     (org-show-subtree)
 
     (outline-next-visible-heading 1))
-  (tnote/-narrow-to-subtree)
   (org-show-subtree)
   (org-cycle-hide-drawers t)
   (let ((pdf-page (string-to-number
@@ -932,12 +907,11 @@ Keybindings (org-mode buffer):
           (progn
             (setq tnote/org-buffer (buffer-name))
             (tnote/-open-file (tnote/-select-split-function))
-            ;; expand/show all headlines if narrowing is disabled
-            (when tnote/disable-narrowing
-              (with-current-buffer tnote/org-buffer
-                (tnote/-goto-search-position)
-                ;; (org-show-subtree)
-                (org-cycle-hide-drawers 'all)))
+            ;; expand/show all headlines
+            (with-current-buffer tnote/org-buffer
+              (tnote/-goto-search-position)
+              ;; (org-show-subtree)
+              (org-cycle-hide-drawers 'all))
             (tnote/-go-to-page-note 1)
             (message "tnote enabled"))
         ('quit
@@ -972,9 +946,6 @@ Keybindings (org-mode buffer):
   (if (eq major-mode 'org-mode)
       ;; Creating session from notes file.
       (progn
-        ;; (when (org-before-first-heading-p)
-        ;;   ;; TODO: check #+NOTER_DOCUMENT:
-        ;;   (error "`tnote' must be issued inside a heading"))
         (tnote/notes-mode))
 
     ;; Creating the session from the annotated document
