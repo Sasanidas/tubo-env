@@ -185,66 +185,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
           "". sql/eval-sql))
   :config
   (progn
-
-    ;; some extra keywords for postgres.
-    (push (sql-font-lock-keywords-builder
-           'font-lock-keyword-face nil
-           "extension" "database" "table" "data" "if" "exists" "wrapper" "cascade" "distributed"
-           "by" "server" "delimiter"
-           )
-          sql-mode-postgres-font-lock-keywords)
-
-    (push (sql-font-lock-keywords-builder
-           'font-lock-builtin-face nil
-           "copy" "create" "analyze"
-           )
-          sql-mode-postgres-font-lock-keywords)
-    (require 'sql+)
-    (if (equal sql-product 'ansi)
-        (sql-set-product 'postgres))
-
-    (advice-add 'sql-product-interactive :around #'yc/sql-product-interactive-adv)
-))
-
-(defun yc/sql-product-interactive-adv (func &rest args)
-  "Advice for 'sql-product-interactive'.
-Call FUNC which is 'sql-product-interactive with ARGS."
-  (PDEBUG "PFX: " current-prefix-arg)
-  (if current-prefix-arg
-      (apply func args)
-
-    ;; special handling for pg, customized login-options...
-    (let* ((sql-postgres-login-params-easy
-            `((database :default ,(user-login-name)
-                        :completion ,(completion-table-dynamic
-                                      (lambda (_) (sql-postgres-list-databases)))
-                        :must-match confirm)
-              "127.0.0.1"))
-           (sql-product-alist
-           '(
-             (ansi
-              :name "ANSI"
-              :font-lock sql-mode-ansi-font-lock-keywords
-              :statement sql-ansi-statement-starters)
-             (postgres
-              :name "Postgres"
-              :free-software t
-              :font-lock sql-mode-postgres-font-lock-keywords
-              :sqli-program sql-postgres-program
-              :sqli-options sql-postgres-options
-              :sqli-login sql-postgres-login-params-easy
-              :sqli-comint-func sql-comint-postgres
-              :list-all ("\\d+" . "\\dS+")
-              :list-table ("\\d+ %s" . "\\dS+ %s")
-              :completion-object sql-postgres-completion-object
-              :prompt-regexp "^[[:alnum:]_]*=[#>] "
-              :prompt-length 5
-              :prompt-cont-regexp "^[[:alnum:]_]*[-(][#>] "
-              :input-filter sql-remove-tabs-filter
-              :terminator ("\\(^\\s-*\\\\g\\|;\\)" . "\\g"))
-             )
-           ))
-      (apply func args))))
+    (require 'sql+)))
 
  ;; protobuf-mode
 (use-package protobuf-mode :mode (rx ".proto" eol))
@@ -292,7 +233,7 @@ Call FUNC with ARGS."
 
 
 (defun pgsql-perl-style ()
-  "Perl style adjusted for PostgreSQL project"
+  "Perl style adjusted for PostgreSQL project."
   (interactive)
   (setq perl-brace-imaginary-offset 0)
   (setq perl-brace-offset 0)

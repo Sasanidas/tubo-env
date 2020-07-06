@@ -96,6 +96,7 @@
 (defun company-sql-update-candidates ()
   "Update candidates."
   (interactive)
+  (PDEBUG "SQL-PRODUCT: " sql-product)
   (puthash sql-product
            (cond
             ((equal sql-product 'postgres)
