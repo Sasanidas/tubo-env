@@ -904,15 +904,6 @@ Call FUNC which is 'dired-compress with ARGS."
   (progn
     (setq desktop-path (list (yc/make-cache-path "desktop" t))
           desktop-dirname (yc/make-cache-path "desktop" t))))
-
-
-
-(use-package annotate
-  :pin melpa
-  :commands (annotate-mode)
-  :custom
-  (annotate-file "~/.cache/emacs/annotations"))
-
 
 ;; ****************************** HTTP Code *****************************
 ;; Explain the meaning of an HTTP status code. Copy httpcode.el to your
