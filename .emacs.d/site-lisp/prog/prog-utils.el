@@ -707,7 +707,12 @@ PREFIX is used to create the key."
                      (list (cons key
                                  (put-text-property
                                   0 1 'swiper-line-number
-                                  (marker-position (cdr elm)) key))))))
+                                  (if (markerp (cdr elm))
+                                      (marker-position (cdr elm))
+                                    (if (numberp (cdr elm))
+                                        (cdr elm)
+                                      (error "??")))
+                                   key))))))
                alist)))
 
 

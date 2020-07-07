@@ -110,6 +110,25 @@
 
 (use-package qml-mode :mode "\\.qml$")
 (use-package swig-mode :mode (rx (or ".i" ".swig") eol))
+
+(defun yc/bison-setup-imenu-function ()
+  "Setup imenu-index-function for Bison mode.."
+  (interactive)
+  (PDEBUG "ENTER.")
+  (setq imenu-create-index-function
+        (lambda ()
+          (let ((end))
+            (beginning-of-buffer)
+            (re-search-forward "^%%")
+            (forward-line 1)
+            (setq end (save-excursion (re-search-forward "^%%") (point)))
+            (loop while (re-search-forward "^\\([a-z].*?\\)\\s-*\n?\\s-*:" end t)
+                  collect (cons (match-string 1)
+                                (point))))))
+  (PDEBUG "BUF:" (current-buffer)
+          "FUNC:" imenu-create-index-function)
+  )
+
 (use-package bison-mode
   :mode (rx "." (or "yy" "y" "jison") eol)
   :config
