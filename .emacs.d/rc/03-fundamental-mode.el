@@ -30,7 +30,7 @@
           enable-recursive-minibuffers t
           ivy-height 20                    ;; Number of result lines to display
           ivy-initial-inputs-alist nil     ;; No regexp by default
-          ivy-wrap t                       ;; wrap candidates
+          ivy-wrap nil                       ;; wrap candidates
 
           ))
   :bind ((;(kbd "C-c C-r")
