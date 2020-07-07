@@ -97,6 +97,25 @@
   (interactive)
   nil)
 
+(defun yc/realgud:cmd-eval-dwim-adv (&rest args)
+  "Advice for 'realgud:cmd-eval-dwim'.
+Call FUNC which is 'realgud:cmd-eval-dwim with ARGS."
+  (interactive)
+  (cond
+   ((region-active-p)
+    (call-interactively #'realgud:cmd-eval-region)
+    (deactivate-mark))
+   ((and (not current-prefix-arg)
+         (thing-at-point 'symbol))
+    (realgud:cmd-run-command
+     (thing-at-point 'symbol)
+   "eval"))
+
+   (t
+    (call-interactively #'realgud:cmd-eval)
+    (if (region-active-p)
+        (deactivate-mark)))))
+
 (use-package realgud
   :pin melpa
   :commands (realgud:gdb realgud:gdb-pid)
@@ -108,6 +127,7 @@
   (realgud-file-find-function 'yc/realgud-find-file)
   :config
   (advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv)
+  (advice-add 'realgud:cmd-eval-dwim :override #'yc/realgud:cmd-eval-dwim-adv)
 )
 
 (use-package realgud-lldb
