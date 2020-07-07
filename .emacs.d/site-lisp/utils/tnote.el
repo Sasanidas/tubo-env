@@ -255,6 +255,8 @@ recursively, that is, when `tnote/recursive' is non-nil.")
 
     (shell-command (format "mv \"%s\" %s/" item target-dir))
 
+    (setq target-file (tnote/get-relative-name target-file))
+
     (if (file-exists-p note-file)
         (with-temp-file note-file
           (insert-file-contents note-file)
@@ -467,10 +469,10 @@ SPLIT-WINDOW is a function that actually splits the window, so it must be either
       ;; Check whether we have any entry at point with `org-entry-properties' before
       ;; prompting if the user wants multi-pdf.
       (if (and (org-entry-properties) (y-or-n-p "Is this multi-pdf? "))
-          (org-entry-put (point) tnote/property-doc-file doc-file-name)
+          (org-entry-put (point) tnote/property-doc-file (tnote/get-relative-name doc-file-name))
         (save-excursion
           (goto-char (point-min))
-          (insert "#+" tnote/property-doc-file ": " doc-file-name))))
+          (insert "#+" tnote/property-doc-file ": " (tnote/get-relative-name doc-file-name)))))
 
     (delete-other-windows)
     (funcall split-window)
@@ -664,9 +666,9 @@ this is the end of the buffer"
       (org-N-empty-lines-before-current 1)
 
       (org-entry-put nil tnote/property-doc-file
-                     (or document
+                     (tnote/get-relative-name (or document
                          (tnote/-headline-doc-path (current-buffer))
-                         (tnote/-find-pdf-path (current-buffer))))
+                         (tnote/-find-pdf-path (current-buffer)))))
       (org-entry-put nil tnote/property-note-location (number-to-string page))
 
 
@@ -939,6 +941,12 @@ Keybindings (org-mode buffer):
         (PDEBUG "Document path: " document-path))
     document-path))
 
+(defun tnote/get-relative-name (file)
+  "Return relative path of FILE (relative to (tnote/get-notes-dir))."
+  (if (ffap-url-p file)
+      file
+    (file-relative-name file (tnote/get-notes-dir))))
+
 (defun tnote ()
   "Start `tnote' session."
   (interactive)
@@ -1078,7 +1086,7 @@ Keybindings (org-mode buffer):
             (goto-char (point-max))
             (insert (if (save-excursion (beginning-of-line) (looking-at "[[:space:]]*$")) "" "\n")
                     "* " document-base)
-            (org-entry-put nil tnote/property-doc-file document-path))
+            (org-entry-put nil tnote/property-doc-file (tnote/get-relative-name document-path)))
           (setq notes-files-annotating notes-files)))
 
       (when (> (length (cl-delete-duplicates notes-files-annotating :test 'equal)) 1)
@@ -1131,6 +1139,42 @@ Keymap:
 (when (boundp 'pdf-view-mode-map)
   (define-key pdf-view-mode-map (kbd "i") #'tnote))
 
+
+
+
+(defun tnote/update-file-path-in-file (file)
+  "Convert absolute path (in FILE) into relative path."
+  (PDEBUG "Updating: " file)
+  (with-temp-file file
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (when (search-forward-regexp
+           (format (rx bol "#+%s:" (+ space) (group (+? nonl)) eol) tnote/property-doc-file) nil t)
+      (let ((target-file (match-string 1)))
+        (unless (ffap-url-p target-file)
+          (replace-match (concat "#+" tnote/property-doc-file ": " (tnote/get-relative-name target-file)))
+          )
+        )
+      )
+
+    (goto-char (point-min))
+
+
+    (while (search-forward-regexp
+            (format (rx ":%s:" (+ space) (group (+? nonl)) eol) tnote/property-doc-file) nil t )
+      (let ((target-file (match-string 1)))
+        (unless (ffap-url-p target-file)
+          (replace-match (concat ":" tnote/property-doc-file ": " (tnote/get-relative-name target-file)))          )
+        )
+      )
+    )
+  )
+
+(defun tnote/update-file-path ()
+  "Convert absolute path into relative path..."
+  (interactive)
+  (dolist (file   (tnote/find-files (tnote/get-notes-dir)))
+    (tnote/update-file-path-in-file file)))
 
 (provide 'tnote)
 
