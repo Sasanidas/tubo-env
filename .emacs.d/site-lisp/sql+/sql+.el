@@ -40,48 +40,9 @@
 (eval-after-load
     'company-keywords
   (progn
-    (unless (assoc 'sql-modef company-keywords-alist)
+    (unless (assoc 'sql-mode company-keywords-alist)
       (push
-       '(sql-mode
-         "accessible" "add" "all" "alter" "analyze" "and" "as" "asc" "asensitive"
-         "before" "between" "bigint" "binary" "bit_and" "bit_or" "bit_xor" "blob"
-         "both" "by" "call" "cascade" "case" "cast" "change" "char" "character"
-         "check" "cluster" "collate" "column" "compress" "condition" "connect"
-         "constraint" "continue" "convert" "count" "create" "cross" "curdate"
-         "decimal" "declare" "default" "delayed" "delete" "dense_rank" "desc"
-         "describe" "deterministic" "distinct" "distinctrow" "distribute"
-         "distributed" "div" "double" "drop" "dual" "each" "else" "elseif" "enclosed"
-         "escaped" "exists" "exit" "explain" "extract" "false" "fetch" "float"
-         "for" "force" "foreign" "from" "full" "fulltext" "gcexport"
-         "gcimport" "gclocal" "gcluster" "gcluster_local" "get" "grant" "group"
-         "grouped" "group_concat" "having" "high_priority" "hour_microsecond"
-         "hour_minute" "hour_second" "if" "ignore" "in" "index" "infile"
-         "initnodedatamap" "inner" "inout" "inpath" "insensitive" "insert" "int"
-         "integer" "intersect" "interval" "into"
-         "is" "iterate" "join" "key" "keys" "kill" "lag" "lead" "leading" "leave"
-         "left" "level" "like" "limit" "limit_storage_size" "linear" "lines" "link"
-         "load" "localtime" "localtimestamp" "lock" "long" "longblob" "longtext"
-         "loop" "low_priority" "match" "max"
-         "mediumblob" "mediumint" "mediumtext" "merge" "mid" "middleint" "min" "minus"
-         "minute_microsecond" "minute_second" "mod" "modifies" "natural" "nocopies"
-         "nocycle" "not" "now" "no_write_to_binlog" "null" "numeric" "on" "optimize"
-         "option" "optionally" "or" "order" "ordered" "out" "outer" "outfile" "over"
-         "percent_rank" "position" "precision" "primary" "prior" "procedure" "purge"
-         "range" "rank" "read" "reads" "read_write" "real" "references" "refresh"
-         "refreshnodedatamap" "regexp" "release" "rename" "repeat" "replace" "require"
-         "restrict" "return" "revert" "revoke" "right" "rlike" "row_number" "schema"
-         "schemas" "scn_number" "second_microsecond" "select" "self" "sensitive"
-         "separator" "set" "show" "smallint" "sort" "spatial" "specific" "sql"
-         "sqlexception" "sqlstate" "sqlwarning" "sql_big_result" "sql_calc_found_rows"
-         "sql_small_result" "ssl" "start" "starting" "std" "stddev" "stddev_pop"
-         "stddev_samp" "straight_join" "substr" "substring" "sum" "sysdate" "table"
-         "target" "terminated" "then" "tinyblob" "tinyint" "tinytext" "to" "trailing"
-         "trigger" "trim" "true" "undo" "union" "unique" "unlock" "unsigned" "update"
-         "usage" "use" "using" "utc_date" "utc_datetime" "utc_time" "utc_timestamp"
-         "values" "varbinary" "varchar" "varcharacter" "variance" "varying" "var_pop"
-         "var_samp" "when" "where" "while" "with" "write" "xor" "year_month"
-         "zerofill" "delimiter")
-       company-keywords-alist)
+       '(sql-mode nil)       company-keywords-alist)
       nil
       )))
 

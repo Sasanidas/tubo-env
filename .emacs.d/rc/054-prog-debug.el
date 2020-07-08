@@ -147,7 +147,8 @@ Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
 ;; Function to debug process, either attaching to a running one, or start a new one.
 (use-package debug-utils
   :commands (attach-pg-idle attach-pg-wal attach-pg-main attach-pg-proc
-                            debug-proc attach-proc attach-proc-su))
+                            debug-proc attach-proc attach-proc-su
+                            yc/kill-gdb-buffers))
 
 
 (provide '054-prog-debug)
