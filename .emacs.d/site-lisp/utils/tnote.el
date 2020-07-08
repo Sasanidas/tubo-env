@@ -226,7 +226,8 @@ recursively, that is, when `tnote/recursive' is non-nil.")
 
   ;; nothing is cached for now, using a hash table may help improving performance.
   (interactive)
-  (let ((files (tnote/find-files (tnote/get-notes-dir))))
+  (let ((default-directory (tnote/get-notes-dir))
+        (files (tnote/find-files (tnote/get-notes-dir))))
     (ivy-read "Find note: " files
               :action 'find-file
               :caller 'tnote/find-note)))
