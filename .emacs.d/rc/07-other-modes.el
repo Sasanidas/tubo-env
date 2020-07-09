@@ -13,6 +13,10 @@
   (setq hl-paren-colors '("red" "yellow" "cyan" "magenta" "green" "firebrick1"
                           "IndianRed4")))
 
+(use-package highlight-indentation
+  :commands (highlight-indentation-mode))
+
+
  ;; Info settings.
 (use-package info
   :commands (info)

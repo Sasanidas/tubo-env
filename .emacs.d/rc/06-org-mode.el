@@ -343,20 +343,18 @@ Ignore error signal in `org-comment-line-break-function'."
 (use-package org-capture :bind ((;; ,(kbd "<M-S-f10>")
                                  [M-S-f10]. org-capture))
   :config
-  (custom-set-variables
-   `(org-capture-templates
-     `(("t" "Todo" entry (file+headline ,(format "%s/gtd.org" org-directory) "Tasks")
-        "\n* TODO %?\n  %i\n  %a")
-       ("p" "Project" entry (file+headline ,(format "%s/gtd.org" org-directory) "Project")
-        "
-** NOTE %?\n %i\n %a" )
-       ("n" "New" entry (file+datetree ,(format "%s/inbox.org" org-directory) "Inbox")
-        "* %?\nEntered on %U\n  %i\n  %a")
-       ("i" "Idea" entry (file+headline ,(format "%s/gtd.org" org-directory)"Idea")
-        "* %?\nEntered on %U\n  %i\n  %a")
-       ("w" "Web site" entry
-        (file "")
-        "* %a :website:\n\n%U %?\n\n%:initial")))))
+  (let ((capture-file (expand-file-name "gtd.org" org-directory)))
+    (setq org-capture-templates
+          `(
+            ("t" "Todo" entry (file+headline ,capture-file  "Tasks")
+             "\n* TODO %?\n  %i\n  %a")
+            ("p" "Project" entry (file+headline ,capture-file "Project")
+             "\n** NOTE %?\n %i\n %a" )
+            ("n" "Note" entry (file+headline ,capture-file "Note")
+             "* %?\nEntered on %U\n  %i\n  %a")
+            ("i" "Idea" entry (file+headline ,capture-file "Idea")
+             "* %?\nEntered on %U\n  %i\n  %a")
+            ))))
 
 
 (defun yc/org-update-yank ()
