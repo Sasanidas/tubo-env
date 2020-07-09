@@ -175,7 +175,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
         result)))
 
 
-(defun tnote/parse-title (file)
+(defun path-to-title (file)
   "Get title from FILE."
   (let* ((content
           (with-temp-buffer
@@ -194,7 +194,16 @@ recursively, that is, when `tnote/recursive' is non-nil.")
                               )
                              (* space))
                          "" content))
-                (file-name-base file))))
+        (file-name-base file))))
+
+(defun tnote/title-to-path (title)
+  "Convert TITLE into path of new file to be created."
+
+  (concat (file-name-as-directory (tnote/get-notes-dir))
+          (downcase
+           (replace-regexp-in-string "\/" "-"
+                                     (replace-regexp-in-string " " "-" title)))
+          ".org"))
 
 (defun tnote/search-via-tags (&optional x)
   "Open org-agenda view, X is ignored."
@@ -206,10 +215,12 @@ recursively, that is, when `tnote/recursive' is non-nil.")
   "ivy-rich"
   (plist-put ivy-rich-display-transformers-list 'tnote/find-note
            '(:columns
-             ((tnote/parse-title (:width 0.8))
-              (ivy-rich-file-last-modified-time (:face font-lock-comment-face))
-              ))))
+             ((path-to-title (:width 0.8))
+              (ivy-rich-file-last-modified-time (:face
+                                                 font-lock-comment-face)))))
 
+  (ivy-rich-mode -1)
+  (ivy-rich-mode 1))
 
 (yc/eval-after-load
   "ivy"
@@ -220,6 +231,25 @@ recursively, that is, when `tnote/recursive' is non-nil.")
      ("l" find-file-literally "Open literally")
      ("t" tnote/search-via-tags "Find via tags"))))
 
+(defun tnote/find-or-create-file (file)
+  "Find or create new FILE."
+  (if (file-exists-p file)
+      (find-file file)
+    (let* ((file (s-trim file))  ;; remove leading/trailing white spaces.
+           (title file)          ;; as title
+           (file (tnote/title-to-path title))) ;; real file:
+      (PDEBUG "Creating new file" file "with title: " title)
+
+      (find-file file)
+      (goto-char (point-min))
+      (unless (looking-at-p "^#\\+TITLE:.*$")
+        (error "Wrong format, first line should begin with \"#+TITLE:\""))
+      (kill-line)
+      (insert "#+TITLE: " title)
+      (goto-char (point-max))
+      (insert "\n")
+      (save-buffer))))
+
 ;;;###autoload
 (defun tnote/find-note ()
   "Find note file.."
@@ -229,7 +259,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
   (let ((default-directory (tnote/get-notes-dir))
         (files (tnote/find-files (tnote/get-notes-dir))))
     (ivy-read "Find note: " files
-              :action 'find-file
+              :action 'tnote/find-or-create-file
               :caller 'tnote/find-note)))
 
 (defun tnote/do-dispatch-file (item)
