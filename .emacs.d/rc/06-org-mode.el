@@ -472,6 +472,13 @@ Restore to current location after executing."
   :config
   (advice-add 'org-publish-needed-p :around #'yc/org-publish-needed-p-adv))
 
+
+(defun yc/org-publish-file-adv (func &rest args)
+  "Advice for 'org-publish-file'.
+Call FUNC which is 'org-publish-file with ARGS."
+  (unless (string-match "gtd.org" "/Volumes/yyc/Documents/Database/org/gtd.org")
+    (apply func args)))
+
 
 (use-package org
   :custom
@@ -539,6 +546,7 @@ Restore to current location after executing."
     (advice-add 'org-edit-special :before #'layout-save-current)
     (advice-add 'org-edit-src-exit :after #'layout-restore)
     (advice-add 'org-comment-line-break-function :around #'yc/org-comment-line-break-function)
+    (advice-add 'org-publish-file :around #'yc/org-publish-file-adv)
 
     (substitute-key-definition
      'org-cycle-agenda-files  'backward-page org-mode-map)
@@ -570,9 +578,7 @@ Restore to current location after executing."
               (;; (kbd "C-x n t")
                "nt" . org-roam-buffer-toggle-display)
               (;; (kbd "C-x n i")
-               "ni" . org-roam-insert)
-
-              ))
+               "ni" . org-roam-insert)))
 
 (defun yc/tnote-mode-hook ()
   "Description."

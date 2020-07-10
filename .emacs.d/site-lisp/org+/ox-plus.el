@@ -134,6 +134,7 @@ Return output file name."
                        :base-extension "org"
                        :publishing-directory ,(concat htdoc-dir "/" bdir)
                        :recursive t
+                       :exclude ".*gtd.org"
                        :publishing-function org-html-publish-to-html
                        :section-numbers nil
                        :with-toc t
@@ -244,6 +245,7 @@ Finally, title will be removed."
           :base-extension "org"
           :publishing-directory ,htdoc-dir
           :recursive t
+          :exclude ".*gtd.org"
           :publishing-function org-top-publish-to-html
           :section-numbers nil
           :with-toc t
