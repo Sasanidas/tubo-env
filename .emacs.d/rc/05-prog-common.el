@@ -50,6 +50,7 @@ Update the Which-Function mode display for all windows."
   :hook ((prog-mode . which-function-mode))
   :config
   (advice-add 'which-func-update :override #'yc/which-func-update)
+  (remove-hook 'after-change-major-mode-hook 'which-func-ff-hook)
 )
 
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
