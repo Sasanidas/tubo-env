@@ -82,7 +82,7 @@
             (t
              (warn
               "Can't get candidates for product %s" (symbol-name sql-product))
-             ""))
+             nil))
            company-sql--candidates-cache))
 
 (defun company-sql--candidates (prefix)
@@ -90,6 +90,8 @@
 
   (unless company-sql--candidates-cache
     (setq company-sql--candidates-cache (make-hash-table :test 'equal)))
+
+  (PDEBUG "SQL-PRODUCT: " sql-product)
 
   ;; If hash is empty, fill it.
   (unless (gethash sql-product company-sql--candidates-cache)

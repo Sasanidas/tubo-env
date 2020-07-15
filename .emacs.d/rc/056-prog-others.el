@@ -177,7 +177,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 (defun yc/sql-mode-hook ()
   "My hook to run for sql mode."
   (ws-butler-mode -1)
-  (yc/add-company-backends-with-yasnippet company-sql))
+  (yc/add-company-backends-with-yasnippet company-sql company-keywords))
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))

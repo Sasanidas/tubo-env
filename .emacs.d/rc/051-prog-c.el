@@ -779,15 +779,15 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
       (let ((root-dir (file-name-directory root-file)) )
         (setq ccls-args
               (list
-               (format "--log-file=/tmp/ccls_%s_%d.log"
+               (format "--log-file=/tmp/%s_ccls_%s.log"
+                       user-login-name
                        (let ((cmps (reverse (s-split "/" root-dir))))
 
                          (while (= (length (car cmps)) 0)
                            (pop cmps))
                          (or
                           (pop cmps)
-                          "unamed"))
-                       (user-uid))
+                          "unamed")))
                "-v=2"))
         ;; guessing compliation database....
         (PDEBUG "Before advice" ccls-initialization-options)
@@ -821,7 +821,6 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
         (unless (member :index ccls-initialization-options)
           (push (list :blacklist (vconcat blacklist nil)) ccls-initialization-options)
           (push :index ccls-initialization-options))
-
 
         (PDEBUG "After advice" ccls-initialization-options)))
     (PDEBUG "leave")))
