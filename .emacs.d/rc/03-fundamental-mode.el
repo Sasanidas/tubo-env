@@ -412,7 +412,10 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 
 (use-package ibuffer
 :bind ((;; ,(kbd "C-x C-b")
-        "". ibuffer)))
+        "". ibuffer))
+:bind (:map ibuffer-mode-map
+            (;; (kbd "C-x C-f")
+             "" . counsel-find-file)))
 
 
 (autoload 'switch-window "switch-window" ""  t)
