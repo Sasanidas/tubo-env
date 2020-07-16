@@ -304,10 +304,7 @@ Call FUNC with ARGS."
           .
           (lambda ()
             (interactive)
-            (yc/lsp--setup "rls" "rustup-init component add rls --toolchain'"
-                           (lambda ()
-                             (unless (featurep 'lsp-rust)
-                               (require 'lsp-rust)))))))
+            (yc/lsp--setup "rls" "rustup-init component add rls --toolchain'"))))
   :config
   (progn
 

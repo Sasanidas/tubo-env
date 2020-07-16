@@ -430,7 +430,8 @@ and is reversed for better performance.")
 
 (use-package ccls
   :ensure t
-  ;; :custom
+  :custom
+  (ccls-executable (or (executable-find "ccls.sh") "ccls"))
   ;; (ccls-sem-highlight-method 'font-lock)
   :config
   (progn
@@ -779,15 +780,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
       (let ((root-dir (file-name-directory root-file)) )
         (setq ccls-args
               (list
-               (format "--log-file=/tmp/%s_ccls_%s.log"
-                       user-login-name
-                       (let ((cmps (reverse (s-split "/" root-dir))))
-
-                         (while (= (length (car cmps)) 0)
-                           (pop cmps))
-                         (or
-                          (pop cmps)
-                          "unamed")))
+               (format "--log-file=%s" (yc/lsp-get-log-file "ccls" root-dir))
                "-v=2"))
         ;; guessing compliation database....
         (PDEBUG "Before advice" ccls-initialization-options)

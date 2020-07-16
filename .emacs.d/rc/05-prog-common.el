@@ -468,18 +468,17 @@ Return t if succeeded, or nil otherwise.")
   )
 
 
-(defun yc/lsp--setup (executable install-tip &optional setup-func)
+(defun yc/lsp--setup (executable install-tip)
   "Setup LSP.
 Enable LSP if EXECUTABLE is t, and if `SETUP-FUNC' is not nil,
 call this function to setup LSP.  Or show INSTALL-TIP."
-
+  (PDEBUG "ENTER ys/lsp-setup, EXEC: "
+          executable
+          ", Available: " (or (executable-find executable)
+          (file-executable-p executable)))
   (if (or (executable-find executable)
           (file-executable-p executable))
-      (progn
-        (when setup-func
-          (PDEBUG "setting up: " setup-func)
-          (funcall setup-func))
-        (lsp))
+      (lsp)
 
     (unless (member major-mode yc/lsp-warned-mode-list)
       (add-to-list 'yc/lsp-warned-mode-list major-mode)
@@ -665,6 +664,31 @@ Call FUNC which is 'lsp with ARGS."
     (if (called-interactively-p)
         (message "Root file: %s." root-file))
     root-file))
+
+
+(defun yc/lsp-get-log-file (client rootdir)
+  "Get logfile name for specified workspace in ROOTDIR & CLIENT."
+  (when (and (file-exists-p rootdir)
+             (not (file-directory-p rootdir)))
+    (setq rootdir (file-name-directory rootdir)))
+
+  (format "%s%s_%s_%s.log" (temporary-file-directory)
+          (aif (file-remote-p default-directory)
+              (if (string-match
+                   (rx bol "/" (or "ssh" "scp" "sudo") ":"
+                       (group (+? nonl)) "@" (+? nonl) ":")
+                   it)
+                  (match-string 1 it)
+                (error "File %s not handled"))
+            user-login-name)
+          client
+          (let ((cmps (reverse (s-split "/" rootdir))))
+
+                         (while (= (length (car cmps)) 0)
+                           (pop cmps))
+                         (or
+                          (pop cmps)
+                          "unamed"))))
 
 (defun yc/lsp-load-project-configuration ()
   "Advice for 'lsp', loading project specific configurations."

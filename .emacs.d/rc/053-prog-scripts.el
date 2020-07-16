@@ -44,20 +44,14 @@
   (completing-read
    "Import File:" (yc/get-python-modules)))
 
-
-(use-package lsp-python-ms
-  :commands (lsp-python-ms-update-server)
-  ;; :config
-  ;; (progn
-  ;;   (setq ;; lsp-python-executable-cmd "python3" ;;; should be set by project.
-  ;;    ))
-
-  :custom
-  (lsp-python-ms-dir (concat yc/lsp-server-dir "/ms-python/"))
-  (lsp-python-ms-executable (concat lsp-python-ms-dir
-                                      "Microsoft.Python.LanguageServer"
-                                      (and (eq system-type 'windows-nt) ".exe")))
-  )
+(defun yc/lsp-load-project-configuration-python-mode (root-file)
+  "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
+  (PDEBUG "ENTER, ROOT:" root-file)
+  (unless (featurep 'lsp-pyls)
+    (require 'lsp-pyls))
+  (setq-default
+      lsp-pyls-server-command (list "pyls"  "-v" "--log-file"
+                                    (yc/lsp-get-log-file "pyls" root-file))))
 
 (use-package python
   :custom
@@ -69,44 +63,16 @@
           (lambda ()
             (unless (buffer-file-name)
               (flycheck-mode -1))
+            (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'")))))
 
-            (yc/lsp--setup (concat yc/lsp-server-dir "/ms-python/" "Microsoft.Python.LanguageServer")
-                           "M-x: lsp-python-ms-update-server"
-                           (lambda ()
-                             (unless (featurep 'lsp-python-ms)
-                               (require 'lsp-python-ms)
-                               (unless (member 'pyls lsp-disabled-clients)
-                                 (push 'pyls lsp-disabled-clients)))))
-
-            ;; (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'"
-            ;;                (lambda ()
-            ;;                  (unless (featurep 'lsp-pyls)
-            ;;                    (require 'lsp-pyls)
-            ;;                    (setq-default
-            ;;                     lsp-clients-python-command '("pyls"  "-v" "--log-file"
-            ;;                                                  "/tmp/pyls.log"))
-
-            ;;                    (let ((pyls (expand-file-name (executable-find "pyls")))
-            ;;                          (lsp-py-lib-dirs
-            ;;                           '("/usr")))
-            ;;                      (aif (file-name-directory (substring (file-name-directory pyls) 0 -1))
-            ;;                          (push it
-            ;;                                lsp-clients-python-library-directories))))))
-
-            ))))
-
-(defun yc/pyvenv-active ()
-  "Enable pyvenv if necessary."
-  (interactive)
-  (unless (featurep 'pyvenv)
-    (require 'pyvenv))
-  (unless pyvenv-virtual-env
-    (let ((directory (ivy-read "Active pyvenv in Directory: "
-                               (directory-files  default-directory t )
-                               :action (lambda (cand)
-                                         (interactive)
-                                         cand))))
-      (pyvenv-activate directory))))
+(use-package lsp-pyls
+  :config
+  (let ((pyls (expand-file-name (executable-find "pyls")))
+        (lsp-py-lib-dirs
+         '("/usr")))
+    (aif (file-name-directory (substring (file-name-directory pyls) 0 -1))
+        (push it
+              lsp-clients-python-library-directories))))
 
 (use-package py-autopep8
   :commands (py-autopep8-buffer)
@@ -148,14 +114,6 @@
           "integer" "limit" "local" "log" "popd" "pushd" "r" "readonly" "rehash" "sched"
           "setopt" "source" "suspend" "true" "ttyctl" "type" "unfunction" "unhash"
           "unlimit" "unsetopt" "vared" "which" "zle" "compdef" "compinit" "zstyle" "colors"))))
-  ;; :hook ((sh-mode .  (lambda ()
-  ;;                      (let ((zsh-file (executable-find "zsh"))
-  ;;                            (fname (buffer-file-name)))
-  ;;                        (when (and fname
-  ;;                                   (string-match (rx (*? ascii) (| "zsh" "zsh")) fname)
-  ;;                                   zsh-file)
-  ;;                          (setq-default sh-shell-file zsh-file)
-  ;;                          (sh-set-shell (file-name-nondirectory zsh-file)))))))
   :config
   (progn
     (yc/add-run-unit 'shell 70
@@ -167,17 +125,7 @@
 
   :hook (
          (sh-mode . (lambda ()
-                      (yc/lsp--setup "bash-language-server" "npm i -g bash-language-server"
-                                     (lambda ()
-                                       (unless (boundp 'lsp-clients)
-                                         (require 'lsp-mode))
-                                       (unless
-                                           (gethash 'bash-ls lsp-clients)
-                                         (lsp-register-client
-                                          (make-lsp-client :new-connection (lsp-stdio-connection '("bash-language-server" "start"))
-                                                           :major-modes '(sh-mode)
-                                                           :priority -1
-                                                           :server-id 'bash-ls))))))))
+                      (yc/lsp--setup "bash-language-server" "npm i -g bash-language-server"))))
   )
 
  ;; Make script executable.
