@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 ###
-### my-script — does one thing well
+### (>>FILE<<) — does one thing well
 ###
 ### Usage:
 ###   my-script <input> <output>
@@ -20,4 +20,4 @@ if [[ $# == 0 ]] || [[ "$1" == "-h" ]]; then
     exit 1
 fi
 
-echo Hello World
+echo "Hello World"
