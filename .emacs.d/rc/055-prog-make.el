@@ -103,36 +103,35 @@
     (unless project-root
       (error "Project root is not set"))
 
-    (let* ((cmake-file (format "%s/CMakeLists.txt" project-root))
-           (build-dir  (format "%s/build" project-root))
-           (gen-file (format "%s/build/gen-compile-db.sh" project-root))
-           (exclude-file (format "%s/.git/info/exclude" project-root))
+    (setq project-root (file-name-as-directory project-root))
+
+
+    (let* ((cmake-file (expand-file-name "CMakeLists.txt" project-root ))
+           (build-dir  (expand-file-name "build" project-root))
+           (exclude-file (expand-file-name "/.git/info/exclude" project-root))
+           (gen-file (expand-file-name "gen-compile-db.sh" build-dir))
+           (command (concat (executable-find "bash") " " gen-file))
+
+           (default-directory build-dir)
+           (buffer-out (concat "*interpreting - " (file-name-nondirectory gen-file) "*"))
+           (compilation-error-regexp-alist executable-error-regexp-alist)
            ignore-list)
 
       (unless (file-exists-p cmake-file)
-        (with-temp-file cmake-file
-          (insert "cmake_minimum_required(VERSION 2.6)
-file(GLOB_RECURSE FAKE_SOURCES
-  *.c
-  *.cpp
-  *.cc
-  )
+        (push "/CMakeLists.txt" ignore-list))
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/src/include)
-add_executable(fake_target ${FAKE_SOURCES} )
-"))
-        (add-to-list 'ignore-list "/CMakeLists.txt"))
+      (unless (file-exists-p (expand-file-name ".lsp-conf" project-root))
+        (push "/.lsp-conf" ignore-list))
 
       (unless (file-directory-p build-dir)
         (make-directory build-dir)
-        (add-to-list 'ignore-list "/build"))
+        (push "/build/" 'ignore-list ))
 
       (unless (file-exists-p gen-file)
         (with-temp-file gen-file
           (insert "#!/bin/bash
 
-#!/bin/bash
+touch ../.lsp-conf
 
 function gen_compile_db ()
 {
@@ -160,8 +159,7 @@ cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 gen_compile_db
 "))
-        (shell-command (format "chmod +x %s" gen-file))
-        (add-to-list 'ignore-list "/build/gen-compile-db.sh"))
+        (shell-command (format "chmod +x %s" gen-file)))
 
       (PDEBUG "LIST" ignore-list)
 
@@ -169,8 +167,12 @@ gen_compile_db
         (with-temp-file exclude-file
           (insert-file-contents exclude-file)
           (goto-char (point-max))
-          (insert (mapconcat 'identity ignore-list "\n"))
-          )))))
+          (insert (mapconcat 'identity ignore-list "\n"))))
+
+      (PDEBUG "COMMAND: " command)
+        (set (make-local-variable 'executable-command) command)
+        (compilation-start command t (lambda (_x) buffer-out)))))
+
 
 (use-package compile
   :commands (compile)
