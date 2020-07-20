@@ -1054,53 +1054,9 @@ Keybindings (org-mode buffer):
           (PDEBUG "INDEX: " action-index)
 
           (case action-index
-            (0 (let* ((notes-file-name (completing-read "What name do you want the notes to have? "
-                                                        search-names nil nil))
-                      list-of-possible-targets
-                      target)
-
-                 ;; NOTE(nox): Create list of targets from current path
-                 (catch 'break
-                   (let ((current-directory document-directory)
-                         file-name)
-                     (PDEBUG "CUR-DIR:" current-directory)
-                     (while current-directory
-                       (setq file-name (expand-file-name notes-file-name current-directory))
-                       (when (file-exists-p file-name)
-                         (setq file-name (propertize file-name 'display
-                                                     (concat file-name
-                                                             (propertize " -- Exists!"
-                                                                         'face '(foreground-color . "green")))))
-                         (push file-name list-of-possible-targets)
-                         (throw 'break nil))
-
-                       (push file-name list-of-possible-targets)
-
-                       (PDEBUG "KKKK: " current-directory)
-                       (when (string= current-directory
-                                      (setq current-directory
-                                            (file-name-directory (directory-file-name current-directory))))
-                         (throw 'break nil)))))
-
-                 (setq list-of-possible-targets (nreverse list-of-possible-targets))
-
-                 ;; NOTE(nox): Create list of targets from search path
-                 (when (file-exists-p (tnote/get-notes-dir))
-                   (let ((file-name (expand-file-name notes-file-name (expand-file-name "org" tnote/root-directory))))
-                     (unless (member file-name list-of-possible-targets)
-                       (when (file-exists-p file-name)
-                         (setq file-name (propertize file-name 'display
-                                                     (concat file-name
-                                                             (propertize " -- Exists!"
-                                                                         'face '(foreground-color . "green"))))))
-                       (push file-name list-of-possible-targets))))
-
-                 (setq target (completing-read "Where do you want to save it? " list-of-possible-targets
-                                               nil t))
-                 (set-text-properties 0 (length target) nil target)
-                 (unless (file-exists-p target) (write-region "" nil target))
-
-                 (setq notes-files (list target))))
+            (0 (push (tnote/title-to-path
+                                        (completing-read "Input title of new note: "
+                                                         nil nil)) notes-files))
             (1
              (push (read-file-name "Select note file: "
                                    (expand-file-name (tnote/get-notes-dir)))
