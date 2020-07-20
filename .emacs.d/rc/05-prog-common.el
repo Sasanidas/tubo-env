@@ -652,7 +652,7 @@ Call FUNC which is 'lsp with ARGS."
          (root-file
           (catch 'p-found
             (dolist (item f-list)
-              (PDEBUG "ITEM: " item)
+              (PDEBUG "YC/LSP-GET-ROOT-FILE: ITEM " item)
               (aif (locate-dominating-file default-directory item)
                   (throw 'p-found (concat (expand-file-name it) item)))))))
 

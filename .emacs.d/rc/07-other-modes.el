@@ -149,27 +149,30 @@
 (defun yc/ediff-prepare (&optional buffer)
   "Prepare BUFFER for Ediff."
   (with-current-buffer (or buffer (current-buffer))
-    (PDEBUG "PREPARE EDIFF: " buffer)
+    (PDEBUG "YC/EDIFF-PREPARE: " buffer)
 
     (ws-butler-mode -1)
     (flycheck-mode -1)
     (if (fboundp 'show-ifdefs)
-        (show-ifdefs))))
+        (show-ifdefs))
+    (PDEBUG "YC/EDIFF-PREPARE END.")))
 
 (defun yc/ediff-buffers (buffer-A buffer-B &rest args)
   "Run Ediff on a pair of buffers, BUFFER-A and BUFFER-B, with optional ARGS."
   (yc/ediff-prepare buffer-A)
   (yc/ediff-prepare buffer-B))
 
+(defun yc/smerge-ediff-adv (&rest args)
+  "Disable some minor-mode before `smerge-eiff', and renable them after that."
+  (yc/ediff-prepare))
+
 (use-package smerge-mode
   :bind ((;; ,(kbd "<S-f12>")
           [S-f12]. smerge-ediff))
   :config
-    (advice-add 'smerge-ediff :before #'yc/smerge-ediff))
+    (advice-add 'smerge-ediff :before #'yc/smerge-ediff-adv))
 
-(defun yc/smerge-ediff (&rest args)
-  "Disable some minor-mode before `smerge-eiff', and renable them after that."
-  (yc/ediff-prepare))
+
 
 
 (defun yc/ediff-startup-hook ()
@@ -267,8 +270,9 @@
           "<" . yc/shrink-window-horizontal)
 
          ([f5] . yc/open-eshell)
-         )
 
+         ([remap shell-command] . yc/exec-command-via-eshell)
+         )
   )
 
 (use-package yc-dump

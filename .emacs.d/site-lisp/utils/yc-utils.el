@@ -1453,6 +1453,21 @@ args should be a list, but to make caller's life easier, it can accept one atom 
           (switch-to-buffer ebuffer))
       (eshell))))
 
+(defun yc/exec-command-via-eshell ()
+  "Open eshell and execute command."
+  (interactive)
+  (let ((command (read-shell-command "Shell command: "
+                                         nil nil
+			                 (let ((filename
+			                        (cond
+				                 (buffer-file-name)
+				                 ((eq major-mode 'dired-mode)
+				                  (dired-get-filename nil t)))))
+			                   (and filename (file-relative-name filename))))))
+    (with-current-buffer (yc/open-eshell)
+      (insert command)
+      (eshell-send-input))))
+
 
 (provide 'yc-utils)
 
