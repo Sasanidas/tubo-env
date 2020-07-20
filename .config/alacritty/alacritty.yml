@@ -637,6 +637,7 @@ key_bindings:
   - { key: Y,         mods: Alt|Shift, chars: "\x1bY"                       }
   - { key: Z,         mods: Alt|Shift, chars: "\x1bZ"                       }
 
+  - { key: Key1,      mods: Alt|Shift, chars: "\x1b!"                       }
   - { key: Key4,      mods: Alt|Shift, chars: "\x1b$"                       }
 
 
