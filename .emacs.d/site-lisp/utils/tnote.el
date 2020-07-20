@@ -10,6 +10,7 @@
 
  ;; required packages.
 (require '02-functions)
+(require '03-fundamental-mode)
 
 (require 'org)
 (require 'org-element)
@@ -227,9 +228,9 @@ recursively, that is, when `tnote/recursive' is non-nil.")
 
   (ivy-add-actions
    'tnote/find-note
-   '(("g" counsel-grep-in-dir "Grep in current directory")
-     ("l" find-file-literally "Open literally")
-     ("t" tnote/search-via-tags "Find via tags"))))
+   (append  '(("g" counsel-grep-in-dir "Grep in current directory")
+              ("t" tnote/search-via-tags "Find via tags"))
+            yc/ivy-common-actions)))
 
 (defun tnote/find-or-create-file (file)
   "Find or create new FILE."

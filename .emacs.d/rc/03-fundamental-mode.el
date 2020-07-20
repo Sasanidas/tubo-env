@@ -140,6 +140,16 @@ Call FUNC which is 'counsel-git-grep-action with X."
   (interactive)
   (yc/counsel-grep))
 
+(defvar yc/ivy-common-actions
+  '(("u" counsel-find-file-as-user "Open as other user")
+    ("g" counsel-grep-in-dir "Grep in current directory")
+    ("l" find-file-literally "Open literally")
+    ("v" vlf "Open with VLF")
+    ("d" counsel-locate-action-dired "dired")
+    )
+  "My actions.")
+
+
 (use-package counsel
   :commands (counsel-find-file
              counsel-recentf counsel-semantic-tags
@@ -193,13 +203,7 @@ Call FUNC which is 'counsel-git-grep-action with X."
   (advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
   (advice-add 'counsel-git-grep-action :before-until #'yc/counsel-git-grep-action-adv)
 
-  (ivy-add-actions
-   'counsel-find-file
-   '(("u" counsel-find-file-as-user "Open as other user")
-     ("g" counsel-grep-in-dir "Grep in current directory")
-     ("l" find-file-literally "Open literally")
-     ("v" vlf "Open with VLF")
-     ))
+  (ivy-add-actions 'counsel-find-file  yc/ivy-common-actions)
   )
 
 

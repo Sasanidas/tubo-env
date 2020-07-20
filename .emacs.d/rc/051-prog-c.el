@@ -259,7 +259,7 @@ and is reversed for better performance.")
                            1 nil
                            (lambda ()
                              (unless (bound-and-true-p lsp-mode)
-                               (message "Lazy hooks for mode %s" major-mode)
+                               (PDEBUG "Lazy hooks for mode " major-mode)
                                (let ((compiler (getenv "CC")))
                                  (if (or (and compiler (string= compiler "clang"))
                                          (eq system-type 'darwin))
