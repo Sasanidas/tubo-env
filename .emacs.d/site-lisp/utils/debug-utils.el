@@ -97,8 +97,10 @@
 
   (unless proc
     (setq proc (if (region-active-p)
-                   (buffer-substring-no-properties (region-beginning)
-                                                   (region-end)))))
+                      (buffer-substring-no-properties (region-beginning)
+                                                      (region-end))
+                      (aif (number-at-point)
+                          (number-to-string it)))))
 
   (let (pid)
     (when proc

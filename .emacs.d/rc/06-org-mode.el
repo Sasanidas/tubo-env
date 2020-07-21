@@ -20,6 +20,36 @@
         (throw 'path-found path)))
     ""))
 
+(defun yc/ditaa-path ()
+  "Get path of plantUML."
+
+  (cond
+   ((executable-find "ditaa")
+    (progn
+      (let ((content (shell-command-to-string (format "cat %s" (executable-find "ditaa")))))
+        (PDEBUG "CONTENT: " content)
+
+        (catch 'p-found
+          (dolist (item (s-split " " content))
+            (PDEBUG "ITEM: " item)
+            (PDEBUG "MATCH: " (string-match (rx "ditaa" (+? nonl) ".jar") item))
+
+            (when (string-match (rx "ditaa" (+? nonl) ".jar") item)
+              (throw 'p-found item)))
+          nil))))
+   (t
+    (warn "yc/ditaa-package not setup")
+    nil))
+  (catch 'path-found
+    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
+                    "/usr/share/plantuml/lib/plantuml.jar"
+                    "/usr/local/plantuml/lib/plantuml.jar"
+                    "/usr/local/opt/plantuml/libexec/plantuml.jar"))
+      (PDEBUG "CHECKING: " path)
+      (when (file-exists-p path)
+        (throw 'path-found path)))
+    ""))
+
 
 (defun uml/parse-stringfied-nodes (&optional silent)
   "Parse all stringfied nodes.
@@ -500,7 +530,7 @@ Call FUNC which is 'org-publish-file with ARGS."
   (org-special-ctrl-k t)
   (org-startup-folded nil)
   (org-startup-indented t)
-  (org-ditaa-jar-path (yc/plantuml-path))
+  (org-ditaa-jar-path (yc/ditaa-path))
   (org-use-property-inheritance t)
   (org-enforce-todo-checkbox-dependencies t)
   ;; WAITING: Assigned to others, and waiting for their report.

@@ -1,0 +1,31 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: defhelp
+# key: dfh
+# --
+###
+### (>>FILE<<) — does one thing well
+###
+### Usage:
+###   my-script <input> <output>
+###
+### Options:
+###   <input>   Input file to read.
+###   <output>  Output file to write. Use '-' for stdout.
+###   -h        Show this message.
+
+function help() {
+    sed -rn 's/^### ?//;T;p' "$0"
+}
+
+
+while getopts h var; do
+    case $var in
+        h)
+        help()
+        exit 0
+        ;;
+        *)
+        ;;
+    esac
+done
+shift $(($OPTIND - 1))
