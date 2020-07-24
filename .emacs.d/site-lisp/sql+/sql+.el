@@ -161,16 +161,23 @@ Sql is a cross-platform, open-source make system."
 (defun sql/choose-dbms ()
   "Choose dbms..."
   (interactive)
-  (let ((target (ivy-read "Choose DBMS: " '("postgres" "mysql"))))
-    (cond
-     ((string= target "postgres")
-      (progn
-        (setq db/product 'postgres)
-        (sql-set-product 'postgres)))
 
-     (t (error "Not implemented"))
-     )
-    ))
+  (let ((target
+         (let (mappings names)
+           (dolist (product sql-product-alist)
+             (let ((iden (car product))
+                   (name (plist-get (cdr product) :name)))
+               (push (cons name iden) mappings)
+               (push name names)
+               )
+             )
+           (PDEBUG "MAP" mappings)
+           (alist-get (ivy-read "Choose DBMS: " names) mappings nil nil
+                      'equal))))
+
+
+    (setq db/product target)
+    (sql-set-product target)))
 
 (defun eval-sql/command ()
   "Get command to execute a query.."

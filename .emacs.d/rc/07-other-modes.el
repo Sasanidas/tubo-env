@@ -1238,6 +1238,8 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 (use-package conf-mode
   :mode (rx (or "Doxyfile"
+                (: (? "_" (+? nonl)) "init_file" (? "_" (+? nonl)))
+
                 (: (+? ascii) (or "." "_") (or "doxy" "doxygen" "service"  "conf" "config" "rc"
                                                "cnf" "options"))
                 (: "fvwm/" (+? ascii))

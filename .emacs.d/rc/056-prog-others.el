@@ -182,9 +182,9 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
                  (: (or "input" "output") "/" (+? nonl) ".source")
-                 (: "test/regress/" (or "output" "input") "/"
+                 (: "test/" (+? nonl) (or "output" "input") "/"
                     (+? nonl) ".source")
-                 (: "test/regress/" (or "results" "expected") (*? nonl) "/"
+                 (: (or "results" "expected") (*? nonl) "/"
                     (+? nonl) ".out")
                  ) eol)  . sql-mode)
   :hook (

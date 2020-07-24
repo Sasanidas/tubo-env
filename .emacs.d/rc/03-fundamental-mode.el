@@ -299,31 +299,42 @@ Call FUNC with ARGS."
     (setq projectile-generic-command "rg -0 --files --follow --color=never --hidden")))
   )
 
+
+(defun yc/projectile-find-file (&rest args)
+  "Advice for 'projectile-find-file'.
+Call FUNC which is 'projectile-find-file with ARGS."
+  (interactive "P")
+  (cond
+   (current-prefix-arg
+    (ivy-read "Find file: " (projectile-files-via-ext-command default-directory (projectile-get-ext-command nil))
+              :matcher counsel-projectile-find-file-matcher
+              :require-match t
+              :sort counsel-projectile-sort-files
+              :action counsel-projectile-find-file-action
+              :caller 'counsel-projectile-find-file
+              ))
+
+   ((file-exists-p (concat (projectile-project-root) ".git"))
+    ;; find file, exclude files in submodules.
+    (ivy-read (projectile-prepend-project-name "Find file: ")
+              (magit-revision-files "HEAD")
+              :matcher counsel-projectile-find-file-matcher
+              :require-match t
+              :sort counsel-projectile-sort-files
+              :action counsel-projectile-find-file-action
+              :caller 'counsel-projectile-find-file)
+    )
+
+   (t
+    (counsel-projectile-find-file)))
+  )
+
 (use-package counsel-projectile
   :pin melpa
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files)
   :functions (counsel-projectile-find-file-action)
   :commands (counsel-projectile-find-file)
-  :bind (("C-x M-f" . (lambda ()
-                        (interactive)
-
-                        (unless (featurep 'counsel-projectile)
-                          (load "counsel-projectile"))
-
-                        (if (or current-prefix-arg
-                                (not (file-exists-p (concat (projectile-project-root) ".git"))))
-                            (counsel-projectile-find-file)
-
-                          ;; find file, exclude files in submodules.
-                          (ivy-read (projectile-prepend-project-name "Find file: ")
-                                    (magit-revision-files "HEAD")
-                                    :matcher counsel-projectile-find-file-matcher
-                                    :require-match t
-                                    :sort counsel-projectile-sort-files
-                                    :action counsel-projectile-find-file-action
-                                    :caller 'counsel-projectile-find-file)
-                          ))
-          )
+  :bind (("C-x M-f" . yc/projectile-find-file)
          ("C-x M-d" . counsel-projectile-find-dir)))
 
 
