@@ -3,7 +3,7 @@
 # key: dfh
 # --
 ###
-### (>>FILE<<) — does one thing well
+### Brief introduction here.
 ###
 ### Usage:
 ###   my-script <input> <output>
@@ -14,18 +14,20 @@
 ###   -h        Show this message.
 
 function help() {
-    sed -rn 's/^### ?//;T;p' "$0"
+    sed -rn 's/^### ?//;T;p' "\$0"
 }
 
 
 while getopts h var; do
     case $var in
         h)
-        help()
+        help
         exit 0
         ;;
         *)
         ;;
     esac
 done
-shift $(($OPTIND - 1))
+shift \$((\$OPTIND - 1))
+
+$0
