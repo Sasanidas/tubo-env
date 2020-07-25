@@ -29,15 +29,15 @@
     (define-key js2-mode-map "\C-c\C-x" 'executable-interpret)))
 
 
-(use-package java
-  :defer t
-  :hook ((java-mode
-          .
-          (lambda ()
-            ;; (yc/add-company-backends-with-yasnippet company-eclim)
-            (unless (featurep 'lsp-java)
-              (require 'lsp-java))
-            (lsp)))))
+;; (use-package java
+;;   :defer t
+;;   :hook ((java-mode
+;;           .
+;;           (lambda ()
+;;             ;; (yc/add-company-backends-with-yasnippet company-eclim)
+;;             (unless (featurep 'lsp-java)
+;;               (require 'lsp-java))
+;;             (lsp)))))
 
 
 (use-package batch-mode :mode (rx "." (or "bat" "cmd")))
@@ -382,6 +382,12 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
 (use-package typescript-mode
   :mode (rx "." (or "ts") buffer-end)
   :hook ((typescript-mode . lsp)))
+
+(use-package go
+  :pin melpa
+  :mode "\\.go\\'"
+  )
+
 
 
 (provide '059-prog-others)

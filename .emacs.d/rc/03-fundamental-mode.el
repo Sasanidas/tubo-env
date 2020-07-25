@@ -304,6 +304,8 @@ Call FUNC with ARGS."
   "Advice for 'projectile-find-file'.
 Call FUNC which is 'projectile-find-file with ARGS."
   (interactive "P")
+  (unless (featurep 'counsel-projectile)
+    (require 'counsel-projectile))
   (cond
    (current-prefix-arg
     (ivy-read "Find file: " (projectile-files-via-ext-command default-directory (projectile-get-ext-command nil))
@@ -331,7 +333,8 @@ Call FUNC which is 'projectile-find-file with ARGS."
 
 (use-package counsel-projectile
   :pin melpa
-  :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files)
+  :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files
+                                                 projectile-files-via-ext-command)
   :functions (counsel-projectile-find-file-action)
   :commands (counsel-projectile-find-file)
   :bind (("C-x M-f" . yc/projectile-find-file)
