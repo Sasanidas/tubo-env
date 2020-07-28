@@ -28,7 +28,9 @@
                "h"
                . cmake-help)
               ("\C-cl" . cmake-help-list-commands)
-              ("\C-cu" .  unscreamify-cmake-buffer)))
+              ("\C-cu" .  unscreamify-cmake-buffer))
+  :custom
+  (cmake-tab-width 4))
 
 
 (cdsq yc/cmake-command-template

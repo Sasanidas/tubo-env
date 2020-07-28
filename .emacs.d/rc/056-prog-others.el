@@ -276,7 +276,8 @@ Call FUNC with ARGS."
      '(cperl-brace-offset -2              )
      '(cperl-merge-trailing-else nil      )))
   :hook ((perl-mode . (lambda ()
-                        (when (string-match "/postgres\\(ql\\)?/" buffer-file-name)
+                        (when (and buffer-file-name
+                                   (string-match "/postgres\\(ql\\)?/" buffer-file-name))
                           (pgsql-perl-style))))))
 
  ;; swig
@@ -383,9 +384,14 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
   :mode (rx "." (or "ts") buffer-end)
   :hook ((typescript-mode . lsp)))
 
-(use-package go
+(use-package go-mode
   :pin melpa
   :mode "\\.go\\'"
+  )
+
+(use-package groovy-mode
+  :pin melpa
+  :mode (rx "." (or "grovvy" "gradle") buffer-end)
   )
 
 

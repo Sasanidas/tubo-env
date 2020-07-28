@@ -511,6 +511,7 @@ Call FUNC which is 'org-publish-file with ARGS."
 
 
 (use-package org
+  :commands (org-load-modules-maybe)
   :custom
   (org-image-actual-width nil)
   (org-confirm-babel-evaluate nil)

@@ -58,6 +58,44 @@
     (counsel-git-grep init)
     (yc/push-stack m)))
 
+(defun yc/git-add-current-file ()
+  "Add curent file to state."
+  (interactive)
+  (unless (buffer-file-name)
+    (error "Not a file"))
+
+  (if (buffer-modified-p)
+      (save-buffer))
+
+  (shell-command-to-string (concat "git add " (buffer-file-name)))
+
+  (let* ((curent-dir default-directory)
+         (root-dir (magit-toplevel))
+         (cands (catch 'confilicts
+                  (while (not (equal root-dir default-directory))
+                    (let* ((output (shell-command-to-string
+                                    "git status . | grep 'both modified' | awk -F \":\" '{print $2}'"))
+                           (tmp (remove-if (lambda (x)
+                                             (= (length x) 0) )
+                                           (mapcar 's-trim (s-split "\n" output)))))
+
+                      (if tmp
+                          (throw 'confilicts tmp)
+                        (setq default-directory
+                              (file-name-directory (directory-file-name
+                                                    default-directory)))))))))
+    (if cands
+        (let ((next-file
+               (if current-prefix-arg
+                   (ivy-read "Choose NextFile: " cands)
+                 (car cands))))
+
+          (with-current-buffer (find-file next-file)
+            (smerge-ediff)))
+
+      (message "All files are cleared in this folder."))))
+
+
 (use-package magit
   :pin melpa
   :commands (magit-blame-addition magit-revision-files)
@@ -65,7 +103,8 @@
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
               ("gb" . magit-blame-addition)
-              ("gg" . 'yc/counsel-git-grep))
+              ("gg" . 'yc/counsel-git-grep)
+              ("ga" . 'yc/git-add-current-file))
   :custom
   (magit-revert-buffers t)
   (magit-commit-show-diff nil)
