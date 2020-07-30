@@ -353,11 +353,11 @@ Call FUNC which is 'projectile-find-file with ARGS."
   :config
   (require 'smartparens-config)
   :bind (:map smartparens-mode-map
-              (;; (kbd "C-M-n")
-               [134217742] . sp-forward-sexp)
+              ;; (;; (kbd "C-M-n")
+              ;;  [134217742] . sp-forward-sexp)
 
-              (;; (kbd "C-M-p")
-               [134217744] . sp-backward-sexp)
+              ;; (;; (kbd "C-M-p")
+              ;;  [134217744] . sp-backward-sexp)
 
               (;; (kbd "C-M-k")
                [134217739] . sp-kill-sexp)

@@ -58,9 +58,19 @@
     (counsel-git-grep init)
     (yc/push-stack m)))
 
+(defvar yc/auto-merge-func nil
+  "Function try to merge file automatically.
+This function accept file name as argument, and return t if file is merged automatically.")
+
+
+(use-package magit-ediff
+  :commands (magit-unmerged-files))
+
+
 (defun yc/git-add-current-file ()
   "Add curent file to state."
   (interactive)
+
   (unless (buffer-file-name)
     (error "Not a file"))
 
@@ -69,36 +79,26 @@
 
   (shell-command-to-string (concat "git add " (buffer-file-name)))
 
-  (let* ((curent-dir default-directory)
-         (root-dir (magit-toplevel))
-         (cands (catch 'confilicts
-                  (while (not (equal root-dir default-directory))
-                    (let* ((output (shell-command-to-string
-                                    "git status . | grep 'both modified' | awk -F \":\" '{print $2}'"))
-                           (tmp (remove-if (lambda (x)
-                                             (= (length x) 0) )
-                                           (mapcar 's-trim (s-split "\n" output)))))
-
-                      (if tmp
-                          (throw 'confilicts tmp)
-                        (setq default-directory
-                              (file-name-directory (directory-file-name
-                                                    default-directory)))))))))
+  (let* ((default-directory (magit-toplevel))
+         (cands (magit-unmerged-files)))
     (if cands
-        (let ((next-file
-               (if current-prefix-arg
-                   (ivy-read "Choose NextFile: " cands)
-                 (car cands))))
+        (let* ((next-file
+                (if current-prefix-arg
+                    (ivy-read "Choose NextFile: " cands)
+                  (car cands))))
 
-          (with-current-buffer (find-file next-file)
-            (smerge-ediff)))
+          ;; Do smerge-ediff when auto-merge-func is not specified, or failed.
+          (when (or (not yc/auto-merge-func)
+                    (not (funcall yc/auto-merge-func next-file)))
+            (with-current-buffer (find-file next-file)
+              (smerge-ediff))))
 
       (message "All files are cleared in this folder."))))
 
 
 (use-package magit
   :pin melpa
-  :commands (magit-blame-addition magit-revision-files)
+  :commands (magit-blame-addition magit-revision-files magit-toplevel)
   :bind (:map ctl-x-map
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
