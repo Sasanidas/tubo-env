@@ -532,7 +532,6 @@ Call FUNC which is 'org-publish-file with ARGS."
   (org-html-head-include-default-style nil)
   (org-html-head-include-scripts nil)
   (org-log-done 'time)
-  (org-plantuml-jar-path (yc/plantuml-path))
   (org-pretty-entities t)
   (org-preview-latex-image-directory "/tmp/")
   (org-publish-list-skipped-files nil)
@@ -541,7 +540,6 @@ Call FUNC which is 'org-publish-file with ARGS."
   (org-special-ctrl-k t)
   (org-startup-folded nil)
   (org-startup-indented t)
-  (org-ditaa-jar-path (yc/ditaa-path))
   (org-use-property-inheritance t)
   (org-enforce-todo-checkbox-dependencies t)
   ;; WAITING: Assigned to others, and waiting for their report.
@@ -562,6 +560,12 @@ Call FUNC which is 'org-publish-file with ARGS."
   :config
   (progn
     (require 'ox-plus)
+
+    ;; some variables are customized after package loaded.
+    (custom-set-variables
+     '(org-ditaa-jar-path (yc/ditaa-path))
+     '(org-plantuml-jar-path (yc/plantuml-path))
+     )
 
     (sp-with-modes 'org-mode
       (sp-local-pair "$" "$")

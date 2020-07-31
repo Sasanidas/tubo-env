@@ -103,10 +103,12 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   :hook ((flycheck-mode . flycheck-popup-tip-mode)))
 
  ;; EMR.
-(straight-use-package `(emr :local-repo ,(expand-file-name "site-lisp/emr" user-emacs-directory)
-                            :type built-in))
+
+(use-package list-utils)
+(use-package iedit)
 
 (use-package emr
+  :straight nil
   :bind (([S-f6] . emr-show-refactor-menu))
   :commands (emr-initialize)
   :pin melpa

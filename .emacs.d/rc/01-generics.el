@@ -31,27 +31,6 @@
 ;;   (package-refresh-contents)
 ;;   (package-install 'use-package))
 
-
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (message "Loading bootstrap.")
-  (load bootstrap-file nil 'nomessage))
-
-(require 'straight)
-(straight-use-package 'use-package)
-(require 'use-package)
-
-;; (straight-use-package 'lsp-pyright)
-
 (custom-set-variables
  '(straight-use-package-by-default t)
  '(straight-check-for-modifications 'never)
@@ -61,6 +40,27 @@
   '(use-package-expand-minimally t)  ; make the expanded code as minimal as possible
   '(use-package-always-pin nil)
   '(use-package-enable-imenu-support t))
+
+(defvar bootstrap-version 5)
+
+(defvar bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+
+(unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+(message "Loading bootstrap.")
+(load bootstrap-file nil 'nomessage)
+
+(require 'straight)
+(straight-use-package 'use-package)
+(require 'use-package)
+
+;; (straight-use-package 'lsp-pyright)
 
 (defmacro yc/straight-add-local-package (name location)
   "Add local package named NAME, located at LOCATION."

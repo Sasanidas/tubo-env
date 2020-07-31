@@ -387,7 +387,7 @@ Call FUNC which is 'find-file-noselect with ARGS."
   :straight nil
   :config
   ;;Handle file-error and suggest to install missing packages...
-  (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
+  ;; (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
   (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
   (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv))
 
