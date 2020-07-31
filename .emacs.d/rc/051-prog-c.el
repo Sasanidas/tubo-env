@@ -185,10 +185,9 @@ and is reversed for better performance.")
 
   (yc/update-inc-marks))
 
-
-
 
 (use-package member-function
+  :straight nil
   :commands (expand-member-functions)
   :config (setq mf--insert-commentary nil)
   :hook ((c++-mode . (lambda ()
@@ -196,6 +195,7 @@ and is reversed for better performance.")
 
  ;; ================================== CPP-H switch ===========================
 (use-package prog-utils
+  :straight nil
   :commands (
              yc/asm-post-process
              yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
@@ -249,9 +249,11 @@ and is reversed for better performance.")
 
 
 (use-package semantic/bovine/gcc
+  :straight nil
   :commands (semantic-gcc-setup))
 
 (use-package semantic/bovine/c
+  :straight nil
   :commands (semantic-default-c-setup)
   :hook ((c-mode-common .
                         (lambda ()
@@ -429,7 +431,7 @@ and is reversed for better performance.")
   :commands (cwarn-mode))
 
 (use-package ccls
-  :ensure t
+  ;; :ensure t
   :custom
   (ccls-executable (or (executable-find "ccls.sh") "ccls"))
   ;; (ccls-sem-highlight-method 'font-lock)

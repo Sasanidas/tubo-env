@@ -9,35 +9,66 @@
 ;;
 
  ;; Package Management...
+
 (require 'package)
 
 (custom-set-variables
  '(package-archives
    '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-     ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
-     ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+     ;; ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+     ;; ("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
      ))
  '(package-archive-priorities
-   '(("melpa-stable" . 10)
-     ("gnu" . 5)
+   '(;; ("melpa-stable" . 10)
+     ;; ("gnu" . 5)
      ("melpa" . 0))))
 
-(add-hook 'package-menu-mode-hook 'hl-line-mode)
+;; (add-hook 'package-menu-mode-hook 'hl-line-mode)
 
-(package-initialize)
+;; (package-initialize)
 
-(setq-default use-package-always-ensure nil ; Auto-download package if not exists
-              use-package-always-defer t ; Always defer load package to speed up startup
-              use-package-verbose nil ; Report loading details
-              use-package-expand-minimally t  ; make the expanded code as minimal as possible
-              use-package-always-pin nil
-              use-package-enable-imenu-support t)
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
 
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (message "Loading bootstrap.")
+  (load bootstrap-file nil 'nomessage))
+
+(require 'straight)
+(straight-use-package 'use-package)
 (require 'use-package)
+
+;; (straight-use-package 'lsp-pyright)
+
+(custom-set-variables
+ '(straight-use-package-by-default t)
+ '(straight-check-for-modifications 'never)
+ '(use-package-always-ensure nil) ; Auto-download package if not exists
+  '(use-package-always-defer t) ; Always defer load package to speed up startup
+  '(use-package-verbose nil) ; Report loading details
+  '(use-package-expand-minimally t)  ; make the expanded code as minimal as possible
+  '(use-package-always-pin nil)
+  '(use-package-enable-imenu-support t))
+
+(defmacro yc/straight-add-local-package (name location)
+  "Add local package named NAME, located at LOCATION."
+  (straight-use-package `(,NAME :local-repo ,location
+                                :type built-in))
+  )
+
+
 
 
 ;;;; User Info

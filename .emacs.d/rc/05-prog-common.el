@@ -56,7 +56,7 @@ Update the Which-Function mode display for all windows."
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
 
 (use-package flycheck
-  :ensure t
+  ;; :ensure t
   :pin melpa
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
   :bind (:map flycheck-mode-map
@@ -102,13 +102,15 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   :commands (flycheck-popup-tip-mode)
   :hook ((flycheck-mode . flycheck-popup-tip-mode)))
 
-
-
  ;; EMR.
+(straight-use-package `(emr :local-repo ,(expand-file-name "site-lisp/emr" user-emacs-directory)
+                            :type built-in))
+
 (use-package emr
   :bind (([S-f6] . emr-show-refactor-menu))
   :commands (emr-initialize)
   :pin melpa
+  ;; :local-repo (expand-file-name "site-lisp/emr" user-emacs-directory)
   :custom
   (emr-clang-format-style '(("BasedOnStyle" . "LLVM")
                             ("IndentWidth" . "4")
@@ -154,6 +156,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 
 ;; Semantic mode.
 (use-package semantic
+  :straight nil
   :commands (semantic-mode)
   :hook (;; (prog-mode . semantic-mode) ;; TODO: should we enable this, if lsp not avaiable?
          (semantic-init . (lambda ()
@@ -173,10 +176,10 @@ Call FUNC which is 'flycheck-next-error with ARGS."
    '(pulse-flag 'never)
    '(semanticdb-default-save-directory (yc/make-cache-path "semanticdb"))
    '(srecode-map-save-file (yc/make-cache-path "srecode-map.el")))
-
   )
 
 (use-package semantic/decorate/mode
+  :straight nil
   :defer t
   :config
   (progn
@@ -187,6 +190,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 ;;;; Semanticdb 定制
 ;; Semantic DataBase存储位置
 (use-package semantic/db-mode
+  :straight nil
   :commands (global-semanticdb-minor-mode)
   :config
   (setq-mode-local c-mode semanticdb-find-default-throttle
@@ -195,6 +199,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
                    '(project unloaded system recursive)))
 
 (use-package srecode/mode
+  :straight nil
   :commands (srecode-minor-mode)
   :hook ((prog-mode . srecode-minor-mode))
   :custom
@@ -204,6 +209,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
     (dolist (dir '("~/.emacs.d/templates/srecode"
                    "~/.emacs.d/templates/srecode/private"))
       (add-to-list 'srecode-map-load-path (expand-file-name dir)))))
+
 (defun yc/print-cur-tag ( )
   "Print current tag."
   (interactive)
@@ -214,6 +220,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 
  ;; *************************** TAGS Database Settings *********************
 (use-package counsel-xgtags
+  :straight nil
   :commands (counsel-xgtags-find-header counsel-xgtags-mode counsel-xgtags-find-definition
                                         counsel-xgtags-update-tags counsel-xgtags-parse-file)
   :custom
@@ -456,6 +463,7 @@ Return t if succeeded, or nil otherwise.")
 
 
 (use-package semantic-uml
+  :straight nil
   :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml))
 
  ;; lsp
@@ -491,7 +499,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
 (use-package lsp-mode
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
                  lsp-format-buffer lsp-flycheck-enable)
-  :ensure t
+  ;; :ensure t
   :pin melpa
   :custom
   (lsp-diagnostic-package :auto)
@@ -719,7 +727,7 @@ Call FUNC which is 'lsp with ARGS."
     (PDEBUG "leave")))
 
 (use-package company-lsp
-  :ensure t
+  ;; :ensure t
   :custom
   (company-lsp-cache-candidates 'auto)
   :commands (company-lsp))
@@ -734,6 +742,7 @@ Call FUNC which is 'lsp with ARGS."
 
 ;;;; Common Program settings
 (use-package prog-utils
+  :straight nil
   :commands (yc/doc-at-point yc/insert-single-comment yc/show-methods-dwim)
   :bind ((;; (kbd "M-m")
           [134217837] . yc/show-methods-dwim)))
@@ -788,6 +797,7 @@ Call FUNC which is 'lsp with ARGS."
   (flycheck-mode 1))
 
 (use-package prog-mode
+  :straight nil
   :defer t
   :hook ((prog-mode . yc/common-program-hook))
   )
@@ -830,6 +840,7 @@ This function returns a string as compile command, or nil if it can't handle
 
 
 (use-package counsel-compile2
+  :straight nil
   :commands (makefile/get-target-list))
 
 (yc/add-compile-unit 'makefile 99

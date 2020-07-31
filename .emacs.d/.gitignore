@@ -21,3 +21,6 @@ session.*
 /irony
 /transient/
 emacs.pdmp
+/straight/
+/workspace/
+/.dap-breakpoints

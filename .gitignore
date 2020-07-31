@@ -356,3 +356,6 @@ tmp/
 /.emacs.d/site-lisp/github/
 eln-*/
 wt_*/
+/.tooling
+/pxf/
+/workspace/

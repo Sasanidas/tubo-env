@@ -15,6 +15,7 @@
   :hook ((cmake-mode . cmake-font-lock-activate)))
 
 (use-package company-cmake
+  :straight nil
   :commands (company-cmake)
   :hook ((cmake-mode .
                      (lambda ()
@@ -298,6 +299,7 @@ Call FUNC with ARGS."
   :hook ((makefile-mode . (lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))))
 
 (use-package counsel-compile2
+  :straight nil
   :commands (counsel-compile2 counsel-compile-projectile)
   :bind ((;; ,(kbd "<M-f6>")
           [M-f6]. counsel-compile2)
@@ -309,7 +311,8 @@ Call FUNC with ARGS."
 
 
 (use-package ninja-mode
-  :ensure nil)
+  ;; :ensure nil
+  )
 
 (yc/add-compile-unit 'ninja 77
   (when (file-exists-p "build.ninja")

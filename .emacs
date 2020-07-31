@@ -2,22 +2,26 @@
 ;;; Commentary:
 ;;; Code:
 
-;; (package-initialize)
-
  ;; Load all configuration and packages.
 (let ((ts-init (current-time))
-      (default-directory  "~/.emacs.d/site-lisp/")
       ;; 加载的时候临时增大`gc-cons-threshold'以加速启动速度。
       (gc-cons-threshold most-positive-fixnum)
       (gc-cons-threshold most-positive-fixnum)
       ;; 清空避免加载远程文件的时候分析文件。
       (file-name-handler-alist nil)
+        (default-directory  )
       (debug-on-error t))
   (message "Start loading configurations...\n")
 
   (push (expand-file-name "~/.emacs.d/rc") load-path)
+
   ;; Add customized paths to the front of load-path
-  (normal-top-level-add-subdirs-to-load-path)
+  (dolist (path (list
+                 (expand-file-name "site-lisp/"  user-emacs-directory)
+                 (expand-file-name "straight/build"  user-emacs-directory)
+                  ))
+  (let ((default-directory path))
+    (normal-top-level-add-subdirs-to-load-path)))
 
   ;; Never load the `central-custome-file'.
   (setq custom-file "~/.emacs.d/rc/10-emacs-custome.el")

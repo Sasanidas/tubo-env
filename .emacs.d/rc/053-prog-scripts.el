@@ -66,6 +66,7 @@
             (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'")))))
 
 (use-package lsp-pyls
+  :straight nil
   :config
   (let ((pyls (expand-file-name (executable-find "pyls")))
         (lsp-py-lib-dirs

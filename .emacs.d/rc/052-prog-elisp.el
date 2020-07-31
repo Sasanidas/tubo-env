@@ -79,6 +79,7 @@
 
 (use-package
   elisp-mode
+  :straight nil
   :mode (((rx "." (or "el" "sexp") eol) . emacs-lisp-mode))
   :bind (:map emacs-lisp-mode-map
               (;; (kbd "C-c M-k")

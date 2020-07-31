@@ -5,7 +5,7 @@
 ;;; Commentary:
 
 ;;; Code:
-(use-package mule :commands (recode-region))
+(use-package mule :straight nil :commands (recode-region))
 
  ;; ************************** magit ****************************
 
@@ -26,12 +26,14 @@
   (git-commit-summary-max-length 72))
 
 (use-package magit-repos
+  :straight nil
   :custom
   (magit-repository-directories `((,(expand-file-name "~") . 0)))
   :bind (:map ctl-x-map
               ("gL" . magit-list-repositories)))
 
 (use-package magit-files
+  :straight nil
   :pin melpa
   :defer t
   :config
@@ -39,16 +41,17 @@
     (define-key magit-file-mode-map "\C-xg" nil)))
 
 
-(use-package magit-log :bind (:map ctl-x-map ("gl" . magit-log-buffer-file)))
+(use-package magit-log :straight nil :bind (:map ctl-x-map ("gl" . magit-log-buffer-file)))
 (use-package git-timemachine :bind (:map ctl-x-map ("gt" . git-timemachine)))
 (use-package magit-counsel
+  :straight nil
   :bind (:map ctl-x-map
               ("gc" . counsel-magit-checkout)
               ("gU" . counsel-magit-checkout-file)))
 
 (use-package magit-auto-revert
+  :straight nil
   :commands (magit-auto-revert-mode))
-
 
 (defun yc/counsel-git-grep ()
   "Description."
@@ -62,8 +65,8 @@
   "Function try to merge file automatically.
 This function accept file name as argument, and return t if file is merged automatically.")
 
-
 (use-package magit-ediff
+  :straight nil
   :commands (magit-unmerged-files))
 
 

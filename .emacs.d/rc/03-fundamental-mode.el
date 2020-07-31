@@ -21,7 +21,7 @@
 (use-package ivy
   :commands (ivy-read ivy-mode)
   :pin melpa
-  :ensure t
+  ;; :ensure t
   :hook ((emacs-startup . ivy-mode))
   :config
   (progn
@@ -42,7 +42,7 @@
 ;; More friendly display transformer for Ivy
 (use-package ivy-rich
   :pin melpa
-  :ensure t
+  ;; :ensure t
   :hook (ivy-mode . ivy-rich-mode)
   :custom
   ;; For better performance
@@ -157,7 +157,7 @@ Call FUNC which is 'counsel-git-grep-action with X."
              counsel-grep-or-swiper
              counsel-git-grep)
   :pin melpa
-  :ensure t
+  ;; :ensure t
   :custom
   (counsel-find-file-at-point t)
   (counsel-find-file-ignore-regexp (rx (or (: buffer-start (or "#" "."))
@@ -222,6 +222,7 @@ Call FUNC which is 'counsel-grep-or-swiper with ARGS."
     result))
 
 (use-package counsel-woman
+  :straight nil
   :bind (([f1] . counsel-woman))
   :custom
   (woman-use-own-frame nil)
@@ -249,7 +250,7 @@ Call FUNC with ARGS."
 
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
-  :ensure t
+  ;; :ensure t
   :defer t
   :commands amx-mode
   :hook (ivy-mode . amx-mode)
@@ -343,7 +344,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
 
 (use-package smartparens
   :pin melpa
-  :ensure t
+  ;; :ensure t
   :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :hook ((after-init . smartparens-global-mode))
   :custom
@@ -383,6 +384,7 @@ Call FUNC which is 'find-file-noselect with ARGS."
                (error "%s" (cadr var)))))))
 
 (use-package files
+  :straight nil
   :config
   ;;Handle file-error and suggest to install missing packages...
   (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
@@ -406,6 +408,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 
 
 (use-package server
+  :straight nil
   :commands (server-start server-running-p)
   :hook ((emacs-startup .
                         (lambda ()
@@ -414,6 +417,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 
  ;;; ABBREV-MODE;;;
 (use-package abbrev
+  :straight nil
   :custom
   (abbrev-file-name  "~/.emacs.d/abbrev_defs")
   (save-abbrevs 'silently)
@@ -460,13 +464,13 @@ With REVERSE is t, switch to previous window."
 
 ;; string functions..
 (use-package s
-  :ensure t
+  ;; :ensure t
   :commands (s-contains?
              s-ends-with? s-ends-with-p
              s-starts-with? s-blank? s-split))
 
 (use-package session
-  :ensure t
+  ;; :ensure t
   :commands (session-initialize)
   :custom
   (session-globals-include
@@ -479,7 +483,7 @@ With REVERSE is t, switch to previous window."
   :hook ((emacs-startup . session-initialize)))
 
 (use-package super-save
-  :ensure t
+  ;; :ensure t
   :commands (super-save-mode)
   :hook ((emacs-startup . super-save-mode))
   :custom
@@ -489,7 +493,7 @@ With REVERSE is t, switch to previous window."
 ;; Tabs and spaces
 (use-package ws-butler
   :commands (ws-butler-mode)
-  :ensure t
+  ;; :ensure t
   :hook ((prog-mode .  ws-butler-mode))
   :custom
   (tab-always-indent 'complete)
