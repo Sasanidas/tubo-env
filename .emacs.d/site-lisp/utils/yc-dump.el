@@ -6,14 +6,6 @@
 
 ;;; Code:
 
-;; load configurations..
-;; (load-file (expand-file-name "~/.emacs"))
-
-;; (dolist (package '(use-package company ivy counsel org lsp-mode
-;;                     use-package swiper  highlight-parentheses
-;;                     ws-butler flyspell magit  flycheck))
-;;   (require package))
-
 ;; dump image
 (require 'yc-utils)
 

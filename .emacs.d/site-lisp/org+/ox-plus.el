@@ -162,6 +162,7 @@ Return output file name."
 
 (use-package ox-html
   :defer t
+  :straight nil
   :init
   (progn
     (custom-set-variables
@@ -350,6 +351,7 @@ Call FUNC with ARGS."
              (apply func args)))
 
 (use-package ox-publish
+  :straight nil
   :config
 
   (require 'ox-html)
@@ -371,6 +373,7 @@ Call FUNC with ARGS."
 
 (use-package ox-odt
   ;; org v8 bundled with Emacs 24.4
+  :straight nil
   :custom
   (org-odt-preferred-output-format "doc")
   :config

@@ -494,9 +494,10 @@ and is reversed for better performance.")
 
 
 (use-package cc-mode
+  :straight nil
   :commands (c++-mode objc-mode c-mode)
   :mode (((rx (or (: "." (or "H" "cc" "hh" "c" "h" "moc" "ipp") (? ".in") buffer-end)
-                  (: "include/" alnum ))) . c++-mode)
+                  )) . c++-mode)
          ((rx "." (or "C" "c" "ic") buffer-end) . c-mode)
          ((rx "." (or "mm" "m") buffer-end) . objc-mode))
   :bind (:map c-mode-base-map
