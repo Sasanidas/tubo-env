@@ -92,7 +92,6 @@ plantuml is a cross-platform, open-source make system."
     (candidates (company-plantuml--candidates arg))))
 
 (use-package plantuml-mode
-  :pin melpa
   :mode (rx "." (or "plantuml" "puml" "plu" "pu") eow)
   :hook ((plantuml-mode .
                         (lambda ()
@@ -203,7 +202,6 @@ call func which is 'org-download--image/url-retrieve with args."
 
 
 (use-package org-download
-  :pin melpa
   :commands (org-download-image org-download-screenshot)
   :custom
   (org-download-method 'directory)
@@ -468,7 +466,6 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
       (error "Can't find target for %s" text))))
 
 (use-package org-superstar
-  :pin melpa
   :hook ((org-mode . org-superstar-mode))
   :custom
   (org-superstar-headline-bullets-list '( "●"  "◎" "○" "✸" "✿" "✤" "✜" "◆" "▶")))

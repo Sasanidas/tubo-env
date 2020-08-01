@@ -429,7 +429,6 @@
 
  ;; PDF
 (use-package pdf-tools
-  :pin melpa
   :commands (pdf-tools-install pdf-tools-enable-minor-modes)
   :mode (("\\.pdf\\'" . pdf-view-mode))
   :hook ((pdf-view-mode . pdf-tools-enable-minor-modes))
@@ -925,7 +924,6 @@ Call FUNC which is 'dired-compress with ARGS."
     (vimish-fold-toggle)))
 
 (use-package vimish-fold
-  :pin melpa
   :commands (vimish-fold vimish-fold-toggle vimish-fold-delete)
   :bind ((;; ,(kbd "C-c hr")
           "hr". yc/vimish-fold-toggle)))
@@ -1196,7 +1194,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 (use-package markdown-mode
   :commands (markdown-mode markdown-follow-link-at-point)
-  :pin melpa
   :hook ((markdown-mode . orgtbl-mode)
          (before-save . (lambda ()
                           (when (eq major-mode 'markdown-mode)

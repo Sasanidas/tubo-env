@@ -117,7 +117,6 @@ Call FUNC which is 'realgud:cmd-eval-dwim with ARGS."
         (deactivate-mark)))))
 
 (use-package realgud
-  :pin melpa
   :commands (realgud:gdb realgud:gdb-pid)
   :hook ((realgud-short-key-mode . setup-prog-keybindings)
          (realgud:gdb-track-mode . (lambda ()
@@ -131,7 +130,6 @@ Call FUNC which is 'realgud:cmd-eval-dwim with ARGS."
 )
 
 (use-package realgud-lldb
-  :pin melpa
   :commands (realgud--lldb)
   )
 

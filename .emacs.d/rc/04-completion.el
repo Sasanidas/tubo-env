@@ -170,8 +170,6 @@
 
 (use-package yasnippet
   :commands (yas-global-mode yas-minor-mode)
-  :pin melpa
-  ;; :ensure t
   :custom
   (yas-verbosity 2)
   (yas-triggers-in-field nil)
@@ -208,7 +206,6 @@
               ([tab] . company-complete)
               (;; ,(kbd "TAB")
                "	". company-complete))
-  ;; :ensure t
   :custom
   (company-backends '((company-files company-dabbrev company-abbrev :with company-yasnippet)))
   (company-minimum-prefix-length 2)

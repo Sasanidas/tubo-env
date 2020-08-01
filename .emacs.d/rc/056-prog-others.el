@@ -99,7 +99,6 @@
       (start-process "powershell-help" nil "devhelp" "-s" function))))
 
 (use-package yaml-mode
-  :pin melpa
   :mode (rx (or ".clang-format" (: ".y" (? "a" ) "ml")) eol)
   :hook ((yaml-mode .           (lambda ()
             (unless (buffer-file-name)
@@ -377,7 +376,6 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
 
 
 (use-package lua-mode
-  :pin melpa
   :commands (lua-mode)
   :mode (rx "." (or "lua") eow)
   )
@@ -387,12 +385,10 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
   :hook ((typescript-mode . lsp)))
 
 (use-package go-mode
-  :pin melpa
   :mode "\\.go\\'"
   )
 
 (use-package groovy-mode
-  :pin melpa
   :mode (rx "." (or "grovvy" "gradle") buffer-end)
   )
 

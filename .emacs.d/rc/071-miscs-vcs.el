@@ -34,7 +34,6 @@
 
 (use-package magit-files
   :straight nil
-  :pin melpa
   :defer t
   :config
   (progn
@@ -100,7 +99,6 @@ This function accept file name as argument, and return t if file is merged autom
 
 
 (use-package magit
-  :pin melpa
   :commands (magit-blame-addition magit-revision-files magit-toplevel)
   :bind (:map ctl-x-map
               ("gs" . magit-status)

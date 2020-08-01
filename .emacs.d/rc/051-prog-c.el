@@ -431,7 +431,6 @@ and is reversed for better performance.")
   :commands (cwarn-mode))
 
 (use-package ccls
-  ;; :ensure t
   :custom
   (ccls-executable (or (executable-find "ccls.sh") "ccls"))
   ;; (ccls-sem-highlight-method 'font-lock)
@@ -828,7 +827,6 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   'yc/lsp-load-project-configuration-cc-mode)
 
 (use-package modern-cpp-font-lock
-  :pin melpa
   :commands (modern-c++-font-lock-mode)
   :hook ((c++-mode . modern-c++-font-lock-mode))
 )

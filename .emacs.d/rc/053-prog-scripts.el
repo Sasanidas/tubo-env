@@ -75,6 +75,13 @@
         (push it
               lsp-clients-python-library-directories))))
 
+;; TODO: Find out how to customize search path...
+;; (use-package lsp-pyright
+;;   :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
+;;   :hook (python-mode . (lambda ()
+;;                           (require 'lsp-pyright)
+;;                           (lsp))))
+
 (use-package py-autopep8
   :commands (py-autopep8-buffer)
   :config

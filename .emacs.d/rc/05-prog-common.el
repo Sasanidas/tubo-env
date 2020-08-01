@@ -56,8 +56,6 @@ Update the Which-Function mode display for all windows."
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
 
 (use-package flycheck
-  ;; :ensure t
-  :pin melpa
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
   :bind (:map flycheck-mode-map
               ([M-S-f9] . flycheck-first-error)
@@ -111,7 +109,6 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   :straight nil
   :bind (([S-f6] . emr-show-refactor-menu))
   :commands (emr-initialize)
-  :pin melpa
   ;; :local-repo (expand-file-name "site-lisp/emr" user-emacs-directory)
   :custom
   (emr-clang-format-style '(("BasedOnStyle" . "LLVM")
@@ -501,8 +498,6 @@ call this function to setup LSP.  Or show INSTALL-TIP."
 (use-package lsp-mode
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
                  lsp-format-buffer lsp-flycheck-enable)
-  ;; :ensure t
-  :pin melpa
   :custom
   (lsp-diagnostic-package :auto)
   (lsp-restart 'interactive)
@@ -729,7 +724,6 @@ Call FUNC which is 'lsp with ARGS."
     (PDEBUG "leave")))
 
 (use-package company-lsp
-  ;; :ensure t
   :custom
   (company-lsp-cache-candidates 'auto)
   :commands (company-lsp))

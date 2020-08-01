@@ -9,7 +9,6 @@
 
 
 (use-package helpful
-  :pin melpa
   :commands (helpful-callable helpful-variable)
   :bind ((;; (kbd "C-h c")
           "c" . helpful-key)
@@ -20,8 +19,6 @@
  ;; ivy mode
 (use-package ivy
   :commands (ivy-read ivy-mode)
-  :pin melpa
-  ;; :ensure t
   :hook ((emacs-startup . ivy-mode))
   :config
   (progn
@@ -41,8 +38,6 @@
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
 (use-package ivy-rich
-  :pin melpa
-  ;; :ensure t
   :hook (ivy-mode . ivy-rich-mode)
   :custom
   ;; For better performance
@@ -156,8 +151,6 @@ Call FUNC which is 'counsel-git-grep-action with X."
              counsel-fzf counsel-imenu-categorize-functions
              counsel-grep-or-swiper
              counsel-git-grep)
-  :pin melpa
-  ;; :ensure t
   :custom
   (counsel-find-file-at-point t)
   (counsel-find-file-ignore-regexp (rx (or (: buffer-start (or "#" "."))
@@ -165,7 +158,7 @@ Call FUNC which is 'counsel-git-grep-action with X."
                                            (: buffer-start ".ccls-cache" buffer-end)
                                            (: ".elc")
                                            )))
-  (counsel-rg-base-command "rg -u --with-filename --no-heading --line-number --color never %s")
+  (counsel-rg-base-command "rg --with-filename --no-heading --line-number --color never %s")
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
 
@@ -232,26 +225,23 @@ Call FUNC which is 'counsel-grep-or-swiper with ARGS."
                                                    "/usr/local/share/man")))))
   )
 
-
-(use-package bookmark
-  :defer t
-  :custom
-  (bookmark-default-file (yc/make-cache-path "bookmarks"))
-  :config
-  (progn
-    (advice-add 'bookmark-set :after #'yc/bookmark-set)))
-
 (defun yc/bookmark-set (func &rest args)
   "Save bookmark after `bookmark-set'.
 Call FUNC with ARGS."
   (and (bookmark-time-to-save-p t)
        (bookmark-save)))
 
+(use-package bookmark
+  :straight nil
+  :custom
+  (bookmark-default-file (yc/make-cache-path "bookmarks"))
+  :config
+  (progn
+    (advice-add 'bookmark-set :after #'yc/bookmark-set)))
+
 
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
-  ;; :ensure t
-  :defer t
   :commands amx-mode
   :hook (ivy-mode . amx-mode)
   :custom
@@ -333,7 +323,6 @@ Call FUNC which is 'projectile-find-file with ARGS."
   )
 
 (use-package counsel-projectile
-  :pin melpa
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files
                                                  projectile-files-via-ext-command)
   :functions (counsel-projectile-find-file-action)
@@ -343,8 +332,6 @@ Call FUNC which is 'projectile-find-file with ARGS."
 
 
 (use-package smartparens
-  :pin melpa
-  ;; :ensure t
   :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :hook ((after-init . smartparens-global-mode))
   :custom
@@ -433,11 +420,12 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
  (list (kbd "C-\\")))
 
 (use-package ibuffer
-:bind ((;; ,(kbd "C-x C-b")
-        "". ibuffer))
-:bind (:map ibuffer-mode-map
-            (;; (kbd "C-x C-f")
-             "" . counsel-find-file)))
+  :straight nil
+  :bind ((;; ,(kbd "C-x C-b")
+          "". ibuffer))
+  :bind (:map ibuffer-mode-map
+              (;; (kbd "C-x C-f")
+               "" . counsel-find-file)))
 
 
 (autoload 'switch-window "switch-window" ""  t)
@@ -464,13 +452,11 @@ With REVERSE is t, switch to previous window."
 
 ;; string functions..
 (use-package s
-  ;; :ensure t
   :commands (s-contains?
              s-ends-with? s-ends-with-p
              s-starts-with? s-blank? s-split))
 
 (use-package session
-  ;; :ensure t
   :commands (session-initialize)
   :custom
   (session-globals-include
@@ -483,7 +469,6 @@ With REVERSE is t, switch to previous window."
   :hook ((emacs-startup . session-initialize)))
 
 (use-package super-save
-  ;; :ensure t
   :commands (super-save-mode)
   :hook ((emacs-startup . super-save-mode))
   :custom
@@ -493,7 +478,6 @@ With REVERSE is t, switch to previous window."
 ;; Tabs and spaces
 (use-package ws-butler
   :commands (ws-butler-mode)
-  ;; :ensure t
   :hook ((prog-mode .  ws-butler-mode))
   :custom
   (tab-always-indent 'complete)
