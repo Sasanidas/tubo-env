@@ -15,7 +15,7 @@
   :hook ((cmake-mode . cmake-font-lock-activate)))
 
 (use-package company-cmake
-  :straight nil
+
   :commands (company-cmake)
   :hook ((cmake-mode .
                      (lambda ()
@@ -299,8 +299,8 @@ Call FUNC with ARGS."
   :hook ((makefile-mode . (lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))))
 
 (use-package counsel-compile2
-  :straight nil
-  :commands (counsel-compile2 counsel-compile-projectile)
+
+  :commands (counsel-compile2 counsel-compile-projectile counsel-make)
   :bind ((;; ,(kbd "<M-f6>")
           [M-f6]. counsel-compile2)
          ;; (kbd "ESC <f6>")

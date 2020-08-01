@@ -6,10 +6,7 @@
 
 ;;; Code:
 
-(straight-use-package '(org :type built-in))
-
  ;; PlantUML,
-
 (defun yc/plantuml-path ()
   "Get path of plantUML."
   (catch 'path-found
@@ -232,7 +229,7 @@ call func which is 'org-download--image/url-retrieve with args."
 
  ;; *************************** Org Mode ********************************
 (use-package org-indent
-  :straight nil
+
   :commands (org-indent-mode))
 
 ;; hide blocks marked as :hidden
@@ -354,11 +351,11 @@ Ignore error signal in `org-comment-line-break-function'."
 
 
 (use-package ol
-  :straight nil
+
   :bind (("\C-cl" . org-store-link)))
 
 (use-package org-agenda
-  :straight nil
+
   :custom
   (org-agenda-files (list (expand-file-name "~/Documents/Database/org/")))
   (org-agenda-dim-blocked-tasks (quote invisible))
@@ -374,7 +371,7 @@ Ignore error signal in `org-comment-line-break-function'."
   )
 
 (use-package org-capture
-  :straight nil
+
   :bind ((;; ,(kbd "<M-S-f10>")
           [M-S-f10]. org-capture))
   :config
@@ -471,7 +468,7 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (org-superstar-headline-bullets-list '( "●"  "◎" "○" "✸" "✿" "✤" "✜" "◆" "▶")))
 
 (use-package ox-latex
-  :straight nil
+
   :custom
   (org-latex-compiler "xelatex")
   (org-latex-default-figure-position "htbp";; "H"
@@ -503,7 +500,7 @@ Restore to current location after executing."
     (apply func args)))
 
 (use-package ox-publish
-  :straight nil
+
   :commands (org-publish-needed-p)
   :config
   (advice-add 'org-publish-needed-p :around #'yc/org-publish-needed-p-adv))
@@ -517,7 +514,7 @@ Call FUNC which is 'org-publish-file with ARGS."
 
 
 (use-package org
-  :straight nil
+
   :commands (org-load-modules-maybe)
   :custom
   (org-image-actual-width nil)
@@ -636,7 +633,7 @@ Call FUNC which is 'org-publish-file with ARGS."
   )
 
 (use-package tnote
-  :straight nil
+
   :commands (tnote
              tnote/dispatch-file tnote/dispatch-directory
              tnote/find-note)

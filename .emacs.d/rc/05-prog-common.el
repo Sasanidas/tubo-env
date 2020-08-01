@@ -106,7 +106,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 (use-package iedit)
 
 (use-package emr
-  :straight nil
+
   :bind (([S-f6] . emr-show-refactor-menu))
   :commands (emr-initialize)
   ;; :local-repo (expand-file-name "site-lisp/emr" user-emacs-directory)
@@ -155,7 +155,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 
 ;; Semantic mode.
 (use-package semantic
-  :straight nil
+
   :commands (semantic-mode)
   :hook (;; (prog-mode . semantic-mode) ;; TODO: should we enable this, if lsp not avaiable?
          (semantic-init . (lambda ()
@@ -178,7 +178,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   )
 
 (use-package semantic/decorate/mode
-  :straight nil
+
   :defer t
   :config
   (progn
@@ -189,7 +189,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 ;;;; Semanticdb 定制
 ;; Semantic DataBase存储位置
 (use-package semantic/db-mode
-  :straight nil
+
   :commands (global-semanticdb-minor-mode)
   :config
   (setq-mode-local c-mode semanticdb-find-default-throttle
@@ -198,7 +198,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
                    '(project unloaded system recursive)))
 
 (use-package srecode/mode
-  :straight nil
+
   :commands (srecode-minor-mode)
   :hook ((prog-mode . srecode-minor-mode))
   :custom
@@ -219,7 +219,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 
  ;; *************************** TAGS Database Settings *********************
 (use-package counsel-xgtags
-  :straight nil
+
   :commands (counsel-xgtags-find-header counsel-xgtags-mode counsel-xgtags-find-definition
                                         counsel-xgtags-update-tags counsel-xgtags-parse-file)
   :custom
@@ -462,7 +462,7 @@ Return t if succeeded, or nil otherwise.")
 
 
 (use-package semantic-uml
-  :straight nil
+
   :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml))
 
  ;; lsp
@@ -731,7 +731,7 @@ Call FUNC which is 'lsp with ARGS."
 
 ;;;; Common Program settings
 (use-package prog-utils
-  :straight nil
+
   :commands (yc/doc-at-point yc/insert-single-comment yc/show-methods-dwim)
   :bind ((;; (kbd "M-m")
           [134217837] . yc/show-methods-dwim)))
@@ -786,7 +786,7 @@ Call FUNC which is 'lsp with ARGS."
   (flycheck-mode 1))
 
 (use-package prog-mode
-  :straight nil
+
   :defer t
   :hook ((prog-mode . yc/common-program-hook))
   )
@@ -829,7 +829,7 @@ This function returns a string as compile command, or nil if it can't handle
 
 
 (use-package counsel-compile2
-  :straight nil
+
   :commands (makefile/get-target-list))
 
 (yc/add-compile-unit 'makefile 99

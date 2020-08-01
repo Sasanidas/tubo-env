@@ -18,6 +18,7 @@
 
  ;; ivy mode
 (use-package ivy
+  :ensure t
   :commands (ivy-read ivy-mode)
   :hook ((emacs-startup . ivy-mode))
   :config
@@ -215,7 +216,6 @@ Call FUNC which is 'counsel-grep-or-swiper with ARGS."
     result))
 
 (use-package counsel-woman
-  :straight nil
   :bind (([f1] . counsel-woman))
   :custom
   (woman-use-own-frame nil)
@@ -232,7 +232,6 @@ Call FUNC with ARGS."
        (bookmark-save)))
 
 (use-package bookmark
-  :straight nil
   :custom
   (bookmark-default-file (yc/make-cache-path "bookmarks"))
   :config
@@ -242,6 +241,7 @@ Call FUNC with ARGS."
 
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
+  :ensure t
   :commands amx-mode
   :hook (ivy-mode . amx-mode)
   :custom
@@ -371,10 +371,10 @@ Call FUNC which is 'find-file-noselect with ARGS."
                (error "%s" (cadr var)))))))
 
 (use-package files
-  :straight nil
+
   :config
   ;;Handle file-error and suggest to install missing packages...
-  ;; (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
+  (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
   (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
   (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv))
 
@@ -395,7 +395,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 
 
 (use-package server
-  :straight nil
+
   :commands (server-start server-running-p)
   :hook ((emacs-startup .
                         (lambda ()
@@ -404,7 +404,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
 
  ;;; ABBREV-MODE;;;
 (use-package abbrev
-  :straight nil
+
   :custom
   (abbrev-file-name  "~/.emacs.d/abbrev_defs")
   (save-abbrevs 'silently)
@@ -420,7 +420,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
  (list (kbd "C-\\")))
 
 (use-package ibuffer
-  :straight nil
+
   :bind ((;; ,(kbd "C-x C-b")
           "". ibuffer))
   :bind (:map ibuffer-mode-map
@@ -457,6 +457,7 @@ With REVERSE is t, switch to previous window."
              s-starts-with? s-blank? s-split))
 
 (use-package session
+  :ensure t
   :commands (session-initialize)
   :custom
   (session-globals-include
@@ -469,6 +470,7 @@ With REVERSE is t, switch to previous window."
   :hook ((emacs-startup . session-initialize)))
 
 (use-package super-save
+  :ensure t
   :commands (super-save-mode)
   :hook ((emacs-startup . super-save-mode))
   :custom
@@ -477,6 +479,7 @@ With REVERSE is t, switch to previous window."
 
 ;; Tabs and spaces
 (use-package ws-butler
+  :ensure t
   :commands (ws-butler-mode)
   :hook ((prog-mode .  ws-butler-mode))
   :custom
@@ -484,10 +487,11 @@ With REVERSE is t, switch to previous window."
   (tab-width 4)
   (c-basic-offset 4)
   (indent-tabs-mode nil))
-
 
+
 (use-package undo-tree
   :defer 3
+  :ensure t
   :commands (global-undo-tree-mode undo-tree-undo undo-tree-visualize undo-tree-redo)
   :bind (:map undo-tree-map
               (;; (kbd "C-x U")

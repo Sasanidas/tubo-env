@@ -170,6 +170,7 @@
 
 (use-package yasnippet
   :commands (yas-global-mode yas-minor-mode)
+  :ensure t
   :custom
   (yas-verbosity 2)
   (yas-triggers-in-field nil)
@@ -201,6 +202,7 @@
 
  ;; company mode..
 (use-package company
+  :ensure t
   :commands (global-company-mode)
   :bind (:map company-active-map
               ([tab] . company-complete)

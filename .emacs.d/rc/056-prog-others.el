@@ -16,7 +16,7 @@
 
  ;; Javascript mode
 (use-package js-mode
-  :straight nil
+
   :commands (js-mode)
   :mode (rx (or (: bow "manifest") ".json" ".js" ".pac") eol)
   ;; :init
@@ -109,7 +109,7 @@
 
 
 (use-package qml-mode :mode "\\.qml$")
-(use-package swig-mode :straight nil :mode (rx (or ".i" ".swig") eol))
+(use-package swig-mode  :mode (rx (or ".i" ".swig") eol))
 
 (defun yc/bison-setup-imenu-function ()
   "Setup imenu-index-function for Bison mode.."
@@ -170,7 +170,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
-  :straight nil
+
   :commands (sql/eval-sql sql/choose-dbms sql/choose-database company-sql
                          company-sql-update-candidates
                          eshell/restart_pg sql/remove-costs))
@@ -211,7 +211,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 (use-package protobuf-mode :mode (rx ".proto" eol))
 
  ;; console mode
-(use-package console-mode :straight nil :commands (console-mode))
+(use-package console-mode  :commands (console-mode))
 
  ;; scala-mode.
 (use-package ensime

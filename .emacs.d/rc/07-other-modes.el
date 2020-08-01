@@ -33,7 +33,7 @@
             Info-default-directory-list)))
 
 (use-package counsel-info
-  :straight nil
+
   :commands (counsel/info)
   :bind (([remap info] . counsel/info))
   )
@@ -73,13 +73,13 @@
 
  ;;; Dictionary.
 (use-package tdict
-  :straight nil
+
   :bind ((;; (kbd "<C-f10>")
           [C-f10]
           . tdict-search)))
 
 (use-package tabbr
-  :straight nil
+
   :bind ((;; ,(kbd "<S-f10>")
           [S-f10]. tabbr-search)
          (;; ,(kbd "<C-S-f10>")
@@ -87,14 +87,14 @@
 
  ;; image-mode
 (use-package image-mode
-  :straight nil
+
   :bind (:map image-mode-map
               (;; ,(kbd "C-c o")
                "o". yc/open-with-external-app)))
 
  ;; Diff & Merge
 (use-package ediff
-  :straight nil
+
   :commands (ediff-files)
   :bind ((;; ,(kbd "<f12>")
           [f12]. ediff-buffers))
@@ -193,7 +193,7 @@
 
 
 (use-package yc-utils
-  :straight nil
+
   :commands (
              edit-elpa   edit-project   edit-rcs
              edit-template
@@ -282,14 +282,14 @@
   )
 
 (use-package yc-dump
-  :straight nil
+
   :commands (yc/dump-emacs yc/config-emacs))
 
 
  ;; diff-mode
 
 (use-package diff-mode
-  :straight nil
+
   :mode (rx (or ".rej"  "patch") eol)
 
   :bind (:map diff-mode-map
@@ -321,7 +321,7 @@
 
  ;; **************************** RFCs ******************************
 (use-package irfc
-  :straight nil
+
   :commands (irfc-visit irfc-follow)
   :config
   (custom-set-variables
@@ -335,7 +335,7 @@
 ;;   "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
 
 (use-package tramp
-  :straight nil
+
   :custom
   (tramp-default-method
      (cond
@@ -372,7 +372,7 @@
  ;; ****************** eww ***************************
 
 (use-package shr
-  :straight nil
+
   :custom
   (shr-use-fonts nil)
   (shr-use-colors t)
@@ -385,7 +385,7 @@
                "/media/img/git.png"))))))
 
 (use-package browse-url
-  :straight nil
+
   :commands (browse-url-generic)
   :custom
   (browse-url-generic-program (cond ((string= system-type "darwin")
@@ -401,7 +401,7 @@
                                     (t nil))))
 
 (use-package eww
-  :straight nil
+
   :defer t
   :hook ((eww-mode . yc/disable-trailling-spaces))
   :bind (:map eww-mode-map
@@ -415,7 +415,7 @@
               ))
 
 (use-package my-net-utils
-  :straight nil
+
   :commands (yc/download-url yc/open-url)
   :bind ((;; ,(kbd "C-x C-d")
           "". yc/download-url)
@@ -460,12 +460,12 @@ Useful to run after `pdf-tools' updates."
 
 
 (use-package stringtemplate-mode
-  :straight nil
+
   :mode "\\.st\\'")
 
 
 (use-package eshell
-  :straight nil
+
   :commands (eshell-command)
   :bind ((;; ,(kbd "<C-f5>")
           [C-f5]. eshell))
@@ -497,12 +497,12 @@ Useful to run after `pdf-tools' updates."
   (add-hook 'comint-output-filter-functions 'comint-truncate-buffer))
 
 (use-package eshell+
-  :straight nil
+
   :commands (eshell/ldd eshell/restart_pg))
 
 
 (use-package em-term
-  :straight nil
+
   :config
   (mapc (lambda (x) (push x eshell-visual-commands))
         '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
@@ -510,7 +510,7 @@ Useful to run after `pdf-tools' updates."
 
  ;; comint hook
 (use-package comint
-  :straight nil
+
   :defer t
   :init
   (progn
@@ -533,17 +533,17 @@ Useful to run after `pdf-tools' updates."
 
  ;; Term
 (use-package term
-  :straight nil
+
   :bind ((;; ,(kbd "<S-f5>")
           [S-f5]. ansi-term)))
 
 (use-package tabify
-  :straight nil
+
   :bind (("\C-xt" . untabify)
          ("\C-xT" . tabify)))
 
 (use-package find-func
-  :straight nil
+
   :bind (("\C-cff"  . find-function)
          ( "\C-cfc" . find-function-on-key))
   :config
@@ -627,7 +627,7 @@ Useful to run after `pdf-tools' updates."
 
  ;; Dired
 (use-package wdired
-  :straight nil
+
   :commands (wdired-change-to-wdired-mode)
 )
 
@@ -640,7 +640,7 @@ Call FUNC which is 'dired-find-file with ARGS."
 
 
 (use-package dired
-  :straight nil
+
   :commands (dired)
   :custom
   (ls-lisp-dirs-first t)
@@ -673,7 +673,7 @@ Call FUNC which is 'dired-find-file with ARGS."
     (define-key ctl-x-map "d" nil)))
 
 (use-package dired-x
-  :straight nil
+
   :commands (dired-jump)
   :init
   (progn
@@ -685,7 +685,7 @@ Call FUNC which is 'dired-find-file with ARGS."
                                         'dired-virtual-mode))))
 
 (use-package dired-aux
-  :straight nil
+
   :config
   (advice-add 'dired-compress :override #'yc/dired-compress-adv))
 
@@ -857,10 +857,10 @@ Call FUNC which is 'dired-compress with ARGS."
 (use-package ztree
   :commands (ztree-dir ztree-diff))
 
-(use-package charset-util :straight nil :commands (yc/list-non-ascii))
+(use-package charset-util :commands (yc/list-non-ascii))
 
 
-(use-package x86-help :straight nil  :bind (("x" . x86-help))) ;;(kbd "C-h x")
+(use-package x86-help   :bind (("x" . x86-help))) ;;(kbd "C-h x")
 
 
 
@@ -890,19 +890,19 @@ Call FUNC which is 'dired-compress with ARGS."
 
 
 (use-package artist
-  :straight nil
+
   :bind ((;; ,(kbd "<C-S-f2>")
           [C-S-f2]. artist-mode)))
 
 (use-package image-file
-  :straight nil
+
   :defer
   :config
   (progn
     (auto-image-file-mode t))) ; 自动加载图像
 
 
-(use-package t-report :straight nil :commands (yc/new-wp yc/new-mail))
+(use-package t-report  :commands (yc/new-wp yc/new-mail))
 
  ;; edit-indirect mode.
 (use-package edit-indirect
@@ -1034,13 +1034,13 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
   )
 
 (use-package semantic/html
-  :straight nil
+
   :config
   (advice-add 'semantic-html-parse-headings :around #'yc/semantic-html-parse-headings-adv)
   )
 
 (use-package sgml-mode
-  :straight nil
+
   :mode ("/itsalltext/" . html-mode)
   :commands (html-autoview-mode)
   :bind (:map sgml-mode-map
@@ -1056,8 +1056,10 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 
  ;; css & scss & sass
-(use-package sass :straight nil :defer t)
-(use-package css-mode :straight nil :defer t
+(use-package sass
+             :defer t)
+(use-package css-mode
+  :defer t
   :mode (rx "." (or "scss" "css" "rasi") eow)
   :custom
   (css-indent-offset 2)
@@ -1066,7 +1068,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
  ;; *************************** nxml mode for XML *******************
 (use-package nxml-mode
-  :straight nil
+
   :mode (rx "." (or "xml" "xsd" "sch" "rng" "xslt" "svg" "rss" "rdf" "plist") eol)
   :custom
   (nxml-attribute-indent 2)
@@ -1153,7 +1155,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
     (message "This may take for a while, refer to *txt2png* to check progress...")))
 
 (use-package text-mode
-  :straight nil
+
   :bind (:map text-mode-map
               ("\C-c\C-e" . yc/txt-to-png))
   :config
@@ -1164,7 +1166,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
   (defalias 'txt-mode 'text-mode))
 
 (use-package artist-mode
-  :straight nil
+
   :bind (:map artist-mode-map
               ("\C-c\C-e" . yc/txt-to-png)))
 
@@ -1176,7 +1178,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
  ;; markdown
 (use-package org-table
-  :straight nil
+
   :commands (orgtbl-mode))
 
 (defun yc/translate-markdown-filename (in)
@@ -1242,7 +1244,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 
 (use-package logviewer
-  :straight nil
+
   :commands (logviewer-special-handling-csv)
   :mode (((rx (or (: bow "messages" eow)
                   (:  "/" (+? nonl) "_log/" (+? nonl) "."
@@ -1252,7 +1254,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
  ;; Htmlize mode
 (use-package htmlize
-  :straight nil
+
   :commands (htmlize-buffer htmlize-region)
   :config
   (custom-set-variables
@@ -1268,11 +1270,11 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 ;;   :mode (((rx "github.io/" (+ nonl) ".md" eol) . jekyll-markdown-mode)
 ;;          ((rx "github.io/" (+ nonl) "." (or "html" "htm") eol) . jekyll-html-mode)))
 
-(use-package tblog :straight nil :commands (tblog/new-post tblog/export tblog/find-file))
+(use-package tblog :commands (tblog/new-post tblog/export tblog/find-file))
 
 
 (use-package conf-mode
-  :straight nil
+
   :mode (rx (or "Doxyfile"
                 (: (? "_" (+? nonl)) "init_file" (? "_" (+? nonl)))
 
@@ -1302,7 +1304,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
      (format "xelatex %s" file))))
 
 (use-package tex-mode
-  :straight nil
+
   :mode (((rx buffer-start "." (or "tex" "latex") buffer-end) . LaTex-mode))
   )
 
@@ -1311,11 +1313,11 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 (require 'generic-x)
 
 (use-package fontawesome
-  :straight nil
+
   :commands (counsel-fontawesome))
 
 (use-package counsel-nerd-fonts
-  :straight nil
+
   :commands (counsel-nerd-fonts))
 
 (use-package leetcode

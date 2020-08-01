@@ -186,7 +186,7 @@ and is reversed for better performance.")
 
 
 (use-package member-function
-  :straight nil
+
   :commands (expand-member-functions)
   :config (setq mf--insert-commentary nil)
   :hook ((c++-mode . (lambda ()
@@ -194,7 +194,7 @@ and is reversed for better performance.")
 
  ;; ================================== CPP-H switch ===========================
 (use-package prog-utils
-  :straight nil
+
   :commands (
              yc/asm-post-process
              yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
@@ -248,11 +248,11 @@ and is reversed for better performance.")
 
 
 (use-package semantic/bovine/gcc
-  :straight nil
+
   :commands (semantic-gcc-setup))
 
 (use-package semantic/bovine/c
-  :straight nil
+
   :commands (semantic-default-c-setup)
   :hook ((c-mode-common .
                         (lambda ()
@@ -492,7 +492,7 @@ and is reversed for better performance.")
 
 
 (use-package cc-mode
-  :straight nil
+
   :commands (c++-mode objc-mode c-mode)
   :mode (((rx (or (: "." (or "H" "cc" "hh" "c" "h" "moc" "ipp") (? ".in") buffer-end)
                   )) . c++-mode)

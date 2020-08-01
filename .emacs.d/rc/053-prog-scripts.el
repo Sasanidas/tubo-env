@@ -66,7 +66,6 @@
             (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'")))))
 
 (use-package lsp-pyls
-  :straight nil
   :config
   (let ((pyls (expand-file-name (executable-find "pyls")))
         (lsp-py-lib-dirs
@@ -76,11 +75,13 @@
               lsp-clients-python-library-directories))))
 
 ;; TODO: Find out how to customize search path...
-;; (use-package lsp-pyright
-;;   :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
-;;   :hook (python-mode . (lambda ()
-;;                           (require 'lsp-pyright)
-;;                           (lsp))))
+(use-package lsp-pyright
+  ;; :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
+  :quelpa (lsp-pyright
+           :fetcher github :repo "emacs-lsp/lsp-pyright")
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))
 
 (use-package py-autopep8
   :commands (py-autopep8-buffer)
