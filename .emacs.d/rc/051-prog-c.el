@@ -95,7 +95,6 @@ and is reversed for better performance.")
 (define-skeleton skeleton-include
   "generate include<>" ""
   > "#include "
-  ;; (company-lsp)
   )
 
 (define-skeleton skeleton-include-2

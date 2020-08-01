@@ -507,6 +507,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   (lsp-enable-symbol-highlighting nil)
   (lsp-enable-links t)
   (lsp-enable-snippet t)
+  (lsp-completion-enable t)
   (lsp-auto-configure t)
   (lsp-log-io nil)
   (lsp-flycheck-live-reporting nil)
@@ -580,10 +581,7 @@ Call FUNC which is 'lsp with ARGS."
 
   ;; functions to run after lsp...
   (lsp-flycheck-enable t)
-  (unless (featurep 'company-lsp)
-    (require 'company-lsp))
 
-  (yc/add-company-backends-with-yasnippet company-lsp)
   (flycheck-mode 1))
 
 ;; advice for format-buffer & format-region: save execution before format.
@@ -722,11 +720,6 @@ Call FUNC which is 'lsp with ARGS."
       (funcall mode-specific-func root-file))
 
     (PDEBUG "leave")))
-
-(use-package company-lsp
-  :custom
-  (company-lsp-cache-candidates 'auto)
-  :commands (company-lsp))
 
 
 (use-package imenu

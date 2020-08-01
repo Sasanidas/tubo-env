@@ -207,7 +207,7 @@
               (;; ,(kbd "TAB")
                "	". company-complete))
   :custom
-  (company-backends '((company-files company-dabbrev company-abbrev :with company-yasnippet)))
+  (company-backends '((company-files company-capf company-dabbrev company-abbrev :with company-yasnippet)))
   (company-minimum-prefix-length 2)
   (company-idle-delay 0.1)
   (company-show-numbers  t)
