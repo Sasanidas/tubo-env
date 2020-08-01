@@ -79,53 +79,64 @@
 
     targets))
 
-(defun counsel-make (&optional makefile)
+(defun counsel-make (&optional makefile no-choose no-execute)
   "Use `counsel' to select a MAKEFILE target and `compile'.
-If makefile is specified use it as path to Makefile"
+If makefile is specified use it as path to Makefile.
+If NO-CHOOSE is t, compile default target.
+If NO-EXECUTE is t, don't execute, but return compile command."
   (interactive)
   (PDEBUG "MK: " makefile
-    "PFX:" current-prefix-arg)
+          "PFX:" current-prefix-arg)
 
-  (let* ((files (cond
-                 ((not makefile) '("GNUmakefile" "makefile" "Makefile"))
-                 ((listp makefile) makefile)
-                 ((stringp makefile) (list makefile))
-                 (t (error "Oops: %s" makefile))))
-         (targets (flatten-list (mapcar 'makefile/get-target-list files))))
+  (let* ((arg (if current-prefix-arg
+                  (if (listp current-prefix-arg)
+                      (car current-prefix-arg)
+                    current-prefix-arg)
+                (yc/get-cpu-number)))
 
-    (PDEBUG "FILES: " files)
+         ;; special handling when jobs is 0: turn on verbose mode.
+         (verbose (if (= 0 arg) 1 0))
+         (jobs  (if (= 0 arg) 1 arg))
+         (target (if no-choose
+                     ""
+                   (let* ((files (cond
+                                  ((not makefile) '("GNUmakefile" "makefile" "Makefile"))
+                                  ((listp makefile) makefile)
+                                  ((stringp makefile) (list makefile))
+                                  (t (error "Oops: %s" makefile))))
+                          (targets (flatten-list (mapcar 'makefile/get-target-list files)))
+                          )
 
-    (unless targets
-      (error "No target in %s" default-directory))
+                     (PDEBUG "FILES: " files)
 
-    (PDEBUG "TARGET: " targets)
+                     (unless targets
+                       (error "No target in %s" default-directory))
 
-    ;; save buffers before calling make
-    (let* ((regex (format "^%s" default-directory))
-           (buffers
-            (cl-remove-if-not
-             (lambda (b)
-               (let ((name (buffer-file-name b)))
-                 (and name
-                      (string-match regex (expand-file-name name)))))
-             (buffer-list))))
-      (mapc
-       (lambda (b)
-         (with-current-buffer b
-           (save-buffer)))
-       buffers))
+                     (PDEBUG "TARGET: " targets)
+                     ;; save buffers before calling make
+                     (let* ((regex (format "^%s" default-directory))
+                            (buffers
+                             (cl-remove-if-not
+                              (lambda (b)
+                                (let ((name (buffer-file-name b)))
+                                  (and name
+                                       (string-match regex (expand-file-name name)))))
+                              (buffer-list))))
+                       (mapc
+                        (lambda (b)
+                          (with-current-buffer b
+                            (save-buffer)))
+                        buffers))
 
 
-    (ivy-read "Targets " (-uniq (sort targets 'string<))
-              :action (lambda (x)
-                        (compile (format "make -j%d %s"
-                                         (if current-prefix-arg
-                                             (if (listp current-prefix-arg)
-                                                 (car current-prefix-arg)
-                                               current-prefix-arg)
-                                           (yc/get-cpu-number))
-                                         x) ))
-              :caller 'counsel-make)))
+                     (ivy-read "Targets " (-uniq (sort targets 'string<))
+                               :caller 'counsel-make))))
+         (command (format "VERBOSE=%d make -j%d %s" verbose jobs target)))
+
+
+         (if no-execute
+             command
+           (compile command))))
 
 (defun counsel-ninja ()
   "Use `counsel' to select a Makefile target and `compile'.

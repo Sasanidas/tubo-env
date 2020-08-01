@@ -843,8 +843,7 @@ This function returns a string as compile command, or nil if it can't handle
   (aif (or (yc/file-exists-p "makefile")
            (yc/file-exists-p "Makefile"))
       (lambda ()
-        (format "make -j%d"
-                (yc/get-compiling-threads)))))
+        (counsel-make nil t t))))
 
 (defun get-command-from-list (commands)
   "Get command from LST."
