@@ -43,6 +43,11 @@
  '(use-package-enable-imenu-support t))
 
 (require 'use-package)
+
+
+(use-package quelpa-use-package
+  :ensure t)
+
 (require 'quelpa-use-package)
 
 
