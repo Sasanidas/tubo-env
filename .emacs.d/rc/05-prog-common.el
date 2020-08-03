@@ -56,6 +56,7 @@ Update the Which-Function mode display for all windows."
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
 
 (use-package flycheck
+  :ensure t
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
   :bind (:map flycheck-mode-map
               ([M-S-f9] . flycheck-first-error)
@@ -97,6 +98,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
     ))
 
 (use-package flycheck-popup-tip
+  :ensure t
   :commands (flycheck-popup-tip-mode)
   :hook ((flycheck-mode . flycheck-popup-tip-mode)))
 

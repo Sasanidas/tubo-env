@@ -332,6 +332,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
 
 
 (use-package smartparens
+  :ensure t
   :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :hook ((after-init . smartparens-global-mode))
   :custom
