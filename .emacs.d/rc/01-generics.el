@@ -34,7 +34,7 @@
 (custom-set-variables
  '(ivy--display-transformers-alist nil)
  '(quelpa-checkout-melpa-p nil)
- '(quelpa-checkout-melpa-p nil)
+ '(quelpa-update-melpa-p nil)
  '(use-package-always-ensure nil) ; Auto-download package if not exists
  '(use-package-always-defer t) ; Always defer load package to speed up startup
  '(use-package-verbose nil) ; Report loading details
@@ -43,7 +43,6 @@
  '(use-package-enable-imenu-support t))
 
 (require 'use-package)
-
 
 (use-package quelpa-use-package
   :ensure t)

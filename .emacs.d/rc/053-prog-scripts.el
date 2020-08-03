@@ -47,11 +47,17 @@
 (defun yc/lsp-load-project-configuration-python-mode (root-file)
   "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
   (PDEBUG "ENTER, ROOT:" root-file)
-  (unless (featurep 'lsp-pyls)
-    (require 'lsp-pyls))
-  (setq-default
-      lsp-pyls-server-command (list "pyls"  "-v" "--log-file"
-                                    (yc/lsp-get-log-file "pyls" root-file))))
+
+  ;; (unless (featurep 'lsp-pyls)
+  ;;   (require 'lsp-pyls))
+  ;; (setq-default
+  ;;     lsp-pyls-server-command (list "pyls"  "-v" "--log-file"
+  ;;                                   (yc/lsp-get-log-file "pyls" root-file)))
+
+  (unless (featurep 'lsp-pyright)
+    (require 'lsp-pyright))
+
+  )
 
 (use-package python
   :custom
@@ -62,26 +68,35 @@
           .
           (lambda ()
             (unless (buffer-file-name)
-              (flycheck-mode -1))
-            (yc/lsp--setup "pyls" "pip install 'python-language-server[yapf]'")))))
+              (flycheck-mode -1))))))
 
-(use-package lsp-pyls
-  :config
-  (let ((pyls (expand-file-name (executable-find "pyls")))
-        (lsp-py-lib-dirs
-         '("/usr")))
-    (aif (file-name-directory (substring (file-name-directory pyls) 0 -1))
-        (push it
-              lsp-clients-python-library-directories))))
+;; (use-package lsp-pyls
+;;   :config
+;;   (let ((pyls (expand-file-name (executable-find "pyls")))
+;;         (lsp-py-lib-dirs
+;;          '("/usr")))
+;;     (aif (file-name-directory (substring (file-name-directory pyls) 0 -1))
+;;         (push it
+;;               lsp-clients-python-library-directories)))
 
-;; TODO: Find out how to customize search path...
+;;   :hook
+;;   (python-mode . (lambda ()
+;;                          (yc/lsp--setup
+;;                           "pyls"
+;;                           "pip install 'python-language-server[yapf]'")))
+;; )
+
 (use-package lsp-pyright
-  ;; :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
   :quelpa (lsp-pyright
            :fetcher github :repo "emacs-lsp/lsp-pyright")
+
   :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))
+                         (yc/lsp--setup
+                          "pyright-langserver"
+                          "pip install -g pyright")))
+  :custom
+  (lsp-pyright-log-level "trace")
+  )
 
 (use-package py-autopep8
   :commands (py-autopep8-buffer)

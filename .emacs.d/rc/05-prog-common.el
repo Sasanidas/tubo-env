@@ -707,7 +707,7 @@ Call FUNC which is 'lsp with ARGS."
 
     (when root-file
       (PDEBUG "ROOT:" root-file)
-      ;; loading project specific settings from .ccls-root
+      ;; loading project specific settings from .lsp-conf
       (if (and root-file
                (not (file-directory-p root-file))
                (> (file-attribute-size (file-attributes root-file)) 10))
@@ -748,11 +748,8 @@ Call FUNC which is 'lsp with ARGS."
     (yc/doc-at-point)))
 
 (defun setup-prog-keybindings()
-  ;;;; Common program-keybindings
+  "Common program-keybindings."
   (interactive)
-  ;;;; "keybindings for semantic"
-  ;; (local-set-key "." 'semantic-complete-self-insert)
-  ;; (local-set-key ">" 'semantic-complete-self-insert)
   (local-set-key (kbd "M-|") 'align)
   (local-set-key (kbd "M-n") 'senator-next-tag)
   (local-set-key (kbd "M-p") 'senator-previous-tag)
