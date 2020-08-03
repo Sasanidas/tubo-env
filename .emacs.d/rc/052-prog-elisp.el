@@ -114,32 +114,27 @@ Call FUNC which is 'byte-compile-file with ARGS."
     "Description."
     (interactive)
     (unless dir
-      (setq dir (let* ( (suggestion default-directory)
-                            (choices (list
-                                      (format "Choose directory %s" suggestion)
-                                      "Choose by selecting directory interactively."))
-                            (action-index (cl-position
-                                           (completing-read (format "%s is not part of any project. Select action: "
-                                                                    (buffer-name))
-                                                            choices
-                                                            nil
-                                                            t)
-                                           choices
-                                           :test 'equal))
-                            (project-root (case action-index
-                                            (0 suggestion)
-                                            (1 (read-directory-name "Select workspace folder to add: "
-                                                                    (or suggestion default-directory)
-                                                                    nil
-                                                                    t))
-                                            (t nil))))
+      (setq dir (let* ((suggestion default-directory)
+                       (choices (list
+                                 (format "    Choose directory %s" suggestion)
+                                 "    Choose by selecting directory interactively."))
+                       (action-index (cl-position
+                                      (completing-read "Select directory: "
+                                                       choices
+                                                       nil
+                                                       t)
+                                      choices
+                                      :test 'equal))
+                       (project-root (case action-index
+                                       (0 suggestion)
+                                       (1 (read-directory-name "Select workspace folder to add: "
+                                                               (or suggestion default-directory)
+                                                               nil
+                                                               t))
+                                       (t nil))))
                       project-root)))
     (PDEBUG "Native compile: " dir)
     (native-compile-async (expand-file-name dir) t)))
-
-
-
-
 
 (provide '052-prog-elisp)
 
