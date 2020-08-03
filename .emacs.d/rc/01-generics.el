@@ -21,7 +21,7 @@
  '(package-archive-priorities
    '(;; ("melpa-stable" . 10)
      ("gnu" . 5)
-     ("melpa" . 0))))
+     ("melpa" . 10))))
 
 (add-hook 'package-menu-mode-hook 'hl-line-mode)
 
