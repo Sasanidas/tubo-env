@@ -1,4 +1,4 @@
-;;; tblog.el -- Brief introduction here.
+;;; tblog.el --- Brief introduction here.
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 

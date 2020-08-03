@@ -1,4 +1,4 @@
-;;; tabbr.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; tabbr.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

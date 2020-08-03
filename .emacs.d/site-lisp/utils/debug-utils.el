@@ -1,4 +1,4 @@
-;;; debug-utils.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; debug-utils.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yingchao.yang@icloud.com>
 

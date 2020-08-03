@@ -1,4 +1,4 @@
-;;; logviewer.el -- Simple log viewer.  -*- lexical-binding: t; -*-
+;;; logviewer.el --- Simple log viewer.  -*- lexical-binding: t; -*-
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 ;; This file is NOT part of GNU Emacs.

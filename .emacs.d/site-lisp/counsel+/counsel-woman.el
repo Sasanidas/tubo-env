@@ -1,4 +1,4 @@
-;;; counsel-woman.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; counsel-woman.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@gmail.com>
 

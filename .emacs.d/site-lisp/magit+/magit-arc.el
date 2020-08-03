@@ -1,4 +1,4 @@
-;;; magit-arc.el -- arc wrapper for magit.
+;;; magit-arc.el --- arc wrapper for magit.
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 
@@ -16,7 +16,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see http://www.gnu.org/licenses/.
-;;; magit-arc.el -- Brief introduction here.
+;;; magit-arc.el --- Brief introduction here.
 
 
 ;;; Commentary:

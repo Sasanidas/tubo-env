@@ -1,4 +1,4 @@
-;;; counsel-info.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; counsel-info.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yingchao.yang@icloud.com>
 

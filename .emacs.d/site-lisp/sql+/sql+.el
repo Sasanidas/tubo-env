@@ -1,4 +1,4 @@
-;;; sql+.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; sql+.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

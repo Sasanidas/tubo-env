@@ -1,4 +1,4 @@
-;;; emr-others.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; emr-others.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@gmail.com>
 

@@ -1,4 +1,4 @@
-;;; prog-utils.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; prog-utils.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 

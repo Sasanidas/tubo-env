@@ -1,4 +1,4 @@
-;;; ox-plus.el -- Brief introduction here.-*- lexical-binding: t; -*-
+;;; ox-plus.el --- Brief introduction here.-*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

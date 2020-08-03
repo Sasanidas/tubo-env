@@ -1,4 +1,4 @@
-;;; tdict.el -- Brief introduction here.    -*- lexical-binding: t; -*-
+;;; tdict.el --- Brief introduction here.    -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

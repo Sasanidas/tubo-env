@@ -27,10 +27,6 @@
 
 (package-initialize)
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
 (custom-set-variables
  '(ivy--display-transformers-alist nil)
  '(quelpa-checkout-melpa-p nil)
@@ -41,6 +37,11 @@
  '(use-package-expand-minimally t)  ; make the expanded code as minimal as possible
  '(use-package-always-pin nil)
  '(use-package-enable-imenu-support t))
+
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 (require 'use-package)
 

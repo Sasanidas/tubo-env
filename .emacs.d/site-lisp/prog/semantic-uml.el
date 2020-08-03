@@ -1,4 +1,4 @@
-;;; semantic-uml.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; semantic-uml.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 ;;

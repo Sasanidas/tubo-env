@@ -1,4 +1,4 @@
-;;; console-mode.el -- Brief introduction here. -*- lexical-binding: t; -*-
+;;; console-mode.el --- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 

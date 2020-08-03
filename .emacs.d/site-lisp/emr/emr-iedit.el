@@ -1,4 +1,4 @@
-;;; emr-iedit.el -- Use iedit for rename refactorings  -*- lexical-binding: t; -*-
+;;; emr-iedit.el --- Use iedit for rename refactorings  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 EMR Project
 ;; Copyright (C) 2018 Wilfred Hughes

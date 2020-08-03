@@ -1,4 +1,4 @@
-;;; charset-util.el -- Brief introduction here.
+;;; charset-util.el --- Brief introduction here.
 
 ;; Author: YangYingchao <yangyingchao@gmail.com>
 
