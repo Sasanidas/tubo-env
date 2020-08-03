@@ -1,49 +1,9 @@
 ;;; 053-prog-scripts.el -- Brief introduction here.
-
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
-
 ;;; Commentary:
-
 ;;; Code:
 
  ;; *************************** Python Settings ****************************
-
-;; Utility to complete "import" statements with skeleton.
-
-(defvar yc/system-py-modules nil "Python modules installed in system directory.")
-
-(defun yc/get-python-files-of-dir (dir)
-  "Return all python files in `DIR' without extension."
-  (let ((fn-list nil)
-        (yc/r-match-pyfile (rx (group (+? ascii)) ".py" (? (or "c" "o")))))
-    (when (and dir
-               (file-exists-p dir))
-      (dolist (fn (directory-files dir nil yc/r-match-pyfile))
-        (if (string-match yc/r-match-pyfile fn)
-            (progn
-              (setq fn-list (append fn-list (list (match-string 1 fn))))
-              ))))
-    fn-list))
-
-(defun yc/get-python-modules ()
-  "Return all python modules."
-  (unless yc/system-py-modules
-      (setq yc/system-py-modules
-            (mapcar
-             (lambda (f) (list f ))
-             (apply
-              'append
-              (mapcar
-               'yc/get-python-files-of-dir
-               semantic-dependency-system-include-path)))))
-  (append (yc/get-python-files-of-dir ".") (copy-sequence yc/system-py-modules)))
-
-(define-skeleton skeleton-python-import
-  "generate include<>" ""
-  > "import "
-  (completing-read
-   "Import File:" (yc/get-python-modules)))
-
 (defun yc/lsp-load-project-configuration-python-mode (root-file)
   "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
   (PDEBUG "ENTER, ROOT:" root-file)
@@ -55,9 +15,7 @@
   ;;                                   (yc/lsp-get-log-file "pyls" root-file)))
 
   (unless (featurep 'lsp-pyright)
-    (require 'lsp-pyright))
-
-  )
+    (require 'lsp-pyright)))
 
 (use-package python
   :custom
@@ -94,8 +52,6 @@
                          (yc/lsp--setup
                           "pyright-langserver"
                           "pip install -g pyright")))
-  :custom
-  (lsp-pyright-log-level "trace")
   )
 
 (use-package py-autopep8
