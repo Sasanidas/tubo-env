@@ -24,6 +24,14 @@ Update the Which-Function mode display for all windows."
 
  ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
 
+(defun yc/flycheck-next-error-adv (func &rest args)
+  "Advice for 'flycheck-next-error'.
+Call FUNC which is 'flycheck-next-error with ARGS."
+  (condition-case var
+      (apply func args)
+    (user-error (progn
+                  (PDEBUG "Wrap to first error...")
+                  (flycheck-first-error)))))
 (use-package flycheck
   :ensure t
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
@@ -39,32 +47,8 @@ Update the Which-Function mode display for all windows."
   (flycheck-checker-error-threshold nil)
   (flycheck-emacs-lisp-load-path 'inherit)
   (flycheck-flake8-maximum-line-length 120)
-  (flycheck-c/c++-gcc-executable "g++")
-  (flycheck-c/c++-clang-executable "clang++")
-  (flycheck-gcc-warnings
-   (quote ("all" "extra" "no-unused-parameter"
-           "no-overloaded-virtual"
-           "no-unknown-pragmas"
-           "no-unused-local-typedefs")))
-  (flycheck-clang-warnings
-   (quote ("all" "extra" "no-unused-parameter"
-           "no-overloaded-virtual"
-           "no-unknown-pragmas"
-           "no-unused-local-typedefs")))
   :config
-  (progn
-    (defun yc/flycheck-next-error-adv (func &rest args)
-      "Advice for 'flycheck-next-error'.
-Call FUNC which is 'flycheck-next-error with ARGS."
-      (condition-case var
-          (apply func args)
-        (user-error (progn
-                      (PDEBUG "Wrap to first error...")
-                      (flycheck-first-error)))))
-
-    (advice-add 'flycheck-next-error :around #'yc/flycheck-next-error-adv)
-
-    ))
+  (advice-add 'flycheck-next-error :around #'yc/flycheck-next-error-adv))
 
 (use-package flycheck-popup-tip
   :ensure t
@@ -482,6 +466,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   (lsp-auto-configure t)
   (lsp-log-io nil)
   (lsp-flycheck-live-reporting nil)
+  (lsp-flycheck-default-level 'warn)
   (flycheck-check-syntax-automatically '(save idle-change))
 
   :hook
