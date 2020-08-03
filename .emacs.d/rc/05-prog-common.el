@@ -5,37 +5,6 @@
 ;;; Commentary:
 
 ;;; Code:
- ;;
-(use-package projectile
-  :commands (projectile-project-root projectile-find-other-file)
-  :custom
-  (projectile-completion-system 'ivy)
-  (projectile-other-file-alist
-   '( ;; handle C/C++ extensions
-     ("cpp" . ("h" "hh" "hpp" "ipp"))
-     ("ipp" . ("h" "hh" "hpp" "cpp"))
-     ("hpp" . ("h" "hh" "ipp" "cpp" "cc"))
-     ("cxx" . ("h" "hh" "hxx" "ixx"))
-     ("ixx" . ("h" "hh" "hxx" "cxx"))
-     ("hxx" . ("h" "hh" "ixx" "cxx"))
-     ("c"   . ("h" "hh"))
-     ("m"   . ("h" "hh"))
-     ("mm"  . ("h" "hh"))
-     ("h"   . ("c" "cc" "cpp" "ipp" "hpp" "cxx" "ixx" "hxx" "m" "mm"))
-     ("hh"   . ("c" "cc" "cpp" "ipp" "hpp" "cxx" "ixx" "hxx" "m" "mm"))
-     ("cc"  . ("h"  "hh""hh" "hpp"))
-     ("hh"  . ("cc"))
-
-     ;; vertex shader and fragment shader extensions in glsl
-     ("vert" . ("frag"))
-     ("frag" . ("vert"))
-
-     ;; handle files with no extension
-     (nil    . ("lock" "gpg"))
-     ("lock" . (""))
-     ("gpg"  . (""))
-     )))
-
  ;; which-func
 (defun yc/which-func-update (&rest args)
   "Advice for `which-func-update'.

@@ -251,10 +251,12 @@ Call FUNC with ARGS."
  ;; Projectile...
 
 (use-package projectile
+  :commands (projectile-project-root projectile-find-other-file)
   :bind (("C-x M-k" . projectile-kill-buffers)
          ("C-x M-j" . projectile-dired)
          ("C-x M-s" . projectile-save-project-buffers))
   :custom
+  (projectile-completion-system 'ivy)
   (projectile-other-file-alist
    '( ;; handle C/C++ extensions
      ("cpp" . ("h" "hpp" "ipp"))
@@ -323,6 +325,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
   )
 
 (use-package counsel-projectile
+  :ensure t
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files
                                                  projectile-files-via-ext-command)
   :functions (counsel-projectile-find-file-action)

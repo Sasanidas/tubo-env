@@ -41,7 +41,11 @@
 
 
 (use-package magit-log  :bind (:map ctl-x-map ("gl" . magit-log-buffer-file)))
-(use-package git-timemachine :bind (:map ctl-x-map ("gt" . git-timemachine)))
+
+(use-package git-timemachine
+  :ensure t
+  :bind (:map ctl-x-map ("gt" . git-timemachine)))
+
 (use-package magit-counsel
 
   :bind (:map ctl-x-map
@@ -99,6 +103,7 @@ This function accept file name as argument, and return t if file is merged autom
 
 
 (use-package magit
+  :ensure t
   :commands (magit-blame-addition magit-revision-files magit-toplevel)
   :bind (:map ctl-x-map
               ("gs" . magit-status)
