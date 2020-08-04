@@ -39,6 +39,7 @@
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
 (use-package ivy-rich
+  :ensure t
   :hook (ivy-mode . ivy-rich-mode)
   :custom
   ;; For better performance
