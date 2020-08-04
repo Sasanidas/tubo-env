@@ -34,6 +34,7 @@
               :caller 'counsel-magit)))
 
 
+(autoload 'magit-read-file-from-rev "magit-files")
 (defun magit-find-file-in-other-worktree ()
   "View file from other worktree, in another window."
   (interactive )

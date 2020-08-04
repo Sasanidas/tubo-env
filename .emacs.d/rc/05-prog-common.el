@@ -112,7 +112,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 (use-package semantic
 
   :commands (semantic-mode)
-  :hook ((prog-mode . semantic-mode)
+  :hook (;; (prog-mode . semantic-mode)
          (semantic-init . (lambda ()
                             (condition-case nil (imenu-add-to-menubar "TAGS") (error nil)))))
   :init
@@ -677,6 +677,7 @@ Call FUNC which is 'lsp with ARGS."
           (when (fboundp mode-specific-func)
             (PDEBUG "Loading: " mode-specific-func)
             (funcall mode-specific-func root-file)))
+      (semantic-mode 1)
       (user-error "LSP disabled at: %s, but no .lsp-conf is avaiable " root-file))
 
     (PDEBUG "leave")
@@ -744,10 +745,8 @@ Call FUNC which is 'lsp with ARGS."
   (flycheck-mode 1))
 
 (use-package prog-mode
-
   :defer t
-  :hook ((prog-mode . yc/common-program-hook))
-  )
+  :hook ((prog-mode . yc/common-program-hook)))
 
 
 (cdsq yc/compile-commands nil

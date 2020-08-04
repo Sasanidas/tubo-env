@@ -341,6 +341,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
   :hook ((after-init . smartparens-global-mode))
   :custom
   (sp-escape-quotes-after-insert nil)
+  (sp-max-prefix-length 25)
   :custom-face
   (sp-pair-overlay-face ((t nil)))
   :config

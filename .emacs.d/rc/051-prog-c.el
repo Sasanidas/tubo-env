@@ -382,8 +382,7 @@ and is reversed for better performance.")
 
      (lsp)
 
-     (if (bound-and-true-p lsp-mode)
-         (semantic-mode -1)
+     (unless (bound-and-true-p lsp-mode)
        (semantic-mode 1)
        (semantic-force-refresh))
 
