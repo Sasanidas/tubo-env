@@ -112,17 +112,17 @@ Call FUNC which is 'flycheck-next-error with ARGS."
 (use-package semantic
 
   :commands (semantic-mode)
-  :hook (;; (prog-mode . semantic-mode) ;; TODO: should we enable this, if lsp not avaiable?
+  :hook ((prog-mode . semantic-mode)
          (semantic-init . (lambda ()
                             (condition-case nil (imenu-add-to-menubar "TAGS") (error nil)))))
   :init
   (custom-set-variables
    '(semantic-default-submodes nil
-                               ;; (quote (;; global-semantic-decoration-mode
-                               ;;         global-semantic-idle-summary-mode
-                               ;;         global-semantic-idle-scheduler-mode
-                               ;;         global-semanticdb-minor-mode
-                               ;;         global-semantic-mru-bookmark-mode))
+                               (quote (global-semantic-decoration-mode
+                                       global-semantic-idle-summary-mode
+                                       global-semantic-idle-scheduler-mode
+                                       global-semanticdb-minor-mode
+                                       global-semantic-mru-bookmark-mode))
                                )
    '(semantic-idle-scheduler-idle-time 15)
    '(semantic-idle-scheduler-max-buffer-size 102400)
@@ -170,7 +170,7 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   (let ((tag (semantic-current-tag)))
     (if tag
         (PDEBUG tag)
-      (error "No tag retrived."))))
+      (error "No tag retrieved"))))
 
  ;; *************************** TAGS Database Settings *********************
 (use-package counsel-xgtags
@@ -197,13 +197,15 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   "Store current location (PT)."
   (interactive)
   (yc/push-stack)
-  (if (called-interactively-p)
+  (if (called-interactively-p 'interactive)
       (message "Location saved...")))
 
 (use-package gxref
+  :ensure
   :commands (gxref-xref-backend))
 
 (use-package ivy-xref
+  :ensure
   :commands (ivy-xref-show-xrefs)
   :config
   (progn
@@ -341,7 +343,7 @@ Return t if succeeded, or nil otherwise.")
         (lsp-find-implementation)
         (yc/push-stack m))
 
-    (error "Only works for lsp-mode for now.")))
+    (error "Only works for lsp-mode for now")))
 
 (defun yc/find-references ()
   "Goto definition of symbol."
@@ -526,19 +528,20 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
   "Advice for 'lsp'.
 Call FUNC which is 'lsp with ARGS."
 
-  ;; turn off flycheck mode before turning lsp..
-  (flycheck-mode -1)
-
   ;; Load project-specific settings...
-  (yc/lsp-load-project-configuration)
+  (condition-case err
+      (when (yc/lsp-load-project-configuration)
+        ;; Calls lsp...
+        (apply func args)
 
-  ;; Calls lsp...
-  (apply func args)
+        (when (bound-and-true-p lsp-mode)
+          (semantic-mode -1))
 
-  ;; functions to run after lsp...
-  (lsp-flycheck-enable t)
+        ;; functions to run after lsp...
+        (lsp-flycheck-enable t)
 
-  (flycheck-mode 1))
+        (flycheck-mode 1))
+    (error nil)))
 
 ;; advice for format-buffer & format-region: save execution before format.
 ;; some servers (pyls) will move point to other unexpected place....
@@ -659,23 +662,25 @@ Call FUNC which is 'lsp with ARGS."
           (intern (concat "yc/lsp-load-project-configuration" "-"
                           (symbol-name major-mode)))))
 
-    (when root-file
-      (PDEBUG "ROOT:" root-file)
-      ;; loading project specific settings from .lsp-conf
-      (if (and root-file
-               (not (file-directory-p root-file))
-               (> (file-attribute-size (file-attributes root-file)) 10))
+    (PDEBUG "ROOT:" root-file)
+
+    (if (and root-file
+             (not (file-directory-p root-file))
+             (string= ".lsp-conf" (file-name-nondirectory root-file))
+             )
+        (progn
+          (PDEBUG "Loading from: " root-file)
           (with-temp-buffer
             (insert-file-contents root-file)
             (eval-buffer)
-            (message "Loaded project configuration from %s" root-file))))
+            (message "Loaded project configuration from %s" root-file))
+          (when (fboundp mode-specific-func)
+            (PDEBUG "Loading: " mode-specific-func)
+            (funcall mode-specific-func root-file)))
+      (user-error "LSP disabled at: %s, but no .lsp-conf is avaiable " root-file))
 
-
-    (when (fboundp mode-specific-func)
-      (PDEBUG "Loading: " mode-specific-func)
-      (funcall mode-specific-func root-file))
-
-    (PDEBUG "leave")))
+    (PDEBUG "leave")
+    t))
 
 
 (use-package imenu

@@ -707,11 +707,16 @@ PREFIX is used to create the key."
                      (list (cons key
                                  (put-text-property
                                   0 1 'swiper-line-number
-                                  (if (markerp (cdr elm))
-                                      (marker-position (cdr elm))
-                                    (if (numberp (cdr elm))
-                                        (cdr elm)
-                                      (error "??")))
+                                  (cond
+                                   ((markerp (cdr elm))
+                                    (marker-position (cdr elm)))
+                                   ((numberp (cdr elm))
+                                    (cdr elm))
+                                   ((overlayp (cdr elm))
+                                    (overlay-start (cdr elm)))
+                                   (t (PDEBUG "??" (cdr elm))
+                                      (error "??"))
+                                   )
                                    key))))))
                alist)))
 
@@ -865,9 +870,12 @@ PREFIX is used to create the key."
   (let ((yc/debug-log-limit -1))
     (PDEBUG "ALIST:" alist))
 
+  ;; (yc/counsel-imenu-get-candidates-from alist prefix)
+
   (condition-case msg
       (yc/counsel-imenu-get-candidates-from alist prefix)
-    (error (progn (PDEBUG "FAIL: " msg)    nil))))
+    (error (progn (PDEBUG "FAIL: " msg)    nil)))
+  )
 
 
 (defvar-local yc/cached-tags nil "last cached index.")

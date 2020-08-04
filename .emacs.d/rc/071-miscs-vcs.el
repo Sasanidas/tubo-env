@@ -50,7 +50,7 @@
   :bind (:map ctl-x-map
               ("gc" . counsel-magit-checkout)
               ("gU" . counsel-magit-checkout-file)
-              ("gF" . magit-find-file-in-other-worktree)))
+              ("gw" . magit-find-file-in-other-worktree)))
 
 (use-package magit-auto-revert
 

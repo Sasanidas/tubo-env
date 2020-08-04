@@ -382,6 +382,11 @@ and is reversed for better performance.")
 
      (lsp)
 
+     (if (bound-and-true-p lsp-mode)
+         (semantic-mode -1)
+       (semantic-mode 1)
+       (semantic-force-refresh))
+
      (yc/update-hide-env-from-symbol-map)
      (condition-case msg
          (hide-ifdef-mode 1)
