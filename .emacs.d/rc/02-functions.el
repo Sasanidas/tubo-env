@@ -249,6 +249,9 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
     (setq-default header-line-format '("%f")))
   (load-theme 'tb-dark))
 
+;; set color immediately.
+(yc/setup-display)
+
 (defun yc/server-create-window-system-frame (func &rest args)
   "Advice for `server-create-window-system-frame'.
 Call FUNC with ARGS."
@@ -348,7 +351,8 @@ And install necessary packages if there are errors while executing FUNC."
   (condition-case err (apply func args)
     (file-error
      (let ((msg (prin1-to-string err)))
-       (message "Failed to open file: %s" msg)
+       (PDEBUG "ERR: " err
+               "MSG: " msg)
        (if (string-match ".*Cannot open load file.*" msg)
            (if (listp err)
                (let* ((package-name (nth (1- (length err)) err))

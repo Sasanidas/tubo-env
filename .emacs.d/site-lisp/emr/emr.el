@@ -329,9 +329,10 @@ Return a popup item for the refactoring menu if so."
 (defun emr-initialize ()
   "Activate language support for EMR."
   (unless emr-initialized
-    (dolist (file (directory-files "~/.emacs.d/site-lisp/emr" nil
+    (dolist (file (directory-files "~/.emacs.d/site-lisp/emr" t
                                    "^emr-.*.el"))
-      (require (intern (substring file 0 -3)))
+      (load file)
+      ;; (require (intern (substring file 0 -3)))
       )
   (setq emr-initialized t)))
 
