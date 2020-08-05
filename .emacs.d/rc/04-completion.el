@@ -197,13 +197,11 @@
          ;; Format inserted codes after yas-expand.
          (yas-after-exit-snippet . yc/format-snippets-after-expand)))
 
-
-
-
  ;; company mode..
 (use-package company
   :ensure t
   :commands (global-company-mode)
+  :bind (([(meta ?/)] . company-complete-common ))
   :bind (:map company-active-map
               ([tab] . company-complete)
               (;; ,(kbd "TAB")
@@ -211,8 +209,18 @@
   :custom
   (company-backends '((company-files company-capf company-dabbrev company-abbrev :with company-yasnippet)))
   (company-minimum-prefix-length 2)
-  (company-idle-delay 0.1)
+  (company-idle-delay 0.25)
+  (company-tooltip-limit 14)
+  (company-tooltip-align-annotations t)
   (company-show-numbers  t)
+  (company-frontends '(company-pseudo-tooltip-frontend
+                       company-echo-metadata-frontend))
+
+  ;; Make `company-dabbrev' fully case-sensitive, to improve UX with
+  ;; domain-specific words with particular casing.
+  (company-dabbrev-ignore-case nil)
+  (company-dabbrev-downcase nil)
+
   :hook (after-init . global-company-mode)
   :config
   (progn

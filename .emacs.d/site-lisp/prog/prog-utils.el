@@ -243,28 +243,41 @@ variable.")))))
 (defun yc/enable-disable-c-block (start end)
   "Enable or disable c blocks(START ~ END) using #if 0/#endif macro."
   (interactive "rp")
-  (let* ((sep (rx (* space) "//" (+ space)))
-         (if-0-start (concat "#if 0" sep "TODO: Remove this ifdef!\n"))
-         (if-0-end   (concat "#endif" sep "End of #if 0"))
+
+  (let* ((if-0-start (concat "#if 0 "
+                             (comment-padright comment-start comment-add)
+                             "TODO: Remove this if 0!"
+                             (comment-padleft comment-end comment-add)
+                             "\n"))
+
+         (if-0-end   (concat "#endif "
+                             (comment-padright comment-start comment-add)
+                             "End of #if 0"
+                             (comment-padleft comment-end comment-add)
+                             ))
+
          (if-0-end-nl (concat "\n" if-0-end))
          (r-match-if0 (format "%s%s%s" if-0-start(rx (group (+? anything))) if-0-end)))
     (save-excursion
       (save-restriction
         (narrow-to-region start end)
+
         (goto-char (point-min))
 
-        (if (and (looking-at r-match-if0)
-                 (search-forward-regexp r-match-if0 end t))
+        (if (search-forward-regexp
+             (rx bol "#if " (+? nonl) "\n"
+                 (group (+? anything) "\n")
+                 bol "#endif" (+? nonl) eol)
+             end t)
             (replace-match "\\1")
+
           (goto-char end)
-          (insert (if (looking-back "\n" ) if-0-end if-0-end-nl))
+          (unless (looking-back "\n" nil)
+            (insert "\n"))
+          (insert if-0-end "\n")
+
           (goto-char start)
-          (insert if-0-start)
-
-
-          (goto-char (point-min))
-          (while (search-forward sep nil t)
-            (replace-match " // "))))
+          (insert if-0-start)))
 
       (indent-region start end))))
 

@@ -524,7 +524,7 @@ With REVERSE is t, switch to previous window."
   :commands (which-key-mode)
   :custom
   (which-key-show-early-on-C-h t)
-  (which-key-idle-delay 1)
+  (which-key-idle-delay 3)
   (which-key-idle-secondary-delay 0.05)
   :hook ((after-init . which-key-mode)))
 

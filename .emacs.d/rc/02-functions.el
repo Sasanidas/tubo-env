@@ -292,7 +292,6 @@ Call FUNC with ARGS."
   (cons (kbd "C->") 'end-of-buffer)
   (cons (kbd "C-<") 'beginning-of-buffer)
   (cons (kbd "C-w") 'kill-region)
-  (cons [(meta ?/)] 'hippie-expand)
   (cons [f4] 'goto-line)
   (cons (kbd "C-x C") 'kill-emacs)
 
