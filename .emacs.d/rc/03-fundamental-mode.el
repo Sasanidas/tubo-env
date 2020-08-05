@@ -520,6 +520,7 @@ With REVERSE is t, switch to previous window."
 
 
 (use-package which-key
+  :ensure t
   :commands (which-key-mode)
   :custom
   (which-key-show-early-on-C-h t)
