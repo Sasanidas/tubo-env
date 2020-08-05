@@ -462,19 +462,6 @@ With REVERSE is t, switch to previous window."
              s-ends-with? s-ends-with-p
              s-starts-with? s-blank? s-split))
 
-(use-package session
-  :ensure t
-  :commands (session-initialize)
-  :custom
-  (session-globals-include
-   '(  (yc/marker-stack 100000 t)
-       (hide-ifdef-env 100000 t)
-       (kill-ring 10)
-       (session-file-alist 100 t)
-       (file-name-history 200)))
-
-  :hook ((emacs-startup . session-initialize)))
-
 (use-package super-save
   :ensure t
   :commands (super-save-mode)
@@ -529,6 +516,16 @@ With REVERSE is t, switch to previous window."
 
 (use-package layout-restore
   :commands (layout-save-current layout-restore))
+
+
+
+(use-package which-key
+  :commands (which-key-mode)
+  :custom
+  (which-key-show-early-on-C-h t)
+  (which-key-idle-delay 1)
+  (which-key-idle-secondary-delay 0.05)
+  :hook ((after-init . which-key-mode)))
 
 
 ;; Local Variables:
