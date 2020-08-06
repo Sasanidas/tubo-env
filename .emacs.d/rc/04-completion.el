@@ -198,7 +198,16 @@
 (use-package company
   :ensure t
   :commands (global-company-mode)
-  :bind (([(meta ?/)] . company-complete-common ))
+  :bind (([(meta ?/)] .
+          (lambda ()
+            (interactive)
+            (call-interactively
+             (if (yc/in-comment-or-string-p)
+                 'company-dabbrev
+                 'company-complete-common
+                 )
+             ))
+          ))
   :bind (:map company-active-map
               ([tab] . company-complete)
               (;; ,(kbd "TAB")
@@ -219,17 +228,7 @@
   (company-dabbrev-downcase nil)
 
   :hook (after-init . global-company-mode)
-  :config
-  (progn
-    (setq company-async-timeout 10)
-    (advice-add
-     'company--should-begin :around
-     (lambda (func &rest args)
-       (if     (and (> (point) (point-min))
-                    (looking-back (rx (>= 2 (or alnum "_"))) (- (point) 2) nil)
-                    (looking-at (rx (or eow eol))))
-           (apply func args)
-         nil)))))
+  )
 
 (yc/defmacro yc/add-company-backends-with-yasnippet (&rest backends)
   `(set (make-local-variable 'company-backends)

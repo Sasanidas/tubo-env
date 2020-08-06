@@ -2,9 +2,9 @@
 # name: advice-add
 # key: adva
 # --
-(defadvice! yc/$1-adv (${2:$(if (string-match "^ar" yas-text) "orig-func ")} &rest args)
-  "${3:docs}.
-Call ORIG-FUNC which is '$1 with ARGS."$>
+(defadvice! yc/$1-adv (${2:$(if (string-match "^ar" yas-text) "orig-func ")}&rest args)
+  "${3:Docs}
+ORIG-FUNC is called with ARGS."$>
  :${2:b}${2:$(cond
 ((string-match "^b" yas-text) "efore")
 ((string-match "^ar" yas-text) "ound")

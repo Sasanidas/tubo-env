@@ -93,36 +93,6 @@
                "o". yc/open-with-external-app)))
 
  ;; Diff & Merge
-(use-package ediff
-
-  :commands (ediff-files)
-  :bind ((;; ,(kbd "<f12>")
-          [f12]. ediff-buffers))
-  :custom
-  (ediff-split-window-function 'split-window-horizontally)
-  (ediff-window-setup-function 'ediff-setup-windows-plain)
-  (ediff-ignore-similar-regions t)
-
-  :config
-  (advice-add 'ediff-buffers :before #'yc/ediff-buffers)
-  (setq ediff-diff-ok-lines-regexp
-        (concat
-         "^\\("
-         "[0-9,]+[acd][0-9,]+\C-m?$"
-         "\\|[<>] "
-         "\\|---"
-         "\\|.*Warning *:"
-         "\\|.*No +newline"
-         "\\|.*missing +newline"
-         "\\|.*文件尾没有 newline 字符"
-         "\\|^\C-m?$"
-         "\\)"))
-
-  :hook ((ediff-keymap-setup .
-                             (lambda ()
-                               (define-key 'ediff-mode-map "d" 'ediff-copy-both-to-C)
-                               (define-key 'ediff-mode-map "ff" 'yc/ediff-copy-file-name-A)))))
-
 (defun yc/ediff-copy-file-name-A ()
   "Description."
   (interactive)
@@ -151,44 +121,86 @@
     (ediff-get-region-contents ediff-current-difference 'A ediff-control-buffer)
     (ediff-get-region-contents ediff-current-difference 'B ediff-control-buffer))))
 
+(defvar yc/flycheck-bufferes-to-restore nil
+  "List of buffers whose flycheck-mode is disabled temporarily.")
+
 (defun yc/ediff-prepare (&optional buffer)
   "Prepare BUFFER for Ediff."
   (with-current-buffer (or buffer (current-buffer))
     (PDEBUG "YC/EDIFF-PREPARE: " buffer)
 
     (ws-butler-mode -1)
-    (flycheck-mode -1)
+    (if flycheck-mode
+        (push (current-buffer) yc/flycheck-bufferes-to-restore))
+
     (if (fboundp 'show-ifdefs)
         (show-ifdefs))
     (PDEBUG "YC/EDIFF-PREPARE END.")))
 
-(defun yc/ediff-buffers (buffer-A buffer-B &rest args)
-  "Run Ediff on a pair of buffers, BUFFER-A and BUFFER-B, with optional ARGS."
-  (yc/ediff-prepare buffer-A)
-  (yc/ediff-prepare buffer-B))
+(defun yc/ediff-cleanup ()
+  "Clean up for ediff modes."
+  (dolist (buffer yc/flycheck-bufferes-to-restore)
+    (with-current-buffer buffer
+      (flycheck-mode 1)))
 
-(defun yc/smerge-ediff-adv (&rest args)
-  "Disable some minor-mode before `smerge-eiff', and renable them after that."
-  (yc/ediff-prepare))
+  (setq yc/flycheck-bufferes-to-restore nil))
+
+(defun yc/ediff-startup ()
+  "Description."
+  (dolist (buf '(ediff-buffer-A ediff-buffer-B  ediff-buffer-c))
+    (if buf
+        (yc/ediff-prepare buf))))
+
+
+
+(use-package ediff
+
+  :commands (ediff-files)
+  :bind ((;; ,(kbd "<f12>")
+          [f12]. ediff-buffers))
+  :custom
+  (ediff-diff-options "-w") ;; turn off whitespace checking
+  (ediff-split-window-function 'split-window-horizontally)
+  (ediff-window-setup-function 'ediff-setup-windows-plain)
+  (ediff-ignore-similar-regions t)
+
+  :config
+  (defadvice! yc/ediff-buffers-adv (buffer-A buffer-B &rest args)
+    "Run Ediff on a pair of buffers, BUFFER-A and BUFFER-B, with optional ARGS.
+ORIG-FUNC is called with ARGS."
+    :before #'ediff-buffers
+    (yc/ediff-prepare buffer-A)
+    (yc/ediff-prepare buffer-B))
+
+
+  (setq ediff-diff-ok-lines-regexp
+        (concat
+         "^\\("
+         "[0-9,]+[acd][0-9,]+\C-m?$"
+         "\\|[<>] "
+         "\\|---"
+         "\\|.*Warning *:"
+         "\\|.*No +newline"
+         "\\|.*missing +newline"
+         "\\|.*文件尾没有 newline 字符"
+         "\\|^\C-m?$"
+         "\\)"))
+
+  :hook
+  ((ediff-keymap-setup
+    .
+    (lambda ()
+      (define-key 'ediff-mode-map "d" 'ediff-copy-both-to-C)
+      (define-key 'ediff-mode-map "ff" 'yc/ediff-copy-file-name-A)))
+
+   (ediff--startup . yc/ediff-startup)
+   (ediff-quit . yc/ediff-cleanup)))
 
 (use-package smerge-mode
   :bind ((;; ,(kbd "<S-f12>")
           [S-f12]. smerge-ediff))
   :config
-    (advice-add 'smerge-ediff :before #'yc/smerge-ediff-adv))
-
-
-
-
-(defun yc/ediff-startup-hook ()
-  "Description."
-  (PDEBUG "ENTER: yc/ediff-startup-hook" )
-
-  (dolist (buf '(ediff-buffer-A ediff-buffer-B  ediff-buffer-c))
-    (if buf
-        (yc/ediff-prepare buf))))
-
-(add-hook 'ediff--startup-hook 'yc/ediff-startup-hook)
+    (advice-add 'smerge-ediff :before #'yc/ediff-prepare))
 
 
 

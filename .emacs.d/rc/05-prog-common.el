@@ -5,33 +5,23 @@
 ;;; Commentary:
 
 ;;; Code:
- ;; which-func
-(defun yc/which-func-update (&rest args)
-  "Advice for `which-func-update'.
-Update the Which-Function mode display for all windows."
-  (walk-windows
-   (lambda (w)
-     (when which-function-mode
-       (which-func-update-1 w))) nil 'visible))
 
 (use-package which-func
   :commands (which-function-mode)
   :hook ((prog-mode . which-function-mode))
   :config
-  (advice-add 'which-func-update :override #'yc/which-func-update)
   (remove-hook 'after-change-major-mode-hook 'which-func-ff-hook)
+
+  (defadvice! yc/which-func-update-adv (&rest args)
+    "Apply function update to all windows.
+ORIG-FUNC is called with ARGS."
+    :override #'which-func-update
+  (walk-windows
+   (lambda (w)
+     (when which-function-mode
+       (which-func-update-1 w))) nil 'visible))
 )
 
- ;; Flycheck.. XXX: flycheck- -- tmp-file move to /tmp
-
-(defun yc/flycheck-next-error-adv (func &rest args)
-  "Advice for 'flycheck-next-error'.
-Call FUNC which is 'flycheck-next-error with ARGS."
-  (condition-case var
-      (apply func args)
-    (user-error (progn
-                  (PDEBUG "Wrap to first error...")
-                  (flycheck-first-error)))))
 (use-package flycheck
   :ensure t
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
@@ -47,11 +37,38 @@ Call FUNC which is 'flycheck-next-error with ARGS."
   (flycheck-checker-error-threshold nil)
   (flycheck-emacs-lisp-load-path 'inherit)
   (flycheck-flake8-maximum-line-length 120)
+
+  ;; Check only when saving or opening files. Newline & idle checks are a mote
+  ;; excessive and can catch code in an incomplete state, producing false
+  ;; positives, so we removed them.
+  (flycheck-check-syntax-automatically
+   '(save mode-enabled idle-buffer-switch))
+
+  ;; For the above functionality, check syntax in a buffer that you switched to
+  ;; only briefly. This allows "refreshing" the syntax check state for several
+  ;; buffers quickly after e.g. changing a config file.
+  (flycheck-buffer-switch-check-intermediate-buffers t)
+
+  ;; Display errors a little quicker (default is 0.9s)
+  (flycheck-display-errors-delay 0.25)
+
   :config
-  (advice-add 'flycheck-next-error :around #'yc/flycheck-next-error-adv))
+  (defadvice! yc/flycheck-next-error-adv (orig-func  &rest args)
+    "Wrap to first error when tail reached.
+Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
+    :around #'flycheck-next-error
+    (condition-case var
+        (apply orig-func args)
+      (user-error (progn
+                    (PDEBUG "Wrap to first error...")
+                    (flycheck-first-error))))
+    )
+)
 
 (use-package flycheck-popup-tip
   :ensure t
+  :custom
+  (flycheck-popup-tip-error-prefix "✕ ")
   :commands (flycheck-popup-tip-mode)
   :hook ((flycheck-mode . flycheck-popup-tip-mode)))
 
@@ -467,7 +484,6 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   (lsp-log-io nil)
   (lsp-flycheck-live-reporting nil)
   (lsp-flycheck-default-level 'warn)
-  (flycheck-check-syntax-automatically '(save idle-change))
   ;; Auto-kill LSP server after last workspace buffer is killed.
   (lsp-keep-workspace-alive nil)
   ;; capf is the preferred completion mechanism for lsp-mode now
