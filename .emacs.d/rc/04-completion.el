@@ -169,10 +169,9 @@
      (t (indent-region yas-snippet-beg yas-snippet-end)))))
 
 (use-package yasnippet
-  :commands (yas-global-mode yas-minor-mode)
   :ensure t
   :custom
-  (yas-verbosity 2)
+  (yas-verbosity 0)
   (yas-triggers-in-field nil)
   (yas-wrap-around-region t)
   (yas-indent-line 'auto)
@@ -180,9 +179,7 @@
    '((yasnippet backquote-change) (yasnippet re-marker)))
   (yas-snippet-dirs '("~/.emacs.d/templates/yasnippets"
                       "~/.emacs.d/templates/yasnippets-private"))
-  (yas-prompt-functions '(yas-dropdown-prompt
-                           yas-ido-prompt
-                           yas-completing-prompt))
+  (yas-prompt-functions '(yas-completing-prompt))
 
   :mode (((rx (or (: ".emacs.d/templates/yasnippets"
                       (? "-private") "/"

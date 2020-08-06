@@ -53,7 +53,6 @@
               ("gw" . magit-find-file-in-other-worktree)))
 
 (use-package magit-auto-revert
-
   :commands (magit-auto-revert-mode))
 
 (defun yc/counsel-git-grep ()
@@ -69,9 +68,7 @@
 This function accept file name as argument, and return t if file is merged automatically.")
 
 (use-package magit-ediff
-
   :commands (magit-unmerged-files))
-
 
 (defun yc/git-add-current-file ()
   "Add curent file to state."
@@ -111,8 +108,11 @@ This function accept file name as argument, and return t if file is merged autom
               ("gb" . magit-blame-addition)
               ("gg" . 'yc/counsel-git-grep)
               ("ga" . 'yc/git-add-current-file))
+  :hook ((magit-process-mode . goto-address-mode))
   :custom
+  (magit-diff-refine-hunk t)  ;; show granular diffs in selected hunk
   (magit-revert-buffers t)
+  (magit-save-repository-buffers 'dontask)
   (magit-commit-show-diff nil)
   (magit-push-always-verify nil)
   (magit-revision-insert-related-refs t)

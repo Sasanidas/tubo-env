@@ -39,48 +39,6 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
      (when it
        ,@body)))
 
-(defvar yc/debug-log-limit 1024 "Nil.")
-
-(defun yc/debug-log (&rest msgs)
-  "Output MSGS with FILE and LINE."
-  (let ((buf (get-buffer-create YC-DEBUG-BUF))
-        (last  (if msgs
-                   (nth (1- (length msgs)) msgs)
-                   ))
-        pos-start
-        )
-    (save-excursion
-      (with-current-buffer buf
-        (goto-char (point-max))
-        (princ "\n" buf)
-        (princ (format-time-string  "%a %b %d %H:%M:%S %Z %Y" (current-time)) buf)
-        (princ " ======>\n" buf)
-        (setq pos-start (point))
-        (princ (pop msgs) buf)
-
-        (while msgs
-          (princ " " buf)
-
-          (let ((count 0))
-            (princ (pop msgs) (lambda (x)
-                                (when (or (< yc/debug-log-limit 0)
-                                          (< count yc/debug-log-limit))
-                                  (insert x)
-                                  (setq count (1+ count))
-                                    )
-                                ))
-            )
-          )
-        (princ "\n" buf)
-
-        ))
-    last))
-
-(defun PDEBUG (&rest args)
-  "Write log, if YC-DEBUG is non-nil."
-  (when YC-DEBUG
-    (apply 'yc/debug-log args)))
-
 (yc/defmacro yc/eval-after-load (name &rest args)
   "Macro to set expressions in `arg` to be executed after `name` is loaded."
   `(eval-after-load ,name
@@ -90,6 +48,37 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                         ,@args
                         (message "Configuration for %s finished in %.2f seconds" ,name
                                  (float-time (time-since ts ))))))))
+
+;; copy from doom emacs
+(defun doom-enlist (exp)
+  "Return EXP wrapped in a list, or as-is if already a list."
+  (declare (pure t) (side-effect-free t))
+  (if (listp exp) exp (list exp)))
+
+(defmacro defadvice! (symbol arglist &optional docstring &rest body)
+  "Define an advice called SYMBOL and add it to PLACES.
+
+ARGLIST is as in `defun'. WHERE is a keyword as passed to `advice-add', and
+PLACE is the function to which to add the advice, like in `advice-add'.
+DOCSTRING and BODY are as in `defun'.
+
+\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
+  (declare (doc-string 3) (indent defun))
+  (unless (stringp docstring)
+    (push docstring body)
+    (setq docstring nil))
+  (let (where-alist)
+    (while (keywordp (car body))
+      (push `(cons ,(pop body) (doom-enlist ,(pop body)))
+            where-alist))
+    `(progn
+       (defun ,symbol ,arglist ,docstring ,@body)
+       (dolist (targets (list ,@(nreverse where-alist)))
+         (dolist (target (cdr targets))
+           (advice-add target (car targets) #',symbol))))))
+
+(put 'defadvice! 'lisp-indent-function 'defun)
+
 
  ;; Functions
 (defun yc/get-key-code (key &optional recursive)
@@ -131,6 +120,48 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
 
 ;;;; functions to setup platform depadent settings.
 (defalias 'string-split 'split-string)
+
+(defvar yc/debug-log-limit 1024 "Nil.")
+
+(defun yc/debug-log (&rest msgs)
+  "Output MSGS with FILE and LINE."
+  (let ((buf (get-buffer-create YC-DEBUG-BUF))
+        (last  (if msgs
+                   (nth (1- (length msgs)) msgs)
+                   ))
+        pos-start
+        )
+    (save-excursion
+      (with-current-buffer buf
+        (goto-char (point-max))
+        (princ "\n" buf)
+        (princ (format-time-string  "%a %b %d %H:%M:%S %Z %Y" (current-time)) buf)
+        (princ " ======>\n" buf)
+        (setq pos-start (point))
+        (princ (pop msgs) buf)
+
+        (while msgs
+          (princ " " buf)
+
+          (let ((count 0))
+            (princ (pop msgs) (lambda (x)
+                                (when (or (< yc/debug-log-limit 0)
+                                          (< count yc/debug-log-limit))
+                                  (insert x)
+                                  (setq count (1+ count))
+                                    )
+                                ))
+            )
+          )
+        (princ "\n" buf)
+
+        ))
+    last))
+
+(defun PDEBUG (&rest args)
+  "Write log, if YC-DEBUG is non-nil."
+  (when YC-DEBUG
+    (apply 'yc/debug-log args)))
 
 
 (defcustom available-width '(78 82 86 92 98)
@@ -260,7 +291,6 @@ Call FUNC with ARGS."
 (yc/eval-after-load
   "server"
   (advice-add 'server-create-window-system-frame :after #'yc/server-create-window-system-frame))
-
 
 
 (defun s-join (separator strings)

@@ -458,8 +458,6 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   :custom
   (lsp-diagnostic-package :auto)
   (lsp-restart 'interactive)
-  (lsp-enable-file-watchers nil)
-  (lsp-enable-indentation nil)
   (lsp-enable-imenu nil)
   (lsp-enable-symbol-highlighting nil)
   (lsp-enable-links t)
@@ -470,26 +468,117 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   (lsp-flycheck-live-reporting nil)
   (lsp-flycheck-default-level 'warn)
   (flycheck-check-syntax-automatically '(save idle-change))
+  ;; Auto-kill LSP server after last workspace buffer is killed.
+  (lsp-keep-workspace-alive nil)
+  ;; capf is the preferred completion mechanism for lsp-mode now
+  (lsp-prefer-capf t)
+
+
+  ;; Disable LSP's superfluous, expensive and/or debatably unnecessary features.
+  ;; Some servers implement these poorly. Better to just rely on Emacs' native
+  ;; mechanisms and make these opt-in.
+  (lsp-enable-folding nil)
+  ;; Potentially slow
+  (lsp-enable-file-watchers nil)
+  (lsp-enable-text-document-color nil)
+  (lsp-enable-semantic-highlighting nil)
+  ;; Don't modify our code without our permission
+  (lsp-enable-indentation nil)
+  (lsp-enable-on-type-formatting nil)
 
   :hook
   ((lsp-after-open . (lambda ()
                        (setq-local xref-backend-functions
-                                   (cons #'lsp--xref-backend xref-backend-functions))))
+                                   (cons #'lsp--xref-backend xref-backend-functions)))))
 
-   ;; mode specific hooks.
-   )
   :config
-  (progn
+  (defvar +lsp--deferred-shutdown-timer nil)
+  (defadvice! +lsp-defer-server-shutdown-a (orig-fn &optional restart)
+    "Defer server shutdown for a few seconds.
+This gives the user a chance to open other project files before the server is
+auto-killed (which is a potentially expensive process)."
+    :around #'lsp--shutdown-workspace
+    (if (or lsp-keep-workspace-alive
+            restart)
+        (funcall orig-fn restart)
+      (when (timerp +lsp--deferred-shutdown-timer)
+        (cancel-timer +lsp--deferred-shutdown-timer))
+      (setq +lsp--deferred-shutdown-timer
+            (run-at-time
+             5
+             nil (lambda (workspace)
+                   (let ((lsp--cur-workspace workspace))
+                     (unless (lsp--workspace-buffers lsp--cur-workspace)
+                       (funcall orig-fn))))
+             lsp--cur-workspace))))
 
-    (advice-add 'lsp :around #'yc/lsp-adv)
-    (advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
-    (advice-add 'lsp-format-region :around #'yc/lsp-format-adv)
-    (advice-add 'lsp--imenu-create-index :around #'yc/lsp--imenu-create-index-adv)
-    (advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
-    (advice-add 'lsp--suggest-project-root :before-until
-                #'yc/lsp--suggest-project-root-adv)
-    )
-  )
+  (defadvice! yc/lsp-adv (orig-func  &rest args)
+    "Advice for 'lsp'.
+Call ORIG-FUNC which is 'lsp with ARGS.
+Loading project specific settings before starting LSP."
+    :around #'lsp
+    ;; Load project-specific settings...
+    (condition-case err
+        (when (yc/lsp-load-project-configuration)
+          ;; Calls lsp...
+          (apply orig-func args)
+
+          (when (bound-and-true-p lsp-mode)
+            (semantic-mode -1))
+
+          ;; functions to run after lsp...
+          (lsp-flycheck-enable t)
+
+          (flycheck-mode 1))
+      (error nil)))
+
+  (advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
+  (advice-add 'lsp-format-region :around #'yc/lsp-format-adv)
+
+  (defadvice! yc/lsp--imenu-create-index-adv (orig-func  &rest args)
+    "Update cached symbols.
+Call ORIG-FUNC which is 'lsp--imenu-create-index with ARGS."
+    :around #'lsp--imenu-create-index
+    (if (= yc/document-symbols-tick (buffer-chars-modified-tick))
+        yc/cached-symbols
+
+      (PDEBUG "Refreshing tags..." )
+      (setq yc/document-symbols-tick (buffer-chars-modified-tick)
+            yc/cached-symbols (apply orig-func args))))
+
+  (advice-add 'lsp--imenu-create-index :around #'yc/lsp--imenu-create-index-adv)
+  (advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
+  (advice-add 'lsp--suggest-project-root :before-until
+              #'yc/lsp--suggest-project-root-adv)
+
+  (defun yc/lsp/switch-client (client)
+    "Switch to another LSP server."
+    (interactive
+     (progn
+       (require 'lsp-mode)
+       (list (completing-read
+              "Select server: "
+              (or (mapcar #'lsp--client-server-id (lsp--find-clients))
+                  (user-error "No available LSP clients for %S" major-mode))))))
+    (require 'lsp-mode)
+    (let* ((client (if (symbolp client) client (intern client)))
+           (match (car (lsp--filter-clients (lambda (c) (eq (lsp--client-server-id c) client)))))
+           (workspaces (lsp-workspaces)))
+      (unless match
+        (user-error "Couldn't find an LSP client named %S" client))
+      (let ((old-priority (lsp--client-priority match)))
+        (setf (lsp--client-priority match) 9999)
+        (unwind-protect
+            (if workspaces
+                (lsp-workspace-restart
+                 (if (cdr workspaces)
+                     (lsp--completing-read "Select server: "
+                                           workspaces
+                                           'lsp--workspace-print
+                                           nil t)
+                   (car workspaces)))
+              (lsp-mode +1))
+          (setf (lsp--client-priority match) old-priority))))))
 
 (defun yc/lsp--suggest-project-root-adv (&rest args)
   "Advice for 'ccls--suggest-project-root': locate .lsp-conf if possible.
@@ -504,17 +593,6 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
 Call FUNC which is 'lsp-enable-imenu with ARGS."
   t)
 
-
-(defun yc/lsp--imenu-create-index-adv (func &rest args)
-  "Advice for 'lsp--imenu-create-index'.
-Call FUNC which is 'lsp--imenu-create-index with ARGS."
-  (if (= yc/document-symbols-tick (buffer-chars-modified-tick))
-      yc/cached-symbols
-
-    (PDEBUG "Refreshing tags..." )
-    (setq yc/document-symbols-tick (buffer-chars-modified-tick)
-          yc/cached-symbols (apply func args))))
-
 (defun yc/lsp-format-adv (func &rest args)
   "Advice for 'lsp-format-buffer'.
 Call FUNC which is 'lsp-format-buffer with ARGS."
@@ -524,28 +602,8 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
         (goto-char p))))
 
 
-(defun yc/lsp-adv (func &rest args)
-  "Advice for 'lsp'.
-Call FUNC which is 'lsp with ARGS."
-
-  ;; Load project-specific settings...
-  (condition-case err
-      (when (yc/lsp-load-project-configuration)
-        ;; Calls lsp...
-        (apply func args)
-
-        (when (bound-and-true-p lsp-mode)
-          (semantic-mode -1))
-
-        ;; functions to run after lsp...
-        (lsp-flycheck-enable t)
-
-        (flycheck-mode 1))
-    (error nil)))
-
 ;; advice for format-buffer & format-region: save execution before format.
 ;; some servers (pyls) will move point to other unexpected place....
-
 (defun yc/modeline-update-lsp (&rest args)
   "Update `lsp-mode' status."
   (setq-local yc/modeline--lsp

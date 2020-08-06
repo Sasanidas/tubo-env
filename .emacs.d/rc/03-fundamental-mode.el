@@ -19,18 +19,17 @@
  ;; ivy mode
 (use-package ivy
   :ensure t
-  :commands (ivy-read ivy-mode)
+  :commands (ivy-read)
   :hook ((emacs-startup . ivy-mode))
-  :config
-  (progn
-    (setq ivy-use-virtual-buffers t        ;; Enable bookmarks and recentf
-          ivy-count-format "%d/%d "        ;; Display count displayed and total
-          enable-recursive-minibuffers t
-          ivy-height 20                    ;; Number of result lines to display
-          ivy-initial-inputs-alist nil     ;; No regexp by default
-          ivy-wrap nil                       ;; wrap candidates
+  :custom
+  (ivy-use-virtual-buffers t)        ;; Enable bookmarks and recentf
+  (ivy-count-format "%d/%d ")        ;; Display count displayed and total
+  (enable-recursive-minibuffers t)
+  (ivy-height 17)                    ;; Number of result lines to display
+  (ivy-initial-inputs-alist nil)     ;; No regexp by default
+  (ivy-wrap nil)                       ;; wrap candidates
+  (ivy-on-del-error-function #'ignore) ;; don't quit minibuffer on delete-error
 
-          ))
   :bind ((;(kbd "C-c C-r")
           "" . ivy-resume)
          (;(kbd "M-r")

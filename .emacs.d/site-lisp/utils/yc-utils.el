@@ -363,7 +363,13 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   "Update DEBUG variables."
   (setq  YC-DEBUG debug
          debug-on-error debug
-         debug-on-quit nil)
+         debug-on-quit nil
+
+         ;; yasnippt
+         use-package-verbose debug
+         yas-verbosity 4
+
+         )
   (if YC-DEBUG
       (advice-add 'run-hooks :around #'yc/run-hooks-est-time)
     (advice-remove 'run-hooks  #'yc/run-hooks-est-time))
