@@ -204,7 +204,7 @@
             (call-interactively
              (if (yc/in-comment-or-string-p)
                  'company-dabbrev
-                 'company-complete-common
+                 'company-complete
                  )
              ))
           ))
@@ -226,6 +226,7 @@
   ;; domain-specific words with particular casing.
   (company-dabbrev-ignore-case nil)
   (company-dabbrev-downcase nil)
+  (company-auto-complete t)
 
   :hook (after-init . global-company-mode)
   )
