@@ -33,23 +33,66 @@
   :bind ((;(kbd "C-c C-r")
           "" . ivy-resume)
          (;(kbd "M-r")
-          [134217842] . ivy-resume)))
+          [134217842] . ivy-resume))
+  :config
+  (message "Loading ivy")
+)
 
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
+
 (use-package ivy-rich
+  :preface
+  (defun +ivy-rich-describe-variable-transformer (cand)
+    "Previews the value of the variable (CAND) in the minibuffer."
+    (let* ((sym (intern cand))
+           (val (and (boundp sym) (symbol-value sym)))
+           (print-level 3))
+      (replace-regexp-in-string
+       "[\n\t\^[\^M\^@\^G]" " "
+       (cond ((booleanp val)
+              (propertize (format "%s" val) 'face
+                          (if (null val)
+                              'font-lock-comment-face
+                            'success)))
+             ((symbolp val)
+              (propertize (format "'%s" val)
+                          'face 'highlight-quoted-symbol))
+             ((keymapp val)
+              (propertize "<keymap>" 'face 'font-lock-constant-face))
+             ((listp val)
+              (prin1-to-string val))
+             ((stringp val)
+              (propertize (format "%S" val) 'face 'font-lock-string-face))
+             ((numberp val)
+              (propertize (format "%s" val) 'face 'highlight-numbers-number))
+             ((format "%s" val)))
+       t)))
   :ensure t
-  :hook (ivy-mode . ivy-rich-mode)
   :custom
-  ;; For better performance
   (ivy-rich-parse-remote-buffer nil)
   (ivy-rich-path-style 'abbrev)
   :config
+  (message "Loading ivy-rich...")
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-  (plist-put ivy-rich-display-transformers-list 'counsel-bookmark
-           '(:columns
-             ((ivy-rich-candidate (:width 30))
-              (ivy-rich-bookmark-info (:face font-lock-doc-face))))))
+  (plist-put! ivy-rich-display-transformers-list
+    'counsel-bookmark
+    '(:columns
+      ((ivy-rich-candidate (:width 30))
+       (ivy-rich-bookmark-info (:face font-lock-doc-face))))
+    'counsel-describe-variable
+    '(:columns
+      ((counsel-describe-variable-transformer (:width 40)) ; the original transformer
+       (+ivy-rich-describe-variable-transformer (:width 50)) ; display variable value
+       (ivy-rich-counsel-variable-docstring (:face font-lock-doc-face))))
+    'counsel-M-x
+    '(:columns
+      ((counsel-M-x-transformer (:width 60))
+       (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
+    ;; Apply switch buffer transformers to `counsel-projectile-switch-to-buffer' as well
+    'counsel-projectile-switch-to-buffer
+    (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
+  (ivy-rich-mode 1))
 
 
 (defun yc/counsel-grep (&optional deep)
@@ -523,7 +566,7 @@ With REVERSE is t, switch to previous window."
   :commands (which-key-mode)
   :custom
   (which-key-show-early-on-C-h t)
-  (which-key-idle-delay 3)
+  (which-key-idle-delay 9999)
   (which-key-idle-secondary-delay 0.05)
   :hook ((after-init . which-key-mode)))
 

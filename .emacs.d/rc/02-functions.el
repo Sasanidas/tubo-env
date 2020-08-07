@@ -79,6 +79,14 @@ DOCSTRING and BODY are as in `defun'.
 
 (put 'defadvice! 'lisp-indent-function 'defun)
 
+(yc/defmacro plist-put! (plist &rest rest)
+  "Set each PROP VALUE pair in REST to PLIST in-place."
+  `(cl-loop for (prop value)
+            on (list ,@rest) by #'cddr
+            do ,(if (symbolp plist)
+                    `(setq ,plist (plist-put ,plist prop value))
+                  `(plist-put ,plist prop value))))
+
 
  ;; Functions
 (defun yc/get-key-code (key &optional recursive)
@@ -331,7 +339,11 @@ Call FUNC with ARGS."
   (cons (kbd "M-[ 1 ; 6 l") 'beginning-of-buffer)
   (cons (kbd "M-[ 1 ; 6 n") 'end-of-buffer)
   (cons (kbd "M-[ 1 ; 6 n") 'end-of-buffer)
-))
+
+  ;; narrow-to-xxx
+  (cons (kbd "C-x n r") 'narrow-to-region)
+  (cons (kbd "C-x n d") 'narrow-to-defun)
+  (cons (kbd "C-x n w") 'widen)))
 
 
 
