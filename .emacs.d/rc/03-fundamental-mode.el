@@ -9,12 +9,12 @@
 
 
 (use-package helpful
-  :commands (helpful-callable helpful-variable)
-  :bind ((;; (kbd "C-h c")
-          "c" . helpful-key)
-         (;; (kbd "C-h p")
-          "p" . helpful-at-point)
-         ))
+  :init
+  (global-set-key [remap describe-function] #'helpful-callable)
+  (global-set-key [remap describe-command]  #'helpful-command)
+  (global-set-key [remap describe-variable] #'helpful-variable)
+  (global-set-key [remap describe-key]      #'helpful-key)
+  (global-set-key [remap describe-symbol]   #'helpful-symbol))
 
  ;; ivy mode
 (use-package ivy
@@ -33,7 +33,10 @@
   :bind ((;(kbd "C-c C-r")
           "" . ivy-resume)
          (;(kbd "M-r")
-          [134217842] . ivy-resume))
+          [134217842] . ivy-resume)
+
+         ([remap switch-to-buffer] . ivy-switch-buffer)
+         )
   :config
   (message "Loading ivy")
 )
@@ -206,11 +209,26 @@ Call FUNC which is 'counsel-git-grep-action with X."
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
 
-  :bind (("M-x" . counsel-M-x)
-         ([remap yank-pop] . counsel-yank-pop)
-         ([remap bookmark-bmenu-list] . counsel-bookmark)
-         ([remap describe-variable] . counsel-describe-variable)
-         ([remap describe-function] . counsel-describe-function)
+  :bind (
+         ([remap apropos]                  .  counsel-apropos)
+         ([remap bookmark-bmenu-list]      .  counsel-bookmark)
+         ([remap describe-bindings]        .  counsel-descbinds)
+         ([remap describe-face]            .  counsel-faces)
+         ([remap describe-function]        .  counsel-describe-function)
+         ([remap describe-variable]        .  counsel-describe-variable)
+         ([remap find-file]                .  counsel-find-file)
+         ([remap imenu]                    .  counsel-imenu)
+         ([remap org-goto]                 .  counsel-org-goto)
+         ([remap org-set-tags-command]     .  counsel-org-tag)
+         ([remap recentf-open-files]       .  counsel-recentf)
+         ([remap set-variable]             .  counsel-set-variable)
+         ([remap swiper]                   .  counsel-grep-or-swiper)
+         ([remap occur]                    . counsel-grep-or-swiper)
+         ([remap unicode-chars-list-chars] .  counsel-unicode-char)
+         ([remap yank-pop]                 .  counsel-yank-pop)
+         ([remap execute-extended-command] .  counsel-M-x)
+         ([remap eshell-previous-matching-input] . counsel-esh-history)
+
          (;; ,(kbd "C-c k")
           "k"  . yc/counsel-grep)
 
@@ -219,9 +237,6 @@ Call FUNC which is 'counsel-git-grep-action with X."
                      (interactive)
                      (yc/counsel-grep t)))
 
-         ([remap switch-to-buffer] . ivy-switch-buffer)
-         ([remap eshell-previous-matching-input] . counsel-esh-history)
-         ([remap occur] . counsel-grep-or-swiper)
          )
   :bind (:map ctl-x-map
               ("\C-f" . counsel-find-file)
@@ -237,49 +252,55 @@ Call FUNC which is 'counsel-git-grep-action with X."
       (setq counsel-grep-base-command
             "rg -S --no-heading --line-number --color never %s %s"))
 
-  (advice-add 'counsel-grep-or-swiper :around #'yc/counsel-grep-or-swiper-adv)
-  (advice-add 'counsel-git-grep-action :before-until #'yc/counsel-git-grep-action-adv)
+  (defadvice! yc/counsel-grep-or-swiper-adv (orig-func &rest args)
+    "Call counsel-grep-or-swiper with symbol-at-point.
+ORIG-FUNC is called with ARGS."
+    :around #'counsel-grep-or-swiper
+    (apply orig-func (or args (list (aif (symbol-at-point) (symbol-name it))))))
 
-  (ivy-add-actions 'counsel-find-file  yc/ivy-common-actions)
-  )
+  (defadvice! yc/counsel-git-grep-action-adv (x)
+    "ORIG-FUNC is called with ARGS."
+    :before-until #'counsel-git-grep-action
+    (when (string-match "\\`\\(.*?\\):\\([0-9]+\\):\\(.*\\)\\'" x)
+      (let* ((file-name (match-string-no-properties 1 x))
+             (line-number (match-string-no-properties 2 x))
+             (buffer (get-file-buffer (expand-file-name
+                                       file-name
+                                       (ivy-state-directory ivy-last)))))
+        (PDEBUG "BUF:" buffer
+                "FILE:" file-name
+                "LINE:" line-number)
+        (when buffer
+          (with-current-buffer buffer
+            (switch-to-buffer buffer );; (display-buffer buffer)
+            (goto-char (point-min))
+            (forward-line (1- (string-to-number line-number)))
 
+            (when (re-search-forward (ivy--regex ivy-text t) (line-end-position) t)
+              (when swiper-goto-start-of-match
+                (goto-char (match-beginning 0))))
 
-(defun yc/counsel-grep-or-swiper-adv (func &rest args)
-  "Advice for 'counsel-grep-or-swiper'.
-Call FUNC which is 'counsel-grep-or-swiper with ARGS."
-  (apply func (or args (list (aif (symbol-at-point) (symbol-name it))))))
+            (swiper--ensure-visible)
+            (recenter)
 
+            (run-hooks 'counsel-grep-post-action-hook)
+            (unless (eq ivy-exit 'done)
+              (swiper--cleanup)
+              (swiper--add-overlays (ivy--regex ivy-text))))
+          t))))
 
-(defun yc/get-woman-path (lst)
-  "Get list of woman-path from `LST'."
-  (let (result )
-    (dolist (path lst)
-      (if (file-directory-p path)
-          (setq result (append result (directory-files (expand-file-name path) t "[a-z].*")))))
-    result))
+  (ivy-add-actions 'counsel-find-file  yc/ivy-common-actions))
 
-(use-package counsel-woman
-  :bind (([f1] . counsel-woman))
-  :custom
-  (woman-use-own-frame nil)
-  (woman-path (aif (getenv "EPREFIX")
-                  (yc/get-woman-path (list (concat it "/usr/share/man")
-                                           (concat it
-                                                   "/usr/local/share/man")))))
-  )
-
-(defun yc/bookmark-set (func &rest args)
-  "Save bookmark after `bookmark-set'.
-Call FUNC with ARGS."
-  (and (bookmark-time-to-save-p t)
-       (bookmark-save)))
 
 (use-package bookmark
   :custom
   (bookmark-default-file (yc/make-cache-path "bookmarks"))
   :config
-  (progn
-    (advice-add 'bookmark-set :after #'yc/bookmark-set)))
+  (defadvice! yc/bookmark-set-adv (&rest args)
+    "Save book mark file after new bookmark is added.
+ORIG-FUNC is called with ARGS."
+    :after #'bookmark-set
+    (bookmark-save)))
 
 
 ;; With smex, ivy can sort commands by frequency.
@@ -290,9 +311,7 @@ Call FUNC with ARGS."
   :custom
   (amx-history-length 20))
 
-
  ;; Projectile...
-
 (use-package projectile
   :commands (projectile-project-root projectile-find-other-file)
   :bind (("C-x M-k" . projectile-kill-buffers)
@@ -300,29 +319,8 @@ Call FUNC with ARGS."
          ("C-x M-s" . projectile-save-project-buffers))
   :custom
   (projectile-completion-system 'ivy)
-  (projectile-other-file-alist
-   '( ;; handle C/C++ extensions
-     ("cpp" . ("h" "hpp" "ipp"))
-     ("ipp" . ("h" "hpp" "cpp"))
-     ("hpp" . ("h" "ipp" "cpp" "cc"))
-     ("cxx" . ("h" "hxx" "ixx"))
-     ("ixx" . ("h" "hxx" "cxx"))
-     ("hxx" . ("h" "ixx" "cxx"))
-     ("c" . ("h"))
-     ("m" . ("h"))
-     ("mm" . ("h"))
-     ("h" . ("cc" "cpp" "cxx"  "c" "ipp" "hpp" "ixx" "hxx" "m" "mm"))
-     ("cc" . ("h" "hh" "hpp"))
-     ("hh" . ("cc"))
-
-     ;; vertex shader and fragment shader extensions in glsl
-     ("vert" . ("frag"))
-     ("frag" . ("vert"))
-
-     ;; handle files with no extension
-     (nil . ("lock" "gpg"))
-     ("lock" . (""))
-     ("gpg" . (""))))
+  (projectile-globally-ignored-files '(".DS_Store" "TAGS"))
+  (projectile-globally-ignored-file-suffixes '(".elc" ".pyc" ".o"))
 
   :config
   (cond
@@ -332,43 +330,42 @@ Call FUNC with ARGS."
    ((executable-find "fd")
     (setq-default projectile-generic-command "fd . -0 --type f --color=never"))
    ((executable-find "rg")
-    (setq projectile-generic-command "rg -0 --files --follow --color=never --hidden")))
-  )
+    (setq projectile-generic-command "rg -0 --files --follow --color=never --hidden"))))
 
-
-(defun yc/projectile-find-file (&rest args)
-  "Advice for 'projectile-find-file'.
-Call FUNC which is 'projectile-find-file with ARGS."
-  (interactive "P")
-  (unless (featurep 'counsel-projectile)
-    (require 'counsel-projectile))
-  (cond
-   (current-prefix-arg
-    (ivy-read "Find file: " (projectile-files-via-ext-command default-directory (projectile-get-ext-command nil))
-              :matcher counsel-projectile-find-file-matcher
-              :require-match t
-              :sort counsel-projectile-sort-files
-              :action counsel-projectile-find-file-action
-              :caller 'counsel-projectile-find-file
-              ))
-
-   ((file-exists-p (concat (projectile-project-root) ".git"))
-    ;; find file, exclude files in submodules.
-    (ivy-read (projectile-prepend-project-name "Find file: ")
-              (magit-revision-files "HEAD")
-              :matcher counsel-projectile-find-file-matcher
-              :require-match t
-              :sort counsel-projectile-sort-files
-              :action counsel-projectile-find-file-action
-              :caller 'counsel-projectile-find-file)
-    )
-
-   (t
-    (counsel-projectile-find-file)))
-  )
 
 (use-package counsel-projectile
   :ensure t
+  :preface
+  (defun yc/projectile-find-file (&rest args)
+    "My own version of `projectile-find-file'.
+Faster than projectile-find-file, since git submodules are ignored.
+Call FUNC which is 'projectile-find-file with ARGS."
+    (interactive "P")
+    (unless (featurep 'counsel-projectile)
+      (require 'counsel-projectile))
+    (cond
+     (current-prefix-arg
+      (ivy-read "Find file: " (projectile-files-via-ext-command default-directory (projectile-get-ext-command nil))
+                :matcher counsel-projectile-find-file-matcher
+                :require-match t
+                :sort counsel-projectile-sort-files
+                :action counsel-projectile-find-file-action
+                :caller 'counsel-projectile-find-file
+                ))
+
+     ((file-exists-p (concat (projectile-project-root) ".git"))
+      ;; find file, exclude files in submodules.
+      (ivy-read (projectile-prepend-project-name "Find file: ")
+                (magit-revision-files "HEAD")
+                :matcher counsel-projectile-find-file-matcher
+                :require-match t
+                :sort counsel-projectile-sort-files
+                :action counsel-projectile-find-file-action
+                :caller 'counsel-projectile-find-file)
+      )
+
+     (t
+      (counsel-projectile-find-file))))
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files
                                                  projectile-files-via-ext-command)
   :functions (counsel-projectile-find-file-action)
@@ -376,7 +373,6 @@ Call FUNC which is 'projectile-find-file with ARGS."
   :bind (("C-x M-f" . yc/projectile-find-file)
          ("C-x M-d" . counsel-projectile-find-dir)))
 
-
 (use-package smartparens
   :ensure t
   :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
@@ -407,43 +403,42 @@ Call FUNC which is 'projectile-find-file with ARGS."
   (vlf-batch-size 2000000) ;; 2 MB.
   )
 
-(defun yc/find-file-noselect-adv (func &rest args)
-  "Advice for 'find-file-noselect'.
-Call FUNC which is 'find-file-noselect with ARGS."
-  (condition-case var
-      (apply func args)
-    (error (progn
-             (PDEBUG "VAR: " var)
-             (if (string= (cadr var) "File already visited literally")
-                 (find-buffer-visiting (car args))
-               (error "%s" (cadr var)))))))
-
 (use-package files
 
   :config
   ;;Handle file-error and suggest to install missing packages...
   (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
-  (advice-add 'abort-if-file-too-large :before-until #'yc/abort-if-file-too-large)
-  (advice-add 'find-file-noselect :around #'yc/find-file-noselect-adv))
 
-(defun yc/abort-if-file-too-large (size op-type filename  &optional OFFER-RAW)
-  "Advice for `abort-if-file-too-large'.
+  (defadvice! yc/find-file-noselect-adv (orig-func &rest args)
+    "Docs.
+ORIG-FUNC is called with ARGS."
+    :around #'find-file-noselect
+    (condition-case var
+        (apply orig-func args)
+      (error (progn
+               (PDEBUG "VAR: " var)
+               (if (string= (cadr var) "File already visited literally")
+                   (find-buffer-visiting (car args))
+                 (error "%s" (cadr var)))))))
+
+  (defadvice! yc/abort-if-file-too-large-adv (size op-type filename  &optional OFFER-RAW)
+    "Advice for `abort-if-file-too-large'.
 If file SIZE larger than `large-file-warning-threshold', allow user to use
 `vlf' to view part of this file, or call original FUNC which is
 `abort-if-file-too-large' with OP-TYPE, FILENAME."
-  (when (and (string= op-type "open")
-           large-file-warning-threshold size
-           (> size large-file-warning-threshold))
-    (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
-                          (file-name-nondirectory filename)
-                          (file-size-human-readable size)))
-        (progn
-          (vlf filename)
-          (error "File %s opened in VLF mode." filename)))))
+    :before-until #'abort-if-file-too-large
+    (when (and (string= op-type "open")
+               large-file-warning-threshold size
+               (> size large-file-warning-threshold))
+      (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
+                            (file-name-nondirectory filename)
+                            (file-size-human-readable size)))
+          (progn
+            (vlf filename)
+            (error "File %s opened in VLF mode" filename))))))
 
 
 (use-package server
-
   :commands (server-start server-running-p)
   :hook ((emacs-startup .
                         (lambda ()
@@ -468,7 +463,6 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
  (list (kbd "C-\\")))
 
 (use-package ibuffer
-
   :bind ((;; ,(kbd "C-x C-b")
           "". ibuffer))
   :bind (:map ibuffer-mode-map
@@ -553,6 +547,7 @@ With REVERSE is t, switch to previous window."
 
 ;; Preview when `goto-line`
 (use-package goto-line-preview
+  :ensure t
   :bind ([remap goto-line] . goto-line-preview))
 
 

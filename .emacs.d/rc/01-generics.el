@@ -61,7 +61,7 @@
   messages-buffer-max-lines 	t
   mouse-avoidance-mode 		'animate; 光标碰到鼠标所在位置时，鼠标自动移开
 
-                                        ; 设置title
+  ;; 设置 title
   frame-title-format 		'(:eval
                                   (cond
                                    (buffer-file-name buffer-file-name)

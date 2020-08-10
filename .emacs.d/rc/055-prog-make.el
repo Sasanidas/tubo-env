@@ -15,11 +15,10 @@
   :hook ((cmake-mode . cmake-font-lock-activate)))
 
 (use-package company-cmake
-
   :commands (company-cmake)
   :hook ((cmake-mode .
                      (lambda ()
-                       (yc/add-company-backends-with-yasnippet company-cmake)))))
+                       (yc/add-company-backends company-cmake company-dabbrev-code)))))
 
 (use-package cmake-mode
   :commands (cmake-mode cmake-help cmake-help-list-commands)

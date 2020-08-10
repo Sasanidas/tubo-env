@@ -814,8 +814,6 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
   (setup-prog-keybindings)
   (emr-initialize)
 
-  (yc/add-company-backends-with-yasnippet
-    company-keywords company-dabbrev-code)
   (flycheck-mode 1))
 
 (use-package prog-mode

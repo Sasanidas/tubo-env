@@ -16,7 +16,6 @@
 (use-package highlight-indentation
   :commands (highlight-indentation-mode))
 
-
  ;; Info settings.
 (use-package info
   :commands (info)
@@ -1089,11 +1088,12 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
   (nxml-auto-insert-xml-declaration-flag t)
   (nxml-bind-meta-tab-to-complete-flag t)
   (nxml-slash-auto-complete-flag t)
-  :hook ((nxml-mode .       (lambda ()
-                              (local-set-key (kbd "C-c /") 'nxml-finish-element)
-                              (auto-fill-mode)
-                              (rng-validate-mode)
-                              (hs-minor-mode 1)
+  :hook ((nxml-mode .
+                    (lambda ()
+                      (local-set-key (kbd "C-c /") 'nxml-finish-element)
+                      (auto-fill-mode)
+                      (rng-validate-mode)
+                      (hs-minor-mode 1)
                               (yc/add-company-backends-with-yasnippet company-nxml)))))
 
  ;; **************************** Text Mode ***************************

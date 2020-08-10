@@ -93,7 +93,7 @@ plantuml is a cross-platform, open-source make system."
   :hook ((plantuml-mode .
                         (lambda ()
                           (flycheck-plantuml-setup)
-                          (yc/add-company-backends-with-yasnippet company-plantuml)
+                          (yc/add-company-backends company-plantuml)
                           (uml/parse-stringfied-nodes t))))
   :config
   (progn

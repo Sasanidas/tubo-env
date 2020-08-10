@@ -58,7 +58,7 @@
 
   (set (make-local-variable 'autopair-skip-whitespace) 'chmop)
   (eldoc-mode 1)
-  (yc/add-company-backends-with-yasnippet company-elisp)
+  (yc/add-company-backends company-elisp)
   (setq c-basic-offset 8
         tab-width 8))
 
@@ -77,9 +77,7 @@
       (PDEBUG "Byte compile ignored for file: " buffer-file-name)
     (byte-compile-file buffer-file-name))))
 
-(use-package
-  elisp-mode
-
+(use-package  elisp-mode
   :mode (((rx "." (or "el" "sexp") eol) . emacs-lisp-mode))
   :bind (:map emacs-lisp-mode-map
               (;; (kbd "C-c M-k")
@@ -90,7 +88,8 @@
   :hook ((emacs-lisp-mode . my-lisp-hook)
          (lisp-mode my-lisp-hook))
   :config
-  (add-hook 'after-save-hook 'yc/byte-compile-current-elisp))
+  (add-hook 'after-save-hook 'yc/byte-compile-current-elisp)
+  )
 
  ;; native compile..
 

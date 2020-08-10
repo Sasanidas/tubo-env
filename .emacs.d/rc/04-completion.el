@@ -1,4 +1,4 @@
-;;; 04-completion.el -- Brief introduction here.
+;;; 04-completion.el -- Brief introduction here. -*- lexical-binding: t; -*-
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -25,7 +25,7 @@
 
  ;; ************** Autoinsert templates *****************
 (defun insert-today ()
-  "Insert today's date into buffer"
+  "Insert today's date into buffer."
   (interactive)
   (insert (format-time-string "%Y-%m-%d" (current-time))))
 
@@ -213,7 +213,7 @@
               (;; ,(kbd "TAB")
                "	". company-complete))
   :custom
-  (company-backends '((company-files company-capf company-dabbrev company-abbrev :with company-yasnippet)))
+  (company-backends '((company-capf :separate company-yasnippet)))
   (company-minimum-prefix-length 2)
   (company-idle-delay 0.25)
   (company-tooltip-limit 14)
@@ -222,22 +222,25 @@
   (company-frontends '(company-pseudo-tooltip-frontend
                        company-echo-metadata-frontend))
 
+  ;; Only search the current buffer for `company-dabbrev' (a backend that
+  ;; suggests text your open buffers). This prevents Company from causing
+  ;; lag once you have a lot of buffers open.
+  (company-dabbrev-other-buffers nil)
   ;; Make `company-dabbrev' fully case-sensitive, to improve UX with
   ;; domain-specific words with particular casing.
   (company-dabbrev-ignore-case nil)
   (company-dabbrev-downcase nil)
-  (company-auto-complete t)
 
-  :hook (after-init . global-company-mode)
-  )
+  ;; disable auto-complete, or " " will trigger complete.
+  (company-auto-complete nil)
 
-(yc/defmacro yc/add-company-backends-with-yasnippet (&rest backends)
-  `(set (make-local-variable 'company-backends)
-        (push ',(append backends '(company-yasnippet :separate)) company-backends)))
+  :hook ((after-init . global-company-mode))
+)
 
 (yc/defmacro yc/add-company-backends (&rest backends)
   `(set (make-local-variable 'company-backends)
-        (push ',backends company-backends)))
+        (list (append ',backends
+                      '(company-capf :separate company-yasnippet)))))
 
 (provide '04-completion)
 

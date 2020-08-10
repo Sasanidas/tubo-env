@@ -6,6 +6,22 @@
 
 ;;; Code:
 
+(use-package counsel-woman
+  :bind (([f1] . counsel-woman))
+  :custom
+  (woman-use-own-frame nil)
+  :config
+  (aif (getenv "EPREFIX")
+      (mapc
+       (lambda (x)
+         (push (concat (file-name-as-directory it) x) woman-manpath))
+       '("usr/share/man"
+         "usr/local/share/man"
+         "share/man"
+         "local/share/man")))
+
+  )
+
  ;; php mode
 (use-package php-mode
   :mode (rx "." (or (: "php" (* (or "s" "t" digit))) "phtml" "Amkfile" "amk"))
@@ -35,7 +51,7 @@
 ;;   :hook ((java-mode
 ;;           .
 ;;           (lambda ()
-;;             ;; (yc/add-company-backends-with-yasnippet company-eclim)
+;;             ;; (yc/add-company-backends company-eclim)
 ;;             (unless (featurep 'lsp-java)
 ;;               (require 'lsp-java))
 ;;             (lsp)))))
@@ -178,7 +194,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 (defun yc/sql-mode-hook ()
   "My hook to run for sql mode."
   (ws-butler-mode -1)
-  (yc/add-company-backends-with-yasnippet company-sql company-keywords))
+  (yc/add-company-backends company-sql company-keywords))
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
@@ -216,20 +232,14 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
  ;; scala-mode.
 (use-package ensime
   :commands (ensime)
-  :config
-  (progn
-    (advice-add 'ensime-company-enable :around #'yc/ensime-company-enable)
-    (custom-set-variables
-     '(ensime-startup-notification nil)
-     '(ensime-startup-snapshot-notification nil)
-     '(ensime-db-default-port "5005")
-     '(ensime-startup-dirname (yc/make-cache-path "ensime")))))
-
-(defun yc/ensime-company-enable (func &rest args)
-  "Advice for `ensime-company-enable'.
-Call FUNC with ARGS."
-  (yc/add-company-backends-with-yasnippet ensime-company))
-
+  :custom
+  (ensime-startup-notification nil)
+  (ensime-startup-snapshot-notification nil)
+  (ensime-db-default-port "5005")
+  (ensime-startup-dirname (yc/make-cache-path "ensime"))
+  ;; :config
+  ;; (yc/add-company-backends 'ensime-company 'ensime-company)
+  )
 
 (defun yc/ensime-find-definition (pt)
   "Find definition at PT."
