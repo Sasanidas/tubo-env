@@ -1474,6 +1474,22 @@ args should be a list, but to make caller's life easier, it can accept one atom 
       (insert command)
       (eshell-send-input))))
 
+ ;; yasnippet.
+
+(defun yc/new-snippet (name)
+  "Create snippet for current mode."
+  (interactive "sSnippet Name: ")
+  (let* ((mode-mapping
+          (list (cons 'lisp-interaction-mode 'emacs-lisp-mode)
+                (cons 'c-mode 'cc-mode)))
+         (mode (or (cdr (assq major-mode  mode-mapping)) major-mode))
+         (priv (if (yes-or-no-p "Is this public snippet?") "" "-private"))
+         (dirname (expand-file-name
+                   (format "~/.emacs.d/templates/yasnippets%s/%s" priv (symbol-name mode))))
+         (filename (concat dirname "/" name)))
+    (unless (file-directory-p dirname) (mkdir dirname t))
+    (find-file filename)))
+
 
 (provide 'yc-utils)
 

@@ -20,7 +20,6 @@
 (use-package ivy
   :ensure t
   :commands (ivy-read)
-  :hook ((emacs-startup . ivy-mode))
   :custom
   (ivy-use-virtual-buffers t)        ;; Enable bookmarks and recentf
   (ivy-count-format "%d/%d ")        ;; Display count displayed and total
@@ -38,12 +37,11 @@
          ([remap switch-to-buffer] . ivy-switch-buffer)
          )
   :config
-  (message "Loading ivy")
-)
+  (require 'ivy-rich)
+  (ivy-mode))
 
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
-
 (use-package ivy-rich
   :preface
   (defun +ivy-rich-describe-variable-transformer (cand)
@@ -60,7 +58,7 @@
                             'success)))
              ((symbolp val)
               (propertize (format "'%s" val)
-                          'face 'highlight-quoted-symbol))
+                          'face 'font-lock-string-face))
              ((keymapp val)
               (propertize "<keymap>" 'face 'font-lock-constant-face))
              ((listp val)
@@ -68,7 +66,7 @@
              ((stringp val)
               (propertize (format "%S" val) 'face 'font-lock-string-face))
              ((numberp val)
-              (propertize (format "%s" val) 'face 'highlight-numbers-number))
+              (propertize (format "%s" val) 'face 'font-lock-builtin-face))
              ((format "%s" val)))
        t)))
   :ensure t
@@ -95,7 +93,7 @@
     ;; Apply switch buffer transformers to `counsel-projectile-switch-to-buffer' as well
     'counsel-projectile-switch-to-buffer
     (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
-  (ivy-rich-mode 1))
+  (ivy-rich-mode +1))
 
 
 (defun yc/counsel-grep (&optional deep)
@@ -519,7 +517,7 @@ With REVERSE is t, switch to previous window."
 
 
 (use-package undo-tree
-  :defer 3
+  :defer t
   :ensure t
   :commands (global-undo-tree-mode undo-tree-undo undo-tree-visualize undo-tree-redo)
   :bind (:map undo-tree-map
@@ -536,9 +534,9 @@ With REVERSE is t, switch to previous window."
          (;; ,(kbd "\C-x M-u")
           [24 134217845]. 'undo-tree-redo))
   :custom
+  (undo-tree-visualizer-diff t)
   (undo-tree-visualizer-relative-timestamps t)
   (undo-tree-visualizer-timestamps t)
-  (undo-tree-visualizer-diff t)
   (undo-tree-enable-undo-in-region nil)
   (undo-tree-auto-save-history nil)
 
@@ -555,14 +553,19 @@ With REVERSE is t, switch to previous window."
   :commands (layout-save-current layout-restore))
 
 
-
 (use-package which-key
   :ensure t
   :commands (which-key-mode)
   :custom
+  (which-key-sort-order #'which-key-prefix-then-key-order)
   (which-key-show-early-on-C-h t)
   (which-key-idle-delay 9999)
   (which-key-idle-secondary-delay 0.05)
+  (which-key-sort-uppercase-first nil)
+  (which-key-add-column-padding 1)
+  (which-key-max-display-columns nil)
+  (which-key-min-display-lines 6)
+  (which-key-side-window-slot -10)
   :hook ((after-init . which-key-mode)))
 
 

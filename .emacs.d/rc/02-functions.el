@@ -87,7 +87,6 @@ DOCSTRING and BODY are as in `defun'.
                     `(setq ,plist (plist-put ,plist prop value))
                   `(plist-put ,plist prop value))))
 
-
  ;; Functions
 (defun yc/get-key-code (key &optional recursive)
   "Return code of KEY."

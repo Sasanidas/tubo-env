@@ -40,36 +40,19 @@
         (narrow-to-region (match-beginning 0) (match-end 0))
         (replace-match b t)))))
 
-(defun auto-replace-file-name ()
-  (when buffer-file-name
-    (yc/auto-update-template "FILE" (file-name-nondirectory buffer-file-name))))
-
-(defun auto-replace-file-name-no-ext ()
-  (when buffer-file-name
-    (yc/auto-update-template "FILE_NO_EXT"
-                             (file-name-sans-extension
-                              (file-name-nondirectory buffer-file-name)))))
-
-
-(defun auto-replace-date ()
-  (yc/auto-update-template "DATE" (format-time-string "%Y-%m-%d" (current-time))))
-
-(defun auto-replace-timestamp ()
-  (yc/auto-update-template "TIMESTAMP" (format-time-string "%s" (current-time))))
-
-(defun auto-replace-user ()
-  (yc/auto-update-template "USER" user-full-name))
-
-(defun auto-replace-email ()
-  (yc/auto-update-template "EMAIL" user-mail-address))
-
 (defun auto-update-defaults ()
-  (auto-replace-file-name)
-  (auto-replace-file-name-no-ext)
-  (auto-replace-date)
-  (auto-replace-timestamp)
-  (auto-replace-user)
-  (auto-replace-email))
+  "Update inserted template."
+
+  (when buffer-file-name
+    (let ((fn (file-name-nondirectory buffer-file-name)))
+      (yc/auto-update-template "FILE" fn)
+      (yc/auto-update-template "FILE_NO_EXT" (file-name-sans-extension fn))))
+
+  (yc/auto-update-template "DATE" (format-time-string "%Y-%m-%d" (current-time)))
+  (yc/auto-update-template "TIMESTAMP" (format-time-string "%s" (current-time)))
+  (yc/auto-update-template "USER" user-full-name)
+  (yc/auto-update-template "EMAIL" user-mail-address)
+)
 
 (use-package autoinsert
   :commands (auto-insert)
@@ -85,11 +68,11 @@
     ("\\.el$" . ["insert.el" auto-update-defaults])
     ("\\.gjs$" . ["insert.gjs" auto-update-defaults])
     ("\\.h$"   . ["header.h"])
-    ("\\.i$" . ["insert.i" auto-replace-file-name-no-ext])
+    ("\\.i$" . ["insert.i" auto-update-defaults])
     ("\\.py$" . ["insert.py" auto-update-defaults])
     ("\\.rb$" . ["insert.rb" auto-update-defaults])
     ("\\.sh$" . ["insert.sh" auto-update-defaults])
-    ("\\.swig$" . ["insert.i" auto-replace-file-name-no-ext])
+    ("\\.swig$" . ["insert.i" auto-update-defaults])
     ("\\.tex$" . ["insert.tex" auto-update-defaults])
     ("\\.yy$" . ["insert.yy" auto-update-defaults])
     ("\\.ccls$" . ["insert.ccls" auto-update-defaults])
@@ -98,8 +81,7 @@
     (,(rx "." (or "perl" "pl") eol)
      . ["insert.pl" auto-update-defaults])
     (,(rx "yasnippets" (? "-private") "/")
-      . ["insert.snip" auto-update-defaults])
-    ))
+      . ["insert.snip" auto-update-defaults])))
   )
 
 ;; ******************** Yasnippet ****************************
@@ -121,21 +103,6 @@
       (PDEBUG "CONTENT-AFTER:" (buffer-string))
 
       (buffer-substring-no-properties (point-min) (point-max)))))
-
-
-(defun yc/new-snippet (name)
-  "Create snippet for current mode."
-  (interactive "sSnippet Name: ")
-  (let* ((mode-mapping
-          (list (cons 'lisp-interaction-mode 'emacs-lisp-mode)
-                (cons 'c-mode 'cc-mode)))
-         (mode (or (cdr (assq major-mode  mode-mapping)) major-mode))
-         (priv (if (yes-or-no-p "Is this public snippet?") "" "-private"))
-         (dirname (expand-file-name
-                   (format "~/.emacs.d/templates/yasnippets%s/%s" priv (symbol-name mode))))
-         (filename (concat dirname "/" name)))
-    (unless (file-directory-p dirname) (mkdir dirname t))
-    (find-file filename)))
 
 (defun yc/format-snippets-after-expand ()
   "Format expanded snippets."
@@ -219,6 +186,7 @@
   (company-tooltip-limit 14)
   (company-tooltip-align-annotations t)
   (company-show-numbers  t)
+  (company-require-match 'never)
   (company-frontends '(company-pseudo-tooltip-frontend
                        company-echo-metadata-frontend))
 

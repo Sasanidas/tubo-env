@@ -73,7 +73,7 @@
 
             (concat p1 " 'CFLAGS=" (mapconcat 'identity cflags " ") "' " p3))
 
-        (concat  "'CFLAGS=-pipe -g -O2 -march=native'"
+        (concat  "'CFLAGS=-pipe -g -O2 -march=native'  "
                  system-configuration-options))))
 
     (with-current-buffer (eshell)

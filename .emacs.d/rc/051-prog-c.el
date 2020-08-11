@@ -23,91 +23,21 @@ and is reversed for better performance.")
           (semantic-add-system-include dir 'c++-mode))
         yc/system-include-dirs))
 
-(defun yc/get-all-includes ()
-  "Return all include directories"
-  (-flatten (list
-             (if ede-object-project (ede-system-include-path ede-object-project)
-               nil)
-             yc/system-include-dirs)))
 
-(defun yc/show-project-include-path ()
-  (interactive)
-  (if ede-object-project
-      (print (ede-system-include-path ede-object-project))
-    (message "Not controlled by EDE...")))
-
-
-
-;; 输入 inc , 可以自动提示输入文件名称,可以自动补全.
-(mapc
- (lambda (table)
-   (define-abbrev-table table '(
-                                ("inc2" "" skeleton-include-2 1)
-                                ("inc" "" skeleton-include 1)
-                                )))
- '(c-mode-abbrev-table c++-mode-abbrev-table objc-mode-abbrev-table))
-
-(defun yc/incfile-is-local (inc-file)
-  "Judge whether inc-file is local."
-  (let ((inc-fullpath nil)
-        (local-dirs '("."))
-        (ret-val nil))
-    (if ede-object-project
-        (setq local-dirs
-              (append local-dirs
-                      (ede-system-include-path ede-object-project))))
-    (catch 'incfile
-      (mapc
-       (lambda (dir)
-         (if (file-exists-p (format "%s/%s" dir inc-file))
-             (progn
-               (setq ret-val t)
-               (throw 'incfile t))))
-       local-dirs))
-    ret-val))
-
-(defun yc/update-inc-marks ()
-  "Update place markers."
-  (let ((statement (buffer-substring-no-properties
-                    (point-at-bol) (point-at-eol)))
-        (inc-file nil)
-        (prompt nil)
-        (to-begin nil)
-        (to-end nil)
-        (yc/re-include
-         (rx (group (or "#include" "#import"))
-             (+ blank) "|XXX|" (group (*? ascii)) "|XXX|")))
-    (when (string-match yc/re-include statement)
-      (setq prompt (match-string 1 statement))
-      (setq inc-file (match-string 2 statement))
-      (if (yc/incfile-is-local inc-file)
-          (setq to-begin "\"" to-end "\"")
-        (setq to-begin "<" to-end ">"))
-      (move-beginning-of-line 1)
-      (kill-line)
-      (insert (format "%s %s%s%s" prompt to-begin inc-file to-end))
-      (move-end-of-line 1)
-      )))
-
-
 (use-package member-function
-
   :commands (expand-member-functions)
-  :config (setq mf--insert-commentary nil)
+  :custom
+  (mf--insert-commentary nil)
   :hook ((c++-mode . (lambda ()
                        (local-set-key (kbd "C-c m") 'expand-member-functions)))))
 
- ;; ================================== CPP-H switch ===========================
 (use-package prog-utils
-
   :commands (
              yc/asm-post-process
              yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
              yc/preprocess-file yc/insert-empty-template yc/header-make
-             uniq-stack gcrash-analyze-buffer c++filt-buffer
-             ))
+             uniq-stack gcrash-analyze-buffer c++filt-buffer))
 
- ;;;; Hide-ifdefs
 (use-package hideif
   :commands (hide-ifdef-mode hif-set-var)
   :custom
@@ -137,27 +67,11 @@ and is reversed for better performance.")
           (hif-set-var (intern (car x)) (cdr x)))
         semantic-lex-c-preprocessor-symbol-map)))
 
-(defun yc/add-to-ifdef-env (lst)
-  "Helper function to update ifdef-env."
-  (let (kvp k v)
-    (while (setq kvp (pop lst))
-      (setq k (car kvp)
-            v (cdr kvp))
-      (hif-set-var (intern k) t)
-      (when (and (symbolp k) (symbolp v))
-        (add-to-list 'semantic-lex-c-preprocessor-symbol-map (cons (symbol-name k)
-                                                                   (symbol-name v)))))
-    (condition-case msg
-        (hide-ifdefs)
-      (error nil))))
-
 
 (use-package semantic/bovine/gcc
-
   :commands (semantic-gcc-setup))
 
 (use-package semantic/bovine/c
-
   :commands (semantic-default-c-setup)
   :hook ((c-mode-common .
                         (lambda ()
@@ -166,140 +80,18 @@ and is reversed for better performance.")
                            (lambda ()
                              (unless (bound-and-true-p lsp-mode)
                                (PDEBUG "Lazy hooks for mode " major-mode)
-                               (let ((compiler (getenv "CC")))
-                                 (if (or (and compiler (string= compiler "clang"))
-                                         (eq system-type 'darwin))
-                                     (semantic-clang-setup)
-                                   (semantic-gcc-setup)))
+                               ;; (let ((compiler (getenv "CC")))
+                               ;;   (if (or (and compiler (string= compiler "clang"))
+                               ;;           (eq system-type 'darwin))
+                               ;;       (semantic-clang-setup)
+                               ;;     (semantic-gcc-setup)))
+                               (semantic-gcc-setup)
                                (semantic-default-c-setup)
                                (yc/add-common-includes))))))))
 
 
 (use-package clang-format
   :commands (clang-format-region clang-format-buffer))
-
-(defun semantic-clang-get-include-paths (lang)
-  "Return include paths as gcc uses them for language LANG."
-  (let* ((lang "c++")
-         (clang-cmd (cond
-                     ((string= lang "c") "clang")
-                     ((string= lang "c++") "clang++")
-                     (t (if (stringp lang)
-                            (error "Unknown lang: %s" lang)
-                          (error "LANG=%S, should be a string" lang)))))
-         (clang-output (semantic-gcc-query clang-cmd "-v" "-E" "-x" lang null-device))
-         (lines (split-string clang-output "\n"))
-         (include-marks 0)
-         (inc-mark "#include ")
-         (inc-mark-len (length "#include "))
-         inc-path)
-
-    (dolist (line lines)
-      (when (> (length line) 1)
-        (if (= 0 include-marks)
-            (when (and (> (length line) inc-mark-len)
-                       (string= inc-mark (substring line 0 inc-mark-len)))
-              (setq include-marks (1+ include-marks)))
-          (let ((chars (append line nil)))
-            (when (= 32 (nth 0 chars))
-              (let ((path (substring line 1)))
-                (when (and (file-accessible-directory-p path)
-                           (file-name-absolute-p path))
-                  (add-to-list 'inc-path
-                               (expand-file-name path)
-                               t))))))))
-    inc-path))
-
-(defun semantic-clang-setup ()
-  "Setup semantic parsing based on clang."
-  (interactive)
-  (message "Setting environment for clang...")
-  (unless (featurep 'semantic/bovine/gcc)
-    (require 'semantic/bovine/gcc))
-  (let* ((fields (semantic-gcc-fields (semantic-gcc-query "clang" "-v")))
-         (cpp-options `("-E" "-dM" "-x" "c++" ,null-device))
-         (query (let ((q (apply 'semantic-gcc-query "cpp" cpp-options)))
-                  (if (stringp q)
-                      q
-                    ;; `cpp' command in `semantic-gcc-setup' doesn't work on
-                    ;; Mac, try `gcc'.
-                    (apply 'semantic-gcc-query "gcc" cpp-options))))
-         (defines (if (stringp query)
-                      (semantic-cpp-defs query)
-                    (message (concat "Could not query gcc for defines. "
-                                     "Maybe g++ is not installed."))
-                    nil))
-         (ver (cdr (assoc 'version fields)))
-         (host (or (cdr (assoc 'target fields))
-                   (cdr (assoc '--target fields))
-                   (cdr (assoc '--host fields))))
-         ;; (prefix (cdr (assoc '--prefix fields)))
-         ;; gcc output supplied paths
-         ;; FIXME: Where are `c-include-path' and `c++-include-path' used?
-         (c-include-path (semantic-gcc-get-include-paths "c"))
-         (c++-include-path (semantic-gcc-get-include-paths "c++"))
-         (gcc-exe (locate-file "clang" exec-path exec-suffixes 'executable))
-         )
-    ;; Remember so we don't have to call GCC twice.
-    (setq semantic-gcc-setup-data fields)
-    (when (and (not c-include-path) gcc-exe)
-      ;; Fallback to guesses
-      (let* ( ;; gcc include dirs
-             (gcc-root (expand-file-name ".." (file-name-directory gcc-exe)))
-             (gcc-include (expand-file-name "include" gcc-root))
-             (gcc-include-c++ (expand-file-name "c++" gcc-include))
-             (gcc-include-c++-ver (expand-file-name ver gcc-include-c++))
-             (gcc-include-c++-ver-host (expand-file-name host gcc-include-c++-ver)))
-        (setq c-include-path
-              ;; Replace cl-function remove-if-not.
-              (delq nil (mapcar (lambda (d)
-                                  (if (file-accessible-directory-p d) d))
-                                (list "/usr/include" gcc-include))))
-        (setq c++-include-path
-              (delq nil (mapcar (lambda (d)
-                                  (if (file-accessible-directory-p d) d))
-                                (list "/usr/include"
-                                      gcc-include
-                                      gcc-include-c++
-                                      gcc-include-c++-ver
-                                      gcc-include-c++-ver-host))))))
-
-    ;;; Fix-me: I think this part might have been a misunderstanding, but I am not sure.
-    ;; If this option is specified, try it both with and without prefix, and with and without host
-    ;; (if (assoc '--with-gxx-include-dir fields)
-    ;;     (let ((gxx-include-dir (cdr (assoc '--with-gxx-include-dir fields))))
-    ;;       (nconc try-paths (list gxx-include-dir
-    ;;                              (concat prefix gxx-include-dir)
-    ;;                              (concat gxx-include-dir "/" host)
-    ;;                              (concat prefix gxx-include-dir "/" host)))))
-
-    ;; Now setup include paths etc
-    (dolist (D (semantic-clang-get-include-paths "c"))
-      (semantic-add-system-include D 'c-mode))
-    (dolist (D (semantic-clang-get-include-paths "c++"))
-      (semantic-add-system-include D 'c++-mode)
-      (let ((cppconfig (list (concat D "/bits/c++config.h") (concat D "/sys/cdefs.h")
-                             (concat D "/features.h"))))
-        (dolist (cur cppconfig)
-          ;; Presumably there will be only one of these files in the try-paths list...
-          (when (file-readable-p cur)
-            ;; Add it to the symbol file
-            (if (boundp 'semantic-lex-c-preprocessor-symbol-file)
-                ;; Add to the core macro header list
-                (add-to-list 'semantic-lex-c-preprocessor-symbol-file cur)
-              ;; Setup the core macro header
-              (setq semantic-lex-c-preprocessor-symbol-file (list cur)))
-            ))))
-    (if (not (boundp 'semantic-lex-c-preprocessor-symbol-map))
-        (setq semantic-lex-c-preprocessor-symbol-map nil))
-    (dolist (D defines)
-      (add-to-list 'semantic-lex-c-preprocessor-symbol-map D))
-    ;; Needed for parsing macOS libc
-    (when (eq system-type 'darwin)
-      (add-to-list 'semantic-lex-c-preprocessor-symbol-map '("__i386__" . "")))
-    (when (featurep 'semantic/bovine/c)
-      (semantic-c-reset-preprocessor-symbol-map))
-    nil))
 
 (cdsq yc/c-file-mode-mapping
   (list (cons (rx (or "linux-" "kernel" "driver" "samba")) "kernel")
@@ -399,14 +191,57 @@ and is reversed for better performance.")
           '(kernel __KERNEL__ CONFIG_SMP CONFIG_PCI CONFIG_MMU))
          (hide-ifdef-use-define-alist 'kernel))))))
 
+(defun yc/cc-c-c++-objc-mode ()
+  "Use heuristics to detect `c-mode', `objc-mode' or `c++-mode'.
+
+1. Checks if there are nearby cpp/cc/m/mm files with the same name.
+2. Checks for ObjC and C++-specific keywords and libraries.
+3. Falls back to `+cc-default-header-file-mode', if set.
+4. Otherwise, activates `c-mode'.
+
+This is meant to replace `c-or-c++-mode' (introduced in Emacs 26.1), which
+doesn't support specification of the fallback mode and whose heuristics are
+simpler."
+
+  (defun +cc--re-search-for (regexp)
+  (save-excursion
+    (save-restriction
+      (save-match-data
+        (widen)
+        (goto-char (point-min))
+        (re-search-forward regexp magic-mode-regexp-match-limit t)))))
+
+  (let ((base (file-name-sans-extension (buffer-file-name (buffer-base-buffer)))))
+    (cond ((or (file-exists-p (concat base ".cpp"))
+               (file-exists-p (concat base ".cc")))
+           (c++-mode))
+          ((or (file-exists-p (concat base ".m"))
+               (file-exists-p (concat base ".mm"))
+               (+cc--re-search-for
+                (concat "^[ \t\r]*\\(?:"
+                        "@\\(?:class\\|interface\\|property\\|end\\)\\_>"
+                        "\\|#import +<Foundation/Foundation.h>"
+                        "\\|[-+] ([a-zA-Z0-9_]+)"
+                        "\\)")))
+           (objc-mode))
+          ((+cc--re-search-for
+            (let ((id "[a-zA-Z0-9_]+") (ws "[ \t\r]+") (ws-maybe "[ \t\r]*"))
+              (concat "^" ws-maybe "\\(?:"
+                      "using" ws "\\(?:namespace" ws "std;\\|std::\\)"
+                      "\\|" "namespace" "\\(?:" ws id "\\)?" ws-maybe "{"
+                      "\\|" "class"     ws id ws-maybe "[:{\n]"
+                      "\\|" "template"  ws-maybe "<.*>"
+                      "\\|" "#include"  ws-maybe "<\\(?:string\\|iostream\\|map\\)>"
+                      "\\)")))
+           (c++-mode))
+          ((c-mode)))))
 
 (use-package cc-mode
-
   :commands (c++-mode objc-mode c-mode)
-  :mode (((rx (or (: "." (or "H" "cc" "hh" "c" "h" "moc" "ipp") (? ".in") buffer-end)
-                  )) . c++-mode)
+  :mode (((rx "." (or "H" "cc" "hh" "moc" "ipp") (? ".in") buffer-end) . c++-mode)
          ((rx "." (or "C" "c" "ic") buffer-end) . c-mode)
          ((rx "." (or "mm" "m") buffer-end) . objc-mode))
+  :mode ((rx  "." (or "h" ) (? ".in") buffer-end) . yc/cc-c-c++-objc-mode)
   :bind (:map c-mode-base-map
               ("\C-c\C-h" . yc/switch-h-cpp)
               ( ;(kbd "M-:")
@@ -419,8 +254,7 @@ and is reversed for better performance.")
                    (uml/struct-to-puml (region-beginning) (region-end)))))
               )
 
-  :hook ((c-mode-common . yc/c-mode-common-hook)
-         )
+  :hook ((c-mode-common . yc/c-mode-common-hook))
 
   :config
   (require 'smartparens-c)

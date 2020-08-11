@@ -236,6 +236,7 @@ ORIG-FUNC is called with ARGS."
              yc/uef
              yc/touch-file
              yc/git-copy-file-path
+             yc/new-snippet
              )
 
   :bind ((;(kbd "C-x J")
