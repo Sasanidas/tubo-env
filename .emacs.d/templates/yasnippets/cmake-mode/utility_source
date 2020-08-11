@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: utility_source
-# key: us
 # --
 utility_source($0)

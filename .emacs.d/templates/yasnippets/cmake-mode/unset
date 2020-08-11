@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: unset
-# key: un
 # --
 unset($0)

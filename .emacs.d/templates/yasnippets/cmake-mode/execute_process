@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: execute_process
-# key: exp
 # --
 execute_process(
 COMMAND ${1:@CMAKE_COMMAND@ -E remove \"$ENV{DESTDIR}${file}\"}

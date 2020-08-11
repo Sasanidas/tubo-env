@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: target_compile_definitions
-# key: tcd
 # --
 target_compile_definitions(${1:TARGET}
 ${2:PU}${2:$(cond

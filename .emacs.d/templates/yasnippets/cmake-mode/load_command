@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: load_command
-# key: lc
 # --
 load_command($0)

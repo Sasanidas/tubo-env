@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: project
-# key: pr
 # --
 project ($0)

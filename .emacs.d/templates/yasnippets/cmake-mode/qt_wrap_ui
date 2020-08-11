@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: qt_wrap_ui
-# key: qwu
 # --
 qt_wrap_ui($0)

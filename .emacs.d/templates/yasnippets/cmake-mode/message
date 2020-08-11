@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: message
-# key: msg
 # --
 message(${1:S}${1:$(cond
                     ((string-match-p "^S" yas-text) "TATUS")

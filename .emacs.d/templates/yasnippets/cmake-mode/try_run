@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: try_run
-# key: tr
 # --
 try_run($0)

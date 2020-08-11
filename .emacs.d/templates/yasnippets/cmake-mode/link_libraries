@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: link_libraries
-# key: lnl
 # --
 link_libraries($0)

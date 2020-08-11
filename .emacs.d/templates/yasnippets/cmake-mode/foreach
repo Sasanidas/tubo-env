@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: foreach
-# key: foe
 # --
 foreach(${1:item} \${${2:array}})
 $0$>

@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: separate_arguments
-# key: sa
 # --
 separate_arguments($0)

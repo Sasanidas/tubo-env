@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: set_target_properties
-# key: stp
 # --
 set_target_properties($0)

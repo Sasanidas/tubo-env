@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: string
-# key: st
 # --
 string($0)

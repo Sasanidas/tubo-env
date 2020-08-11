@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: add_library
-# key: al
 # --
 add_library(${1:name} ${2:SH}${2:$(if (string-match "^SH" yas-text)
 "ARED"$>

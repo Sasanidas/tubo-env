@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: subdirs
-# key: su
 # --
 subdirs($0)

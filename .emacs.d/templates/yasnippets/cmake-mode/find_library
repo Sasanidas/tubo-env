@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: find_library
-# key: fl
 # --
 find_library($0)

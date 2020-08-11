@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: find_package
-# key: fp
 # --
 find_package($0)

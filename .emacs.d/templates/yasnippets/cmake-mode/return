@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: return
-# key: re
 # --
 return($0)

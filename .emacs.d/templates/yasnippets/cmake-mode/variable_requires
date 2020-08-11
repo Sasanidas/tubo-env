@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: variable_requires
-# key: vr
 # --
 variable_requires($0)

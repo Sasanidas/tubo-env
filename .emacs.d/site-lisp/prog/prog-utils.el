@@ -10,6 +10,7 @@
 (require 'swiper)
 (require 'imenu)
 (require 'counsel)
+(require 'lsp-mode)
 
 
 
@@ -1042,7 +1043,193 @@ If NO-CACHED is true, do not use cached value."
             (unless res
               (goto-char position))
             (yc/imenu--cleanup)))))
+
 
+
+(defvar xref-ivy-last nil "Last state used by ivy-xref-show-xrefs.")
+
+(defun yc/ivy-xref-show-xrefs-adv (&rest args)
+  "Advice for 'ivy-xref-show-xrefs'.
+Call FUNC which is 'ivy-xref-show-xrefs with ARGS."
+  (setq xref-ivy-last ivy-last))
+
+(defun yc/return-reflist ()
+  "Return to last reference list."
+  (interactive)
+  (unless xref-ivy-last
+    (error "Stack is empty"))
+
+  (let ((ivy-last xref-ivy-last) )
+    (ivy-resume)))
+
+
+(defun yc/find-definitions-xgtags ()
+  "Goto definition with xgtags."
+  (interactive)
+  (counsel-xgtags-find-definition))
+
+(defun lsp-ui-find-workspace-symbol (pattern)
+  "List project-wide symbols matching the query string PATTERN."
+  (interactive (list (read-string
+                      "workspace/symbol: "
+                      nil 'xref--read-pattern-history))))
+
+(defun yc/find-definitions-xref ()
+  "Description."
+  (interactive)
+
+  (PDEBUG "T: " (xref-find-backend))
+  (PDEBUG "F: " (xref-backend-identifier-at-point (xref-find-backend)))
+
+
+  (condition-case msg
+      (let ((identifier (xref-backend-identifier-at-point (xref-find-backend))))
+        (PDEBUG "ID: " identifier "LEN: " (length identifier))
+        (if (and identifier
+                 (> (length identifier) 0))
+            (xref--find-definitions identifier nil)
+
+          ;; if identifier is invalid, try apropos...
+          (let ((pattern (read-string
+                          "workspace/symbol: "
+                          nil 'xref--read-pattern-history)) )
+            (xref--find-xrefs pattern 'apropos pattern nil)))
+
+        ;; Don't use marker-ring of xref, I'm using my own stack.
+        (unless (ring-empty-p xref--marker-ring)
+          (ring-remove xref--marker-ring 0))
+        t)
+
+    ('error (progn (PDEBUG "Failed to find definition with xref.") nil))))
+
+
+(defvar-local yc/find-def-func-list nil
+  "List of functions can be used when finding definitions.
+If a function succeeded in finding a definition, it should push a method which can
+  be used to return to previous position, and then returns t. Otherwise, return nil.
+Also, ")
+
+(setq-default yc/find-def-func-list '(yc/find-definitions-xref yc/find-definitions-xgtags))
+
+
+(defun yc/prog-try-function-list (func-list tip)
+  "Call functions in `FUNC-LIST..."
+
+  (catch 'd-found
+    (dolist (func func-list)
+      (condition-case var
+          (progn
+            (PDEBUG "Func: " func)
+            (if (and func (funcall func))
+                (throw 'd-found t)
+              (PDEBUG tip ":"
+                (format "%s returns nil:, trying others.."
+                        (symbol-name func)))))
+
+        (error (PDEBUG tip ":" func var))))
+
+    (error "Failed to %s" tip)))
+
+(defun yc/find-definitions ()
+  "Goto definition of symbol."
+  (interactive)
+  (let ((m (point-marker)))
+    (condition-case msg
+        (progn
+          (yc/prog-try-function-list yc/find-def-func-list "find-definitions")
+          (yc/push-stack m))
+      ('error (PDEBUG "Failed to find definition.")))))
+
+
+(defun yc/find-references-xgtags ()
+  "Goto definition with xgtags."
+  (interactive)
+  (counsel-xgtags-find-reference))
+
+(defun yc/find-references-xref ()
+  "Description."
+  (interactive)
+
+  (condition-case msg
+      (xref-find-references (xref-backend-identifier-at-point (xref-find-backend)))
+    ('error (PDEBUG "Failed to find reference with xref."))))
+
+(defvar-local yc/find-ref-func-list '(yc/find-references-xref yc/find-references-xgtags)
+  "List of functions can be used when finding references.
+Return t if succeeded, or nil otherwise.")
+
+
+(defun yc/find-implementation ()
+  "Description."
+  (interactive)
+  (if (bound-and-true-p lsp-mode)
+      (let ((m (point-marker)) )
+        (lsp-find-implementation)
+        (yc/push-stack m))
+
+    (error "Only works for lsp-mode for now")))
+
+(defun yc/find-references ()
+  "Goto definition of symbol."
+  (interactive)
+  (let ((m (point-marker)))
+    (condition-case msg
+        (progn
+          (yc/prog-try-function-list yc/find-ref-func-list "find-references")
+          (yc/push-stack m))
+      ('error (PDEBUG "Failed to find reference."))))
+  )
+
+(defun yc/find-header-lsp ()
+  "Find header file based on lsp."
+  (interactive)
+
+  (unless lsp-mode
+    (error "lsp-mode not enabled for this buffer"))
+
+  (let ((overlays (overlays-in (point-at-bol) (point-at-eol))))
+    (PDEBUG "OVERLAYS:" overlays)
+    (catch 'p-found
+      (dolist (overlay overlays)
+        (let ((pops (overlay-properties overlay)))
+          (PDEBUG "POPS: " pops)
+          (case (overlay-get overlay 'category)
+            ('default-button
+              (let* ((action (overlay-get overlay 'action))
+                     (res (funcall action overlay)))
+                (PDEBUG "ACTION: " action
+                  "RES:  " res)
+                (if res
+                    (throw 'p-found t)))))))
+      nil)))
+
+
+(defun yc/open-header ()
+  "Open header file lied under current PT."
+  (interactive)
+
+  (let ((m (point-marker)))
+    (condition-case msg
+        (progn
+          (yc/prog-try-function-list
+           '(yc/find-header-lsp yc/find-definitions-xref counsel-xgtags-find-header)
+           "find-header")
+          (yc/push-stack m))
+      ('error (PDEBUG "Failed to find header.")))))
+
+(defun yc/return-func()
+  "Return to previous tag."
+  (interactive)
+
+  (when (ring-empty-p yc/marker-stack)
+    (error "Marker stack is empty"))
+
+  (let ((marker (ring-remove yc/marker-stack 0)))
+    (switch-to-buffer (or (marker-buffer marker)
+                          (error "The marked buffer has been deleted")))
+    (goto-char (marker-position marker))
+    (set-marker marker nil nil)
+    (run-hooks 'xref-after-return-hook)))
 
 (provide 'prog-utils)
 

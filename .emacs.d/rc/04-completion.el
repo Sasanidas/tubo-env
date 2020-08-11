@@ -206,9 +206,15 @@
 )
 
 (yc/defmacro yc/add-company-backends (&rest backends)
+  "Prepend BACKENDS to default `compan-backends'."
   `(set (make-local-variable 'company-backends)
         (list (append ',backends
-                      '(company-capf :separate company-yasnippet)))))
+                      '(company-capf :with company-yasnippet)))))
+
+(yc/defmacro yc/set-company-backends (&rest backends)
+  "Set BACKENDS to default `compan-backends'."
+  `(set (make-local-variable 'company-backends)
+        ',backends))
 
 (provide '04-completion)
 

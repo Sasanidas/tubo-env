@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: make_directory
-# key: md
 # --
 make_directory($0)

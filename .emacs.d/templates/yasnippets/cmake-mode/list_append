@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: list_append
-# key: lsa
 # --
 list(APPEND ${1:LIST} ${2:var}$0)

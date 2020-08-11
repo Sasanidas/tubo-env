@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: install
-# key: ist
 # --
 install(`(ivy-read "Choose Target:" '("TARGETS"
                                       "FILES"

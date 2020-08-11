@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: add_custom_command
-# key: acc
 # --
 add_custom_command(OUTPUT ${1:output1}
                    COMMAND ${2:command1}$0)

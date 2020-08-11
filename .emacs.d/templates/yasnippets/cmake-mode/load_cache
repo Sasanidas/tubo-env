@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: load_cache
-# key: lc
 # --
 load_cache($0)

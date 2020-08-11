@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: set_source_files_properties
-# key: ssfp
 # --
 set_source_files_properties($0)

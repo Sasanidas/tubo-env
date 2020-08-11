@@ -1,6 +1,5 @@
 # -*- mode: snippet -*-
 # name: file
-# key: file
 # --
 file(`(ivy-read "Choose" '("GLOB"
                            "GLOB_RECURSE"

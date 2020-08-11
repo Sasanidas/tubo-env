@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
 # name: link_directories
-# key: lnd
 # --
 link_directories($0)
