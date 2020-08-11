@@ -21,7 +21,6 @@
 
 (defun yc/ditaa-path ()
   "Get path of plantUML."
-
   (cond
    ((executable-find "ditaa")
     (progn

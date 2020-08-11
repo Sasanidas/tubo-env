@@ -75,7 +75,6 @@
   (ivy-rich-path-style 'abbrev)
   :config
   (message "Loading ivy-rich...")
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (plist-put! ivy-rich-display-transformers-list
     'counsel-bookmark
     '(:columns
@@ -86,10 +85,6 @@
       ((counsel-describe-variable-transformer (:width 40)) ; the original transformer
        (+ivy-rich-describe-variable-transformer (:width 50)) ; display variable value
        (ivy-rich-counsel-variable-docstring (:face font-lock-doc-face))))
-    'counsel-M-x
-    '(:columns
-      ((counsel-M-x-transformer (:width 60))
-       (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
     ;; Apply switch buffer transformers to `counsel-projectile-switch-to-buffer' as well
     'counsel-projectile-switch-to-buffer
     (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
@@ -304,8 +299,6 @@ ORIG-FUNC is called with ARGS."
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
   :ensure t
-  :commands amx-mode
-  :hook (ivy-mode . amx-mode)
   :custom
   (amx-history-length 20))
 
