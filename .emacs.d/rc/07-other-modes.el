@@ -288,7 +288,6 @@ ORIG-FUNC is called with ARGS."
           "<" . yc/shrink-window-horizontal)
 
          ([f5] . yc/open-eshell)
-
          ([remap shell-command] . yc/exec-command-via-eshell)
          )
   )
@@ -1073,14 +1072,14 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 (use-package css-mode
   :defer t
   :mode (rx "." (or "scss" "css" "rasi") eow)
+  :config
+  (yc/add-company-backends 'css-mode 'company-css)
   :custom
   (css-indent-offset 2)
-  :hook ((css-mode .  (lambda ()
-                        (yc/add-company-backends-with-yasnippet company-css)))))
+)
 
  ;; *************************** nxml mode for XML *******************
 (use-package nxml-mode
-
   :mode (rx "." (or "xml" "xsd" "sch" "rng" "xslt" "svg" "rss" "rdf" "plist") eol)
   :custom
   (nxml-attribute-indent 2)
@@ -1095,7 +1094,10 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
                       (auto-fill-mode)
                       (rng-validate-mode)
                       (hs-minor-mode 1)
-                              (yc/add-company-backends-with-yasnippet company-nxml)))))
+                      )))
+  :config
+  (yc/add-company-backends nxml-mode 'company-nxml)
+  )
 
  ;; **************************** Text Mode ***************************
 

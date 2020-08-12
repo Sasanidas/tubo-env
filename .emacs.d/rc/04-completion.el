@@ -205,16 +205,37 @@
   :hook ((after-init . global-company-mode))
 )
 
-(yc/defmacro yc/add-company-backends (&rest backends)
-  "Prepend BACKENDS to default `compan-backends'."
-  `(set (make-local-variable 'company-backends)
-        (list (append ',backends
-                      '(company-capf :with company-yasnippet)))))
+(defmacro yc/add-company-backends (modes &rest backends)
+  "Prepend BACKENDS (in order) to `company-backends' in MODES.
 
-(yc/defmacro yc/set-company-backends (&rest backends)
-  "Set BACKENDS to default `compan-backends'."
-  `(set (make-local-variable 'company-backends)
-        ',backends))
+MODES should be one symbol or a list of them, representing major or minor modes.
+This will overwrite backends for MODES on consecutive uses.
+
+If the car of BACKENDS is nil, unset the backends for MODES.
+
+Examples:
+
+  (set-company-backend! 'js2-mode
+    'company-tide 'company-yasnippet)
+
+  (set-company-backend! 'sh-mode
+    '(company-shell :with company-yasnippet))
+
+  (set-company-backend! '(c-mode c++-mode)
+    '(:separate company-irony-c-headers company-irony))
+."
+  (declare (indent defun))
+
+  `(dolist (mode (doom-enlist ,modes))
+     (let* ((mode-name (symbol-name mode))
+            (func-name (format "yc/set-company-backends-%s" mode-name)))
+       (defalias (intern func-name)
+         (function (lambda (&rest args)
+                     (set (make-local-variable 'company-backends)
+                          (list (append ,(push 'list backends)
+                                        '(company-capf :with company-yasnippet)))))))
+               (add-hook (intern (concat (symbol-name mode) "-hook"))
+                 (intern func-name)))))
 
 (provide '04-completion)
 

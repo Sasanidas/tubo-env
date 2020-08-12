@@ -92,15 +92,14 @@ plantuml is a cross-platform, open-source make system."
   :hook ((plantuml-mode .
                         (lambda ()
                           (flycheck-plantuml-setup)
-                          (yc/add-company-backends company-plantuml)
                           (uml/parse-stringfied-nodes t))))
   :config
-  (progn
-    (setq plantuml-jar-path (yc/plantuml-path))
-    (aif (executable-find "dot")
-        (setenv "GRAPHVIZ_DOT" it)
-      (warn "plantUML depends on graphviz, which is not installed."))
-    )
+  (setq plantuml-jar-path (yc/plantuml-path))
+  (aif (executable-find "dot")
+      (setenv "GRAPHVIZ_DOT" it)
+    (warn "plantUML depends on graphviz, which is not installed."))
+  (yc/add-company-backends 'plantuml-mode 'company-plantuml)
+
   :custom
   (plantuml-default-exec-mode 'jar)
   (plantuml-indent-level 4))

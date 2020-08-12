@@ -58,7 +58,6 @@
 
   (set (make-local-variable 'autopair-skip-whitespace) 'chmop)
   (eldoc-mode 1)
-  (yc/add-company-backends company-elisp)
   (setq c-basic-offset 8
         tab-width 8))
 
@@ -89,6 +88,7 @@
          (lisp-mode my-lisp-hook))
   :config
   (add-hook 'after-save-hook 'yc/byte-compile-current-elisp)
+  (yc/add-company-backends 'emacs-lisp-mode 'company-elisp 'company-dabbrev-code)
   )
 
  ;; native compile..

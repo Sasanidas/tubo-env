@@ -16,9 +16,8 @@
 
 (use-package company-cmake
   :commands (company-cmake)
-  :hook ((cmake-mode .
-                     (lambda ()
-                       (yc/add-company-backends company-cmake company-dabbrev-code)))))
+  :config
+  (yc/add-company-backends 'cmake-mode 'company-cmake 'company-dabbrev-code))
 
 (use-package cmake-mode
   :commands (cmake-mode cmake-help cmake-help-list-commands)

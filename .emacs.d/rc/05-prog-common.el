@@ -210,13 +210,6 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
   "Add FUNC at the beginning of `yc/marker-stack'."
   (ring-insert yc/marker-stack (or m (point-marker))))
 
-(defun yc/store-current-location ()
-  "Store current location (PT)."
-  (interactive)
-  (yc/push-stack)
-  (if (called-interactively-p 'interactive)
-      (message "Location saved...")))
-
 (use-package gxref
   :ensure
   :commands (gxref-xref-backend))
@@ -238,7 +231,6 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
 
 
 (use-package semantic-uml
-
   :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml))
 
  ;; lsp
@@ -342,7 +334,9 @@ Loading project specific settings before starting LSP."
           (apply orig-func args)
 
           (when (bound-and-true-p lsp-mode)
-            (semantic-mode -1))
+            (semantic-mode -1)
+            (PDEBUG "updating company-backends...")
+            (PDEBUG "Backends: " company-backends))
 
           ;; functions to run after lsp...
           (lsp-flycheck-enable t)
@@ -577,7 +571,8 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
               ("*" . yc/return-func)
               ("r" . yc/return-reflist)
               ("i" . yc/find-implementation)
-              ("m" . yc/show-methods-dwim)))
+              ("m" . yc/show-methods-dwim))
+  :bind (([remap rectangle-mark-mode] . yc/store-current-location)))
 
 ;; (yc/set-keys `(,(cons (kbd "M-m") 'yc/show-methods-dwim)) nil)
 
@@ -592,12 +587,9 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
   "Common program-keybindings."
   (interactive)
   (local-set-key (kbd "M-|") 'align)
-  (local-set-key (kbd "M-n") 'senator-next-tag)
-  (local-set-key (kbd "M-p") 'senator-previous-tag)
   (local-set-key "\C-csD" 'uml/struct-to-dot)
   (local-set-key "\C-csd" 'uml/struct-to-puml)
   (local-set-key "\C-co"    'yc/open-header)
-  (local-set-key (kbd "C-x SPC") 'yc/store-current-location)
   (local-set-key "\C-cp" 'semantic-ia-show-doc)
   (local-set-key "\C-cdp" 'yc/show-doc-at-point)
   (local-set-key "\C-cdP" 'yc/doc-at-point)

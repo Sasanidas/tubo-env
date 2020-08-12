@@ -194,7 +194,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 (defun yc/sql-mode-hook ()
   "My hook to run for sql mode."
   (ws-butler-mode -1)
-  (yc/add-company-backends company-sql company-keywords))
+  )
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
@@ -220,6 +220,7 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   :bind ((;; ,(kbd "C-c C-b")
           "". sql/eval-sql))
   :config
+  (yc/add-company-backends 'sql-mode 'company-sql 'company-keywords)
   (progn
     (require 'sql+)))
 
@@ -237,8 +238,8 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   (ensime-startup-snapshot-notification nil)
   (ensime-db-default-port "5005")
   (ensime-startup-dirname (yc/make-cache-path "ensime"))
-  ;; :config
-  ;; (yc/add-company-backends 'ensime-company 'ensime-company)
+  :config
+  (yc/add-company-backends 'ensime-mode 'ensime-company)
   )
 
 (defun yc/ensime-find-definition (pt)

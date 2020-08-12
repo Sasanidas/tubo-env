@@ -19,8 +19,8 @@
 
 (use-package python
   :custom
-  (python-shell-interpreter (if (executable-find "python3")
-                                "python3" "python"))
+  (python-shell-interpreter "python")
+  (python-indent-guess-indent-offset-verbose nil)
   :hook (
          (python-mode
           .

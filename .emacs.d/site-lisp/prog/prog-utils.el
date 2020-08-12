@@ -1230,6 +1230,15 @@ Return t if succeeded, or nil otherwise.")
     (goto-char (marker-position marker))
     (set-marker marker nil nil)
     (run-hooks 'xref-after-return-hook)))
+
+(defun yc/store-current-location ()
+  "Store current location (PT)."
+  (interactive)
+  (yc/push-stack)
+  (if (called-interactively-p 'interactive)
+      (message "Location saved...")))
+
+
 
 (provide 'prog-utils)
 
