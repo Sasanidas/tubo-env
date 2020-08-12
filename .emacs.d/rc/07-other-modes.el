@@ -72,13 +72,11 @@
 
  ;;; Dictionary.
 (use-package tdict
-
   :bind ((;; (kbd "<C-f10>")
           [C-f10]
           . tdict-search)))
 
 (use-package tabbr
-
   :bind ((;; ,(kbd "<S-f10>")
           [S-f10]. tabbr-search)
          (;; ,(kbd "<C-S-f10>")
@@ -86,7 +84,6 @@
 
  ;; image-mode
 (use-package image-mode
-
   :bind (:map image-mode-map
               (;; ,(kbd "C-c o")
                "o". yc/open-with-external-app)))
@@ -153,7 +150,6 @@
 
 
 (use-package ediff
-
   :commands (ediff-files)
   :bind ((;; ,(kbd "<f12>")
           [f12]. ediff-buffers))
@@ -204,7 +200,6 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package yc-utils
-
   :commands (
              edit-elpa   edit-project   edit-rcs
              edit-template
@@ -237,6 +232,7 @@ ORIG-FUNC is called with ARGS."
              yc/touch-file
              yc/git-copy-file-path
              yc/new-snippet
+             yc/dired-compress-file
              )
 
   :bind ((;(kbd "C-x J")
@@ -288,21 +284,19 @@ ORIG-FUNC is called with ARGS."
           "<" . yc/shrink-window-horizontal)
 
          ([f5] . yc/open-eshell)
-         ([remap shell-command] . yc/exec-command-via-eshell)
-         )
+         ([remap shell-command] . yc/exec-command-via-eshell))
+
+  :hook ((before-save  .change-file-permissions-to-writable))
   )
 
 (use-package yc-dump
-
   :commands (yc/dump-emacs yc/config-emacs))
 
 
  ;; diff-mode
 
 (use-package diff-mode
-
   :mode (rx (or ".rej"  "patch") eol)
-
   :bind (:map diff-mode-map
               (;(kbd "C-c C-v")
                "" . yc/view-with-ediff)
@@ -332,7 +326,6 @@ ORIG-FUNC is called with ARGS."
 
  ;; **************************** RFCs ******************************
 (use-package irfc
-
   :commands (irfc-visit irfc-follow)
   :config
   (custom-set-variables
@@ -346,7 +339,6 @@ ORIG-FUNC is called with ARGS."
 ;;   "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
 
 (use-package tramp
-
   :custom
   (tramp-default-method
      (cond
@@ -374,16 +366,10 @@ ORIG-FUNC is called with ARGS."
   (progn
     (tramp-set-completion-function "ssh"
                                    '((tramp-parse-sconfig "/etc/ssh_config")
-                                     (tramp-parse-sconfig "~/.ssh/config")))
-
-
-    )
-  )
+                                     (tramp-parse-sconfig "~/.ssh/config")))))
 
  ;; ****************** eww ***************************
-
 (use-package shr
-
   :custom
   (shr-use-fonts nil)
   (shr-use-colors t)
@@ -396,7 +382,6 @@ ORIG-FUNC is called with ARGS."
                "/media/img/git.png"))))))
 
 (use-package browse-url
-
   :commands (browse-url-generic)
   :custom
   (browse-url-generic-program (cond ((string= system-type "darwin")
@@ -412,7 +397,6 @@ ORIG-FUNC is called with ARGS."
                                     (t nil))))
 
 (use-package eww
-
   :defer t
   :hook ((eww-mode . yc/disable-trailling-spaces))
   :bind (:map eww-mode-map
@@ -426,7 +410,6 @@ ORIG-FUNC is called with ARGS."
               ))
 
 (use-package my-net-utils
-
   :commands (yc/download-url yc/open-url)
   :bind ((;; ,(kbd "C-x C-d")
           "". yc/download-url)
@@ -434,7 +417,6 @@ ORIG-FUNC is called with ARGS."
           "" . yc/open-url)))
 
  ;; nov, epub reader
-
 (use-package nov
   :mode ((rx ".epub") . nov-mode))
 
@@ -476,7 +458,6 @@ Useful to run after `pdf-tools' updates."
 
 
 (use-package eshell
-
   :commands (eshell-command)
   :bind ((;; ,(kbd "<C-f5>")
           [C-f5]. eshell))
@@ -508,16 +489,20 @@ Useful to run after `pdf-tools' updates."
   (add-hook 'comint-output-filter-functions 'comint-truncate-buffer))
 
 (use-package eshell+
-
   :commands (eshell/ldd eshell/restart_pg))
 
-
 (use-package em-term
-
   :config
   (mapc (lambda (x) (push x eshell-visual-commands))
         '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
           "spark-shell" "sbt" "watch")))
+
+(use-package vterm
+  :bind ((;; ,(kbd "<S-f5>")
+          [S-f5]. vterm))
+  :custom
+  (vterm-kill-buffer-on-exit t)
+  )
 
  ;; comint hook
 (use-package comint
@@ -542,19 +527,12 @@ Useful to run after `pdf-tools' updates."
               text
             shortened-text))))))
 
- ;; Term
-(use-package term
-
-  :bind ((;; ,(kbd "<S-f5>")
-          [S-f5]. ansi-term)))
-
+
 (use-package tabify
-
   :bind (("\C-xt" . untabify)
          ("\C-xT" . tabify)))
 
 (use-package find-func
-
   :bind (("\C-cff"  . find-function)
          ( "\C-cfc" . find-function-on-key))
   :config
@@ -638,20 +616,10 @@ Useful to run after `pdf-tools' updates."
 
  ;; Dired
 (use-package wdired
-
-  :commands (wdired-change-to-wdired-mode)
-)
-
-(defun yc/dired-find-file-adv (&rest args)
-  "Advice for 'dired-find-file'.
-Call FUNC which is 'dired-find-file with ARGS."
-  (let ((buffer (find-buffer-visiting (dired-get-file-for-visit))))
-    (when buffer
-      (switch-to-buffer buffer ))))
-
+  :bind (:map dired-mode-map
+              ("r" . wdired-change-to-wdired-mode)))
 
 (use-package dired
-
   :commands (dired)
   :custom
   (ls-lisp-dirs-first t)
@@ -672,19 +640,22 @@ Call FUNC which is 'dired-find-file with ARGS."
               (;; (kbd "<M-return>")
                [M-return]
                . yc/open-with-external-app)
-              ("r" . wdired-change-to-wdired-mode)
               ([f12] . dired-ediff))
 
   :config
   (progn
     (setq-default dired-listing-switches "-alh")
-    (advice-add 'dired-ediff :around #'yc/dired-ediff-adv)
-    (advice-add 'dired-find-file :before-until #'yc/dired-find-file-adv)
+    (defadvice! yc/dired-find-file-adv (&rest args)
+      "If file already opened, switch to that buffer without confirm.
+ORIG-FUNC is called with ARGS."
+      :before #'dired-find-file
+      (awhen (find-buffer-visiting (dired-get-file-for-visit))
+          (switch-to-buffer it)))
+
     (load-library "ls-lisp")
     (define-key ctl-x-map "d" nil)))
 
 (use-package dired-x
-
   :commands (dired-jump)
   :init
   (progn
@@ -696,148 +667,12 @@ Call FUNC which is 'dired-find-file with ARGS."
                                         'dired-virtual-mode))))
 
 (use-package dired-aux
-
   :config
-  (advice-add 'dired-compress :override #'yc/dired-compress-adv))
-
-;; Overwrite some functions
-(defun yc/dired-ediff-adv (func file &rest args)
-  "Compare file at point with file FILE using `diff'.
-FILE defaults to the file at the mark.  (That's the mark set by
-\\[set-mark-command], not by Dired's \\[dired-mark] command.)
-The prompted-for file is the first file given to `diff'.
-With prefix arg, prompt for second argument SWITCHES,
-which is options for `diff'."
-  (interactive
-   (let* ((current (dired-get-filename t))
-          ;; Get the file at the mark.
-          (file-at-mark (if (mark t)
-                            (save-excursion (goto-char (mark t))
-                                            (dired-get-filename t t))))
-          ;; Use it as default if it's not the same as the current file,
-          ;; and the target dir is the current dir or the mark is active.
-          (default (or (if (and (not (equal file-at-mark current))
-                                (or (equal (dired-dwim-target-directory)
-                                           (dired-current-directory))
-                                    mark-active))
-                           file-at-mark)
-                       (concat (dired-dwim-target-directory) (file-name-nondirectory current))
-                       ))
-          (target-dir (if default
-                          (dired-current-directory)
-                        (dired-dwim-target-directory)))
-          (defaults (dired-dwim-target-defaults (list current) target-dir)))
-     (list
-      (minibuffer-with-setup-hook
-          (lambda ()
-            (set (make-local-variable 'minibuffer-default-add-function) nil)
-            (setq minibuffer-default defaults))
-        (read-file-name
-         (format "Diff %s with%s: " current
-                 (if default (format " (default %s)" default) ""))
-         target-dir default t)))))
-  (let ((current (dired-get-filename t)))
-    (when (or (equal (expand-file-name file)
-                     (expand-file-name current))
-              (and (file-directory-p file)
-                   (equal (expand-file-name current file)
-                          (expand-file-name current))))
-      (error "Attempt to compare the file to itself"))
-    (ediff-files file current))
-  )
-
-
-;; Use 7z and tar to compress/decompress file if possible.
-(defvar yc/dired-compress-file-suffixes
-  (list
-   ;; Regexforsuffix-Programm-Args.
-   (list (rx "." (or "tar.gz" "tgz")) "tar" "xzvf")
-   (list (rx "." (or "tar.bz2" "tbz")) "tar" "xjvf")
-   (list (rx ".tar.xz") "tar" "xJvf")
-   (list (rx "." (or "gz" "Z" "z" "dz" "bz2" "xz" "zip" "rar" "7z")) "7z" "x"))
-  "nil")
-
-(defun yc/dired-check-process (msg program &rest arguments)
-  (let (err-buffer err (dir default-directory))
-    (message "%s..." msg )
-    (save-excursion
-      ;; Get a clean buffer for error output:
-      (setq err-buffer (get-buffer-create " *dired-check-process output*"))
-      (set-buffer err-buffer)
-      (erase-buffer)
-      (setq default-directory dir	; caller's default-directory
-            err (not (eq 0 (apply 'process-file program nil t nil
-                                  (append (if (string= "7z" program) (list "-y")
-                                            nil) arguments)))))
-      (if err
-          (progn
-            (if (listp arguments)
-                (let ((args "") )
-                  (mapc (lambda (X)
-                          (setq args (concat args X " ")))
-                        arguments)
-                  (setq arguments args)))
-            (dired-log (concat program " " (prin1-to-string arguments) "\n"))
-            (dired-log err-buffer)
-            (or arguments program t))
-        (kill-buffer err-buffer)
-        (message "%s...done" msg)
-        nil))))
-
-(defun yc/dired-compress-file (file)
-  ;; Compress or uncompress FILE.
-  ;; Return the name of the compressed or uncompressed file.
-  ;; Return nil if no change in files.
-  (let ((handler (find-file-name-handler file 'dired-compress-file))
-        suffix newname
-        (suffixes yc/dired-compress-file-suffixes))
-
-    ;; See if any suffix rule matches this file name.
-    (while suffixes
-      (let (case-fold-search)
-        (if (string-match (car (car suffixes)) file)
-            (setq suffix (car suffixes) suffixes nil))
-        (setq suffixes (cdr suffixes))))
-    ;; If so, compute desired new name.
-    (if suffix
-        (setq newname (substring file 0 (match-beginning 0))))
-    (cond (handler
-           (funcall handler 'dired-compress-file file))
-          ((file-symlink-p file)
-           nil)
-          ((and suffix (nth 1 suffix))
-           ;; We found an uncompression rule.
-           (if
-               (and (or (not (file-exists-p newname))
-                        (y-or-n-p
-                         (format "File %s already exists.  Replace it? "
-                                 newname)))
-                    (not (yc/dired-check-process (concat "Uncompressing " file)
-                                                 (nth 1 suffix) (nth 2 suffix) file)))
-               newname))
-          (t
-           ;;; We don't recognize the file as compressed, so compress it.
-           ;;; Try gzip; if we don't have that, use compress.
-           (condition-case nil
-               (let ((out-name (concat file ".7z")))
-                 (and (or (not (file-exists-p out-name))
-                          (y-or-n-p
-                           (format "File %s already exists.  Really compress? "
-                                   out-name)))
-                      (not (yc/dired-check-process (concat "Compressing " file)
-                                                   "7z" "a" out-name file))
-                      ;; Rename the compressed file to NEWNAME
-                      ;; if it hasn't got that name already.
-                      (if (and newname (not (equal newname out-name)))
-                          (progn
-                            (rename-file out-name newname t)
-                            newname)
-                        out-name))))))))
-
-(defun yc/dired-compress-adv (&rest args)
-  "Advice for 'dired-compress'.
-Call FUNC which is 'dired-compress with ARGS."
-  (let* (buffer-read-only
+  (defadvice! yc/dired-compress-adv (&rest args)
+    "Compress file with 7z if possible.
+ORIG-FUNC is called with ARGS."
+    :override #'dired-compress
+      (let* (buffer-read-only
          (from-file (dired-get-filename))
          (new-file (yc/dired-compress-file from-file)))
     (if new-file
@@ -848,9 +683,7 @@ Call FUNC which is 'dired-compress with ARGS."
           ;; Now replace the current line with an entry for NEW-FILE.
           (dired-update-file-line new-file) nil)
       (dired-log (concat "Failed to compress" from-file))
-      from-file))
-  )
-
+      from-file))))
 
 
 (use-package hl-line
@@ -864,7 +697,6 @@ Call FUNC which is 'dired-compress with ARGS."
   :mode (rx (or ".vim" (: "." (? "_") (? "g")  "vimrc") ".exrc")))
 
 
-
 (use-package ztree
   :commands (ztree-dir ztree-diff))
 
@@ -872,32 +704,6 @@ Call FUNC which is 'dired-compress with ARGS."
 
 
 (use-package x86-help   :bind (("x" . x86-help))) ;;(kbd "C-h x")
-
-
-
-(defun change-file-permissions-to-writable ()
-  "to be run from find-file-hook, change write permissions"
-  (interactive)
-  (when (file-exists-p buffer-file-name)
-    (let ((attr (file-attributes buffer-file-name))
-          (msg (format "Make file: %s writable... " buffer-file-name)))
-      ;; Change file mode if this file belongs to me, and it is writeable.
-      (when (and (not (car attr))
-                 (= (user-uid) (caddr attr))
-                 (not (file-writable-p buffer-file-name)))
-        (cond
-         ((executable-find "chmod")
-          (progn
-            (call-process (executable-find "chmod") nil nil nil "+w"
-                          buffer-file-name)))
-         (t (chmod buffer-file-name
-                   (file-modes-symbolic-to-number
-                    "u+w" (file-modes buffer-file-name)))))
-        (setq msg (concat msg (if (file-writable-p buffer-file-name)
-                                  "Succeeded\n" "Failed\n" )))
-        (message msg)))))
-
-(add-hook 'before-save-hook 'change-file-permissions-to-writable)
 
 
 (use-package artist
@@ -939,12 +745,9 @@ Call FUNC which is 'dired-compress with ARGS."
   :bind ((;; ,(kbd "C-c hr")
           "hr". yc/vimish-fold-toggle)))
 
-
-
 (use-package mediawiki
   :commands (mediawiki-open mediawiki-site))
 
-
 (use-package desktop
   :commands (desktop-save-in-desktop-dir desktop-read)
   :config
@@ -959,104 +762,9 @@ Call FUNC which is 'dired-compress with ARGS."
 (autoload 'hc "httpcode" "http status code" t)
 
  ;; ****************************** HTML Mode ******************************
-(defun yc/html-remove-tags (start end)
-  "Remove tags from region (START - END)."
-  (interactive "rp")
-  (when (region-active-p)
-    (let ((orig (buffer-substring-no-properties start end))
-          (r-match-tag (rx
-                        (or (: "<" (? "/") (group (+? nonl)) ">")
-                            (: bol (group (+ space)))))))
-      (with-temp-buffer
-        (insert orig)
-        (goto-char (point-min))
-        (while (search-forward-regexp r-match-tag nil t)
-          (replace-match ""))
-
-        (fill-region (point-min) (point-max))
-        (kill-new (buffer-substring-no-properties (point-min) (point-max)))))
-    (deactivate-mark)))
-
-
-(defun yc/html-to-org ()
-  "Turn region from html to org."
-  (interactive)
-  (when (region-active-p)
-    (let ((orig (buffer-substring-no-properties (region-beginning) (region-end)))
-          (r-match-tag (rx
-                        (or (: "<" (? "/") (group (+? nonl)) ">")
-                            (: bol (group (+ space)))))))
-      (with-temp-buffer
-        (insert orig)
-        (goto-char (point-min))
-
-        ;; handle TAGS
-        (while (search-forward-regexp r-match-tag nil t)
-          (let* ((tag (match-string 1))
-                 (replace
-                  (cond
-                   ((member tag '("varname" "command"))
-                    "=")
-                   ((member tag '("emphasis"))
-                    "*")
-                   (t ""))))
-
-            (replace-match replace)))
-
-        ;; handle special characters
-        (dolist (p '(("&copy;" . "(c)")
-                     ("&amp;" . "&")
-                     ("&lt;" . "<" )
-                     ("&gt;" . ">" )))
-          (goto-char (point-min))
-          (replace-string (car p) (cdr p)))
-
-        ;; fill region and put into kill-ring
-        (fill-region (point-min) (point-max))
-        (kill-new (buffer-substring-no-properties (point-min) (point-max)))))
-    (deactivate-mark)))
-
-(defun yc/semantic-html-parse-headings-adv (func &rest args)
-  "Advice for 'semantic-html-parse-headings'.
-Call FUNC which is 'semantic-html-parse-headings with ARGS."
-  (condition-case var
-      (apply func args)
-    (error
-     (let ((pass1 nil))
-       ;; First search and snarf.
-       (save-excursion
-         (goto-char (point-min))
-
-         (let ((semantic--progress-reporter
-                (make-progress-reporter
-                 (format "Parsing ...")
-                 (point-min) (point-max))))
-           (while (re-search-forward semantic-html-super-regex nil t)
-             (setq pass1 (cons (match-beginning 0) pass1))
-             (progress-reporter-update semantic--progress-reporter (point)))
-           (progress-reporter-done semantic--progress-reporter)))
-
-       (setq pass1 (nreverse pass1))
-       ;; Now, make some tags while creating a set of children.
-       (car (semantic-html-recursive-combobulate-list pass1 0))
-       ))
-    )
-
-  )
-
-(use-package semantic/html
-
-  :config
-  (advice-add 'semantic-html-parse-headings :around #'yc/semantic-html-parse-headings-adv)
-  )
-
 (use-package sgml-mode
-
   :mode ("/itsalltext/" . html-mode)
   :commands (html-autoview-mode)
-  :bind (:map sgml-mode-map
-              (;(kbd "M-W")
-               [134217815] . yc/html-to-org))
   :hook ((html-mode . yc/html-mode-hook)))
 
 (defun yc/html-mode-hook ()
@@ -1096,8 +804,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
                       (hs-minor-mode 1)
                       )))
   :config
-  (yc/add-company-backends nxml-mode 'company-nxml)
-  )
+  (yc/add-company-backends nxml-mode 'company-nxml))
 
  ;; **************************** Text Mode ***************************
 
@@ -1170,7 +877,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
     (message "This may take for a while, refer to *txt2png* to check progress...")))
 
 (use-package text-mode
-
   :bind (:map text-mode-map
               ("\C-c\C-e" . yc/txt-to-png))
   :config
@@ -1181,7 +887,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
   (defalias 'txt-mode 'text-mode))
 
 (use-package artist-mode
-
   :bind (:map artist-mode-map
               ("\C-c\C-e" . yc/txt-to-png)))
 
@@ -1193,7 +898,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
  ;; markdown
 (use-package org-table
-
   :commands (orgtbl-mode))
 
 (defun yc/translate-markdown-filename (in)
@@ -1259,7 +963,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
 
 (use-package logviewer
-
   :commands (logviewer-special-handling-csv)
   :mode (((rx (or (: bow "messages" eow)
                   (:  "/" (+? nonl) "_log/" (+? nonl) "."
@@ -1269,7 +972,6 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
 
  ;; Htmlize mode
 (use-package htmlize
-
   :commands (htmlize-buffer htmlize-region)
   :config
   (custom-set-variables
@@ -1319,20 +1021,18 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
      (format "xelatex %s" file))))
 
 (use-package tex-mode
-
   :mode (((rx buffer-start "." (or "tex" "latex") buffer-end) . LaTex-mode))
   )
 
 
  ;; All others..
 (require 'generic-x)
+
 
 (use-package fontawesome
-
   :commands (counsel-fontawesome))
 
 (use-package counsel-nerd-fonts
-
   :commands (counsel-nerd-fonts))
 
 (use-package leetcode
@@ -1351,9 +1051,7 @@ Call FUNC which is 'semantic-html-parse-headings with ARGS."
     ))
 
 (use-package dockerfile-mode
-  :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end)
-  )
-
+  :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end))
 
 
 (provide '07-other-modes)

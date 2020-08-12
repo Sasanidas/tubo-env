@@ -1491,6 +1491,175 @@ args should be a list, but to make caller's life easier, it can accept one atom 
     (find-file filename)))
 
 
+
+(defun yc/html-remove-tags (start end)
+  "Remove tags from region (START - END)."
+  (interactive "rp")
+  (when (region-active-p)
+    (let ((orig (buffer-substring-no-properties start end))
+          (r-match-tag (rx
+                        (or (: "<" (? "/") (group (+? nonl)) ">")
+                            (: bol (group (+ space)))))))
+      (with-temp-buffer
+        (insert orig)
+        (goto-char (point-min))
+        (while (search-forward-regexp r-match-tag nil t)
+          (replace-match ""))
+
+        (fill-region (point-min) (point-max))
+        (kill-new (buffer-substring-no-properties (point-min) (point-max)))))
+    (deactivate-mark)))
+
+(defun yc/html-to-org ()
+  "Turn region from html to org."
+  (interactive)
+  (when (region-active-p)
+    (let ((orig (buffer-substring-no-properties (region-beginning) (region-end)))
+          (r-match-tag (rx
+                        (or (: "<" (? "/") (group (+? nonl)) ">")
+                            (: bol (group (+ space)))))))
+      (with-temp-buffer
+        (insert orig)
+        (goto-char (point-min))
+
+        ;; handle TAGS
+        (while (search-forward-regexp r-match-tag nil t)
+          (let* ((tag (match-string 1))
+                 (replace
+                  (cond
+                   ((member tag '("varname" "command"))
+                    "=")
+                   ((member tag '("emphasis"))
+                    "*")
+                   (t ""))))
+
+            (replace-match replace)))
+
+        ;; handle special characters
+        (dolist (p '(("&copy;" . "(c)")
+                     ("&amp;" . "&")
+                     ("&lt;" . "<" )
+                     ("&gt;" . ">" )))
+          (goto-char (point-min))
+          (replace-string (car p) (cdr p)))
+
+        ;; fill region and put into kill-ring
+        (fill-region (point-min) (point-max))
+        (kill-new (buffer-substring-no-properties (point-min) (point-max)))))
+    (deactivate-mark)))
+
+
+
+;; Use 7z and tar to compress/decompress file if possible.
+(defvar yc/dired-compress-file-suffixes
+  (list
+   ;; Regexforsuffix-Programm-Args.
+   (list (rx "." (or "tar.gz" "tgz")) "tar" "xzvf")
+   (list (rx "." (or "tar.bz2" "tbz")) "tar" "xjvf")
+   (list (rx ".tar.xz") "tar" "xJvf")
+   (list (rx "." (or "gz" "Z" "z" "dz" "bz2" "xz" "zip" "rar" "7z")) "7z" "x"))
+  "nil")
+
+(defun yc/dired-check-process (msg program &rest arguments)
+  (let (err-buffer err (dir default-directory))
+    (message "%s..." msg )
+    (save-excursion
+      ;; Get a clean buffer for error output:
+      (setq err-buffer (get-buffer-create " *dired-check-process output*"))
+      (set-buffer err-buffer)
+      (erase-buffer)
+      (setq default-directory dir	; caller's default-directory
+            err (not (eq 0 (apply 'process-file program nil t nil
+                                  (append (if (string= "7z" program) (list "-y")
+                                            nil) arguments)))))
+      (if err
+          (progn
+            (if (listp arguments)
+                (let ((args "") )
+                  (mapc (lambda (X)
+                          (setq args (concat args X " ")))
+                        arguments)
+                  (setq arguments args)))
+            (dired-log (concat program " " (prin1-to-string arguments) "\n"))
+            (dired-log err-buffer)
+            (or arguments program t))
+        (kill-buffer err-buffer)
+        (message "%s...done" msg)
+        nil))))
+
+(defun yc/dired-compress-file (file)
+  ;; Compress or uncompress FILE.
+  ;; Return the name of the compressed or uncompressed file.
+  ;; Return nil if no change in files.
+  (let ((handler (find-file-name-handler file 'dired-compress-file))
+        suffix newname
+        (suffixes yc/dired-compress-file-suffixes))
+
+    ;; See if any suffix rule matches this file name.
+    (while suffixes
+      (let (case-fold-search)
+        (if (string-match (car (car suffixes)) file)
+            (setq suffix (car suffixes) suffixes nil))
+        (setq suffixes (cdr suffixes))))
+    ;; If so, compute desired new name.
+    (if suffix
+        (setq newname (substring file 0 (match-beginning 0))))
+    (cond (handler
+           (funcall handler 'dired-compress-file file))
+          ((file-symlink-p file)
+           nil)
+          ((and suffix (nth 1 suffix))
+           ;; We found an uncompression rule.
+           (if
+               (and (or (not (file-exists-p newname))
+                        (y-or-n-p
+                         (format "File %s already exists.  Replace it? "
+                                 newname)))
+                    (not (yc/dired-check-process (concat "Uncompressing " file)
+                                                 (nth 1 suffix) (nth 2 suffix) file)))
+               newname))
+          (t
+           ;;; We don't recognize the file as compressed, so compress it.
+           ;;; Try gzip; if we don't have that, use compress.
+           (condition-case nil
+               (let ((out-name (concat file ".7z")))
+                 (and (or (not (file-exists-p out-name))
+                          (y-or-n-p
+                           (format "File %s already exists.  Really compress? "
+                                   out-name)))
+                      (not (yc/dired-check-process (concat "Compressing " file)
+                                                   "7z" "a" out-name file))
+                      ;; Rename the compressed file to NEWNAME
+                      ;; if it hasn't got that name already.
+                      (if (and newname (not (equal newname out-name)))
+                          (progn
+                            (rename-file out-name newname t)
+                            newname)
+                        out-name))))))))
+
+(defun yc/make-file-writable ()
+  "Make file writable.
+Should be run from find-file-hook, change write permissions."
+  (interactive)
+  (when (file-exists-p buffer-file-name)
+    (let ((attr (file-attributes buffer-file-name))
+          (msg (format "Make file: %s writable... " buffer-file-name)))
+      ;; Change file mode if this file belongs to me, and it is writeable.
+      (when (and (not (car attr))
+                 (= (user-uid) (caddr attr))
+                 (not (file-writable-p buffer-file-name)))
+        (cond
+         ((executable-find "chmod")
+          (progn
+            (call-process (executable-find "chmod") nil nil nil "+w"
+                          buffer-file-name)))
+         (t (chmod buffer-file-name
+                   (file-modes-symbolic-to-number
+                    "u+w" (file-modes buffer-file-name)))))
+        (setq msg (concat msg (if (file-writable-p buffer-file-name)
+                                  "Succeeded\n" "Failed\n" )))
+        (message msg)))))
+
 (provide 'yc-utils)
 
 ;; Local Variables:
