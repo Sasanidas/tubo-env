@@ -6,32 +6,6 @@
 
 ;;; Code:
 
- ;;; company backend for gdb
-
-(cdsq gdb-kwlist nil "List of gdb keywords")
-
-(defun company-gdb--candidates (prefix)
-  "Return candidates for `PREFIX'."
-  (interactive)
-  (all-completions prefix
-                   (or gdb-kwlist
-                       (let ((output (shell-command-to-string "gdb --batch -ex \"help all\"")))
-                         (dolist (item (s-split "\n" output))
-                           (when (s-contains? " -- " item)
-                             (let ((iitem (car (s-split "--" item))))
-                               (dolist (subitem (s-split " " iitem))
-                                 (add-to-list 'gdb-kwlist subitem )))))
-                         gdb-kwlist))))
-
-(defun company-gdb (command &optional arg &rest ignored)
-  "Comapny backend for gdb."
-  (interactive (list 'interactive))
-  (cl-case command
-    (interactive (company-begin-backend 'company-gdb))
-    (init t)
-    (prefix (or (company-grab-symbol) 'stop))
-    (candidates (company-gdb--candidates arg))))
-
  ;;;;;;;; configurations  about gdb;
 (use-package gdb-mi
   :commands (gdb)
@@ -91,63 +65,53 @@
   (advice-add 'gdb-setup-windows :override #'yc/gdb-setup-windows))
 
  ;; realgud
-
-(defun yc/realgud-find-file (marker filename directory)
-  "Description."
-  (interactive)
-  nil)
-
-(defun yc/realgud:cmd-eval-dwim-adv (&rest args)
-  "Advice for 'realgud:cmd-eval-dwim'.
-Call FUNC which is 'realgud:cmd-eval-dwim with ARGS."
-  (interactive)
-  (cond
-   ((region-active-p)
-    (call-interactively #'realgud:cmd-eval-region)
-    (deactivate-mark))
-   ((and (not current-prefix-arg)
-         (thing-at-point 'symbol))
-    (realgud:cmd-run-command
-     (thing-at-point 'symbol)
-   "eval"))
-
-   (t
-    (call-interactively #'realgud:cmd-eval)
-    (if (region-active-p)
-        (deactivate-mark)))))
-
 (use-package realgud
   :commands (realgud:gdb realgud:gdb-pid)
-  :hook ((realgud-short-key-mode . setup-prog-keybindings)
-         (realgud:gdb-track-mode . (lambda ()
-                                     (add-to-list 'company-backends 'company-gdb))))
+  :hook ((realgud-short-key-mode . setup-prog-keybindings))
   :custom
   (realgud-safe-mode nil)
-  (realgud-file-find-function 'yc/realgud-find-file)
+  (realgud-file-find-function (lambda (&rest args) nil))
   :config
-  (advice-add 'realgud:gdb-track-mode-hook :around #'yc/realgud:gdb-track-mode-hook-adv)
-  (advice-add 'realgud:cmd-eval-dwim :override #'yc/realgud:cmd-eval-dwim-adv)
-)
+
+  (defadvice! yc/realgud:gdb-track-mode-hook-adv (&rest args)
+    "ORIG-FUNC is called with ARGS."
+    :override #'realgud:gdb-track-mode-hook
+    (realgud-track-mode-setup 't))
+
+
+  (defadvice! yc/realgud:cmd-eval-dwim-adv (&rest args)
+    "ORIG-FUNC is called with ARGS."
+    :override #'realgud:cmd-eval-dwim
+    (interactive)
+    (cond
+     ((region-active-p)
+      (call-interactively #'realgud:cmd-eval-region)
+      (deactivate-mark))
+     ((and (not current-prefix-arg)
+           (thing-at-point 'symbol))
+      (realgud:cmd-run-command
+       (thing-at-point 'symbol)
+       "eval"))
+
+     (t
+      (call-interactively #'realgud:cmd-eval)
+      (if (region-active-p)
+          (deactivate-mark)))))
+
+    (yc/add-company-backends 'realgud:gdb-track-mode 'company-gdb))
 
 (use-package realgud-lldb
-  :commands (realgud--lldb)
-  )
+  :commands (realgud--lldb))
 
 (defalias 'realgud:lldb 'realgud--lldb)
 (defalias 'lldb 'realgud--lldb)
 
-(defun yc/realgud:gdb-track-mode-hook-adv (func &rest args)
-  "Advice for 'realgud:gdb-track-mode-hook'.
-Call FUNC which is 'realgud:gdb-track-mode-hook with ARGS."
-  (realgud-track-mode-setup 't))
-
 
 ;; Function to debug process, either attaching to a running one, or start a new one.
 (use-package debug-utils
-
   :commands (;; attach-pg-idle attach-pg-wal attach-pg-main attach-pg-proc
              debug-proc attach-proc attach-proc-su
-                        yc/kill-gdb-buffers))
+                        yc/kill-gdb-buffers company-gdb))
 
 
 (provide '054-prog-debug)
