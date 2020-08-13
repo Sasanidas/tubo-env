@@ -225,7 +225,7 @@ ORIG-FUNC is called with ARGS."
              yc/update-env-from
 
              yc/view-with-ediff
-             yc/get-cpu-number
+             yc/get-cpu-cores
              yc/get-compiling-threads
              yc/get-env
              yc/uef

@@ -1269,24 +1269,25 @@ inserts comment at the end of the line."
 
       (error "Can't find proper files to compare at point: %d" (point)))))
 
-(defun yc/get-cpu-number ()
-  "Return CPU number."
-  (cl-case system-type
-    ('gnu/linux
-     (let ((cpuinfo (shell-command-to-string "cat /proc/cpuinfo | grep processor|wc -l"))
-           (r-match-cpu (rx (+? digit ) eol))
-           (cpu-number "1"))
-       (if (string-match r-match-cpu cpuinfo)
-           (setq cpu-number (match-string 0 cpuinfo)))
-       (string-to-number cpu-number)))
-    ('darwin
-     (let ((cpuinfo (shell-command-to-string "sysctl -n hw.ncpu"))
-           (r-match-cpu (rx (+? digit ) eol))
-           (cpu-number "1"))
-       (if (string-match r-match-cpu cpuinfo)
-           (setq cpu-number (match-string 0 cpuinfo)))
-       (string-to-number cpu-number)))
-    (t 1)))
+(defun yc/get-cpu-cores ()
+  "Return number of core."
+  (case system-type
+    ((gnu/linux cygwin)
+     (when (file-exists-p "/proc/cpuinfo")
+       (with-temp-buffer
+         (insert-file-contents "/proc/cpuinfo")
+         (how-many "^processor[[:space:]]+:")))
+     )
+    ((gnu/kfreebsd darwin)
+     (with-temp-buffer
+       (ignore-errors
+         (when (zerop (call-process "sysctl" nil t nil "-n" "hw.ncpu"))
+           (string-to-number (buffer-string)))))
+     )
+    ((windows-nt)
+     (let ((number-of-processors (getenv "NUMBER_OF_PROCESSORS")))
+       (when number-of-processors
+         (string-to-number number-of-processors))))))
 
 
 (defun yc/get-compiling-threads ()
@@ -1295,7 +1296,7 @@ inserts comment at the end of the line."
       (if (listp current-prefix-arg)
           (car current-prefix-arg)
         current-prefix-arg)
-    (yc/get-cpu-number)))
+    (yc/get-cpu-cores)))
 
 
 (defun yc/get-env (env &optional func &rest backups)

@@ -33,7 +33,7 @@
 
 (require 'counsel)
 
-(autoload 'yc/get-cpu-number "yc-utils" ""  t)
+(autoload 'yc/get-cpu-cores "yc-utils" ""  t)
 (autoload 'PDEBUG "02-functions" ""  nil)
 (autoload 'projectile-project-root "projectile" ""  nil)
 (autoload 's-split "s" ""  nil)
@@ -92,7 +92,7 @@ If NO-EXECUTE is t, don't execute, but return compile command."
                   (if (listp current-prefix-arg)
                       (car current-prefix-arg)
                     current-prefix-arg)
-                (yc/get-cpu-number)))
+                (yc/get-cpu-cores)))
 
          ;; special handling when jobs is 0: turn on verbose mode.
          (verbose (if (= 0 arg) 1 0))
