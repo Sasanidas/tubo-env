@@ -512,11 +512,24 @@ Useful to run after `pdf-tools' updates."
           "spark-shell" "sbt" "watch")))
 
 (use-package vterm
-  :bind ((;; ,(kbd "<S-f5>")
-          [S-f5]. vterm))
+  :commands (vterm)
+  :preface
+  (defun yc/open-vterm ()
+    "Open or switch to vterm.
+If *vterm* buffer not exist, or called with current-prefix-arg,
+create new buffer."
+    (interactive)
+    (if current-prefix-arg
+        (vterm)
+      (let* ((name "*vterm*")
+             (vbuffer (get-buffer name)))
+        (unless vbuffer
+          (with-current-buffer (setq vbuffer (get-buffer-create name))
+            (vterm-mode)))
+        (pop-to-buffer vbuffer))))
+  :bind (([S-f5] . yc/open-vterm))
   :custom
-  (vterm-kill-buffer-on-exit t)
-  )
+  (vterm-kill-buffer-on-exit t))
 
  ;; comint hook
 (use-package comint
