@@ -9,12 +9,8 @@
 
 
 (use-package helpful
-  :init
-  (global-set-key [remap describe-function] #'helpful-callable)
-  (global-set-key [remap describe-command]  #'helpful-command)
-  (global-set-key [remap describe-variable] #'helpful-variable)
-  (global-set-key [remap describe-key]      #'helpful-key)
-  (global-set-key [remap describe-symbol]   #'helpful-symbol))
+  :commands (helpful-callable helpful-variable)
+  :bind (([remap describe-key-briefly] . 'helpful-key)))
 
  ;; ivy mode
 (use-package ivy
@@ -38,11 +34,13 @@
          )
   :config
   (require 'ivy-rich)
-  (ivy-mode))
+  (ivy-mode)
+  )
 
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
 (use-package ivy-rich
+  :after (ivy counsel)
   :preface
   (defun +ivy-rich-describe-variable-transformer (cand)
     "Previews the value of the variable (CAND) in the minibuffer."
@@ -75,6 +73,7 @@
   (ivy-rich-path-style 'abbrev)
   :config
   (message "Loading ivy-rich...")
+
   (plist-put! ivy-rich-display-transformers-list
     'counsel-bookmark
     '(:columns
@@ -88,7 +87,10 @@
     ;; Apply switch buffer transformers to `counsel-projectile-switch-to-buffer' as well
     'counsel-projectile-switch-to-buffer
     (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
-  (ivy-rich-mode +1))
+
+
+  (ivy-rich-mode +1)
+  )
 
 
 (defun yc/counsel-grep (&optional deep)

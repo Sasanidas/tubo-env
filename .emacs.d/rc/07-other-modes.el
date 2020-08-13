@@ -126,7 +126,7 @@
     (PDEBUG "YC/EDIFF-PREPARE: " buffer)
 
     (ws-butler-mode -1)
-    (if flycheck-mode
+    (if (bound-and-true-p flycheck-mode)
         (push (current-buffer) yc/flycheck-bufferes-to-restore))
 
     (if (fboundp 'show-ifdefs)
