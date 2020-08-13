@@ -639,10 +639,13 @@ Useful to run after `pdf-tools' updates."
   (ls-lisp-dirs-first t)
   (ls-lisp-use-insert-directory-program nil)
   (dired-dwim-target t)
+  (dired-hide-details-hide-symlink-targets nil)
   (dired-dnd-protocol-alist nil)
   (dired-recursive-copies 'always)
   (dired-recursive-deletes 'top)
+  (dired-auto-revert-buffer t)  ; don't prompt to revert; just do it
   (ls-lisp-verbosity '(uid gid))
+  (dired-listing-switches "-alh")
   :hook ((dired-mode . (lambda () (setq fill-column 9999))))
   :bind (:map dired-mode-map
               (;; (kbd "M-p")
@@ -657,17 +660,31 @@ Useful to run after `pdf-tools' updates."
               ([f12] . dired-ediff))
 
   :config
-  (progn
-    (setq-default dired-listing-switches "-alh")
-    (defadvice! yc/dired-find-file-adv (&rest args)
-      "If file already opened, switch to that buffer without confirm.
+  (defadvice! yc/dired-compress-adv (&rest args)
+    "Compress file with 7z if possible.
 ORIG-FUNC is called with ARGS."
-      :before #'dired-find-file
-      (awhen (find-buffer-visiting (dired-get-file-for-visit))
-          (switch-to-buffer it)))
+    :override #'dired-compress
+    (let* (buffer-read-only
+           (from-file (dired-get-filename))
+           (new-file (yc/dired-compress-file from-file)))
+      (if new-file
+          (let ((start (point)))
+            ;; Remove any preexisting entry for the name NEW-FILE.
+            (ignore-errors (dired-remove-entry new-file))
+            (goto-char start)
+            ;; Now replace the current line with an entry for NEW-FILE.
+            (dired-update-file-line new-file) nil)
+        (dired-log (concat "Failed to compress" from-file))
+        from-file)))
+  (defadvice! yc/dired-find-file-adv (&rest args)
+    "If file already opened, switch to that buffer without confirm.
+ORIG-FUNC is called with ARGS."
+    :before #'dired-find-file
+    (awhen (find-buffer-visiting (dired-get-file-for-visit))
+      (switch-to-buffer it)))
 
-    (load-library "ls-lisp")
-    (define-key ctl-x-map "d" nil)))
+  (load-library "ls-lisp")
+  (define-key ctl-x-map "d" nil))
 
 (use-package dired-x
   :commands (dired-jump)
@@ -679,25 +696,6 @@ ORIG-FUNC is called with ARGS."
     (load-library "ls-lisp")
     (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$"
                                         'dired-virtual-mode))))
-
-(use-package dired-aux
-  :config
-  (defadvice! yc/dired-compress-adv (&rest args)
-    "Compress file with 7z if possible.
-ORIG-FUNC is called with ARGS."
-    :override #'dired-compress
-      (let* (buffer-read-only
-         (from-file (dired-get-filename))
-         (new-file (yc/dired-compress-file from-file)))
-    (if new-file
-        (let ((start (point)))
-          ;; Remove any preexisting entry for the name NEW-FILE.
-          (ignore-errors (dired-remove-entry new-file))
-          (goto-char start)
-          ;; Now replace the current line with an entry for NEW-FILE.
-          (dired-update-file-line new-file) nil)
-      (dired-log (concat "Failed to compress" from-file))
-      from-file))))
 
 
 (use-package hl-line
@@ -716,17 +714,10 @@ ORIG-FUNC is called with ARGS."
 
 (use-package charset-util :commands (yc/list-non-ascii))
 
-
 (use-package x86-help   :bind (("x" . x86-help))) ;;(kbd "C-h x")
 
 
-(use-package artist
-
-  :bind ((;; ,(kbd "<C-S-f2>")
-          [C-S-f2]. artist-mode)))
-
 (use-package image-file
-
   :defer
   :config
   (progn
@@ -789,8 +780,6 @@ ORIG-FUNC is called with ARGS."
 
 
  ;; css & scss & sass
-(use-package sass
-             :defer t)
 (use-package css-mode
   :defer t
   :mode (rx "." (or "scss" "css" "rasi") eow)
@@ -822,8 +811,7 @@ ORIG-FUNC is called with ARGS."
 
  ;; **************************** Text Mode ***************************
 
-(defvar yc/ditaa-package nil "Path of ditaa package")
-
+(defvar yc/ditaa-package nil "Path of ditaa package.")
 (defun yc/load-ditaa ()
   "Load ditaa command and package path."
   (unless (featurep 's)
@@ -848,9 +836,7 @@ ORIG-FUNC is called with ARGS."
            (t
             (warn "yc/ditaa-package not setup")
             nil))))
-  yc/ditaa-package
-)
-
+  yc/ditaa-package)
 
 (defun yc/txt-to-png ()
   "Change a txt file into png file using ditaa."
@@ -896,13 +882,14 @@ ORIG-FUNC is called with ARGS."
   :config
   (sp-with-modes 'text-mode
     (sp-local-pair "```" "```"))
-
   :init
   (defalias 'txt-mode 'text-mode))
 
-(use-package artist-mode
+(use-package artist
   :bind (:map artist-mode-map
-              ("\C-c\C-e" . yc/txt-to-png)))
+              ("\C-c\C-e" . yc/txt-to-png))
+  :bind ((;; ,(kbd "<C-S-f2>")
+          [C-S-f2]. artist-mode)))
 
  ;; ************************** ChangeLog *****************************
 (use-package add-log
@@ -1048,21 +1035,6 @@ ORIG-FUNC is called with ARGS."
 
 (use-package counsel-nerd-fonts
   :commands (counsel-nerd-fonts))
-
-(use-package leetcode
-  :commands (leetcode)
-  :config
-  (progn
-    (setq leetcode--user "yangyingchao"
-          leetcode-prefer-language "c")
-
-    (defun yc/leetcode-set-langnage ()
-      "Description."
-      (interactive)
-      (setq leetcode-prefer-language
-           (ivy-read "Set preferred language to: "
-                     '("c" "cpp" "python3" "rust"))))
-    ))
 
 (use-package dockerfile-mode
   :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end))

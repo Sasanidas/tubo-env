@@ -26,14 +26,12 @@
   (git-commit-summary-max-length 72))
 
 (use-package magit-repos
-
   :custom
   (magit-repository-directories `((,(expand-file-name "~") . 0)))
   :bind (:map ctl-x-map
               ("gL" . magit-list-repositories)))
 
 (use-package magit-files
-
   :defer t
   :config
   (progn
@@ -148,26 +146,16 @@ This function accept file name as argument, and return t if file is merged autom
      magit-insert-unpushed-to-upstream
      magit-insert-unpushed-to-pushremote)))
 
-  :hook ((magit-find-file .       (lambda () ;; Guess proper encoding for files.
-                                    (setq buffer-read-only nil)
-                                    (recode-region (point-min) (point-max) 'undecided 'utf-8)
-                                    (setq buffer-read-only t)))
-
-
-         ;; (magit-status-mode .       (lambda ()
-         ;;                              (when (executable-find "arc")
-         ;;                                (require 'magit-arc)
-         ;;                                (magit-arc-mode))
-         ;;                              (when (try-require 'magit-svn)
-         ;;                                (define-key magit-mode-map (kbd "N") 'magit-svn-popup))))
+  :hook ((magit-find-file
+          .
+          (lambda () ;; Guess proper encoding for files.
+            (setq buffer-read-only nil)
+            (recode-region (point-min) (point-max) 'undecided 'utf-8)
+            (setq buffer-read-only t)))
          )
   :config
   (progn
-    ;; (magit-define-popup-option 'magit-merge-popup
-    ;;   ?x "Strategy options" "--strategy-option=" #'read-from-minibuffer)
     (magit-auto-revert-mode 1)))
-
- ;; svn
 
 (use-package dsvn
   :commands (svn-status))

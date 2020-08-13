@@ -28,6 +28,17 @@
 ;;
 ;;   (add-hook 'magit-mode-hook 'magit-arc-mode)
 
+;; (use-package magit
+;;   :hook (
+;;          (magit-status-mode .       (lambda ()
+;;                                       (when (executable-find "arc")
+;;                                         (require 'magit-arc)
+;;                                         (magit-arc-mode))
+;;                                       (when (try-require 'magit-svn)
+;;                                         (define-key magit-mode-map (kbd "N") 'magit-svn-popup))))
+;;          )
+;;   )
+
 ;;; Code:
 
 

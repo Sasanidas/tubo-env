@@ -1271,7 +1271,7 @@ inserts comment at the end of the line."
 
 (defun yc/get-cpu-cores ()
   "Return number of core."
-  (case system-type
+  (cl-case system-type
     ((gnu/linux cygwin)
      (when (file-exists-p "/proc/cpuinfo")
        (with-temp-buffer
@@ -1288,7 +1288,6 @@ inserts comment at the end of the line."
      (let ((number-of-processors (getenv "NUMBER_OF_PROCESSORS")))
        (when number-of-processors
          (string-to-number number-of-processors))))))
-
 
 (defun yc/get-compiling-threads ()
   "Return proper number of threads."
@@ -1430,23 +1429,6 @@ args should be a list, but to make caller's life easier, it can accept one atom 
   (interactive)
   (enlarge-window (- (yc/adjust-window-calc-lines)) t))
 
-(defun yc/git-copy-file-path ()
-  "Copy path of current visited file."
-  (interactive)
-  (let ((url (magit-git-string "config" "remote.origin.url"))
-        (root (magit-toplevel)))
-
-    (unless url (error "Not in a git repo"))
-
-    (kill-new
-     (concat (replace-regexp-in-string
-              (rx "git@github.com:" (group (+? nonl)) ".git")
-              "https://github.com/\\1"
-              url)
-             "/blob/master/"
-             (and root (file-relative-name buffer-file-name root))
-             ))))
-
 (defun yc/open-eshell ()
   "DOCSTRING."
   (interactive)
@@ -1457,7 +1439,7 @@ args should be a list, but to make caller's life easier, it can accept one atom 
           (set-buffer ebuffer)
           (eshell/cd dir)
           (eshell-send-input)
-          (switch-to-buffer ebuffer))
+          (pop-to-buffer ebuffer))
       (eshell))))
 
 (defun yc/exec-command-via-eshell ()

@@ -10,7 +10,7 @@
 
 (use-package helpful
   :commands (helpful-callable helpful-variable)
-  :bind (([remap describe-key-briefly] . 'helpful-key)))
+  :bind (([remap describe-key] . 'helpful-key)))
 
  ;; ivy mode
 (use-package ivy
@@ -456,6 +456,17 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
  (list (kbd "C-\\")))
 
 (use-package ibuffer
+  :custom
+  (ibuffer-show-empty-filter-groups nil)
+  :config
+
+  ;; Redefine size column to display human readable size
+  (define-ibuffer-column size
+    (:name "Size"
+     :inline t
+     :header-mouse-map ibuffer-size-header-map)
+    (file-size-human-readable (buffer-size)))
+
   :bind ((;; ,(kbd "C-x C-b")
           "". ibuffer))
   :bind (:map ibuffer-mode-map
