@@ -294,8 +294,6 @@ call func which is 'org-download--image/url-retrieve with args."
 
   (setq show-trailing-whitespace t)
 
-  (flyspell-mode)
-
   (individual-visibility-source-blocks)
 
   ;; modify syntax-entry, so electric-pair can work better.

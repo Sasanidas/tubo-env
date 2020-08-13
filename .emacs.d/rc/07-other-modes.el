@@ -39,35 +39,49 @@
 
 
  ;;; spell checker..
-(use-package flyspell
-  :commands (flyspell-mode flyspell-prog-mode)
-  :hook ((prog-mode . flyspell-prog-mode)
-         (markdown-mode . flyspell-mode)
-         (emacs-startup . (lambda ()
-                            (unless (executable-find "aspell")
-                              (warn "aspell not found, flyspell will not work.")))))
-  :config
-  (progn
-    (substitute-key-definition
-     'flyspell-goto-next-error  'backward-page flyspell-mode-map)
-    (substitute-key-definition
-     'flyspell-auto-correct-word 'forward-page flyspell-mode-map)))
-
 (use-package ispell
   :bind (([M-S-f11] . ispell-buffer)
          ([S-f11]   . ispell-word))
+
+  :hook ((emacs-startup . (lambda ()
+                            (unless (executable-find "aspell")
+                              (warn "aspell not found, flyspell/ispell will not work.")))))
+
   :config
-  (custom-set-variables
-   '(ispell-program-name (executable-find "aspell"))
-   '(ispell-extra-args '("--reverse"))
-   '(ispell-skip-html t)
-   '(ispell-dictionary "english")
-   '(ispell-local-dictionary "english"))
+  (pushnew! ispell-skip-region-alist
+            '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")
+            '("#\\+BEGIN_SRC" . "#\\+END_SRC")
+            '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
+  :custom
+   (ispell-program-name (executable-find "aspell"))
+   (ispell-extra-args '("--sug-mode=ultra" "--run-together" "--dont-tex-check-comments"))
+   (ispell-skip-html t)
+   (ispell-dictionary "english")
+   (ispell-local-dictionary "english")
   )
 
-(use-package log-edit
-  :hook ((log-edit-mode . (lambda ()
-                            (flyspell-mode 1)))))
+(use-package flyspell
+  :commands (flyspell-mode flyspell-prog-mode)
+  :init
+  (add-hook! '(org-mode-hook
+               markdown-mode-hook
+               TeX-mode-hook
+               rst-mode-hook
+               mu4e-compose-mode-hook
+               message-mode-hook
+               log-edit-mode-hook
+               git-commit-mode-hook)
+             #'flyspell-mode)
+  (add-hook! '(yaml-mode-hook
+               conf-mode-hook
+                 prog-mode-hook)
+             #'flyspell-prog-mode)
+
+  :custom
+  (flyspell-issue-welcome-flag nil)
+  ;; Significantly speeds up flyspell, which would otherwise print
+  ;; messages for every word when checking the entire buffer
+  (flyspell-issue-message-flag nil))
 
 
  ;;; Dictionary.
