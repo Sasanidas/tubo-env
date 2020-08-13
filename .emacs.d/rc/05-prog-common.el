@@ -19,8 +19,7 @@ ORIG-FUNC is called with ARGS."
   (walk-windows
    (lambda (w)
      (when which-function-mode
-       (which-func-update-1 w))) nil 'visible))
-)
+       (which-func-update-1 w))) nil 'visible)))
 
 (use-package flycheck
   :ensure t

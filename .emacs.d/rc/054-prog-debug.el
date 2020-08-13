@@ -98,7 +98,7 @@
       (if (region-active-p)
           (deactivate-mark)))))
 
-    (yc/add-company-backends 'realgud:gdb-track-mode 'company-gdb))
+    (yc/add-company-backends 'realgud:gdb-track-mode 'company-gdb 'company-dabbrev))
 
 (use-package realgud-lldb
   :commands (realgud--lldb))
