@@ -200,7 +200,8 @@
   :bind ((;; ,(kbd "C-c C-b")
           "". sql/eval-sql))
   :config
-  (yc/add-company-backends 'sql-mode 'company-sql 'company-keywords)
+  (yc/add-company-backends '(sql-mode sql-interactive-mode)
+    'company-sql 'company-keywords 'company-dabbrev)
   (progn
     (require 'sql+)))
 
