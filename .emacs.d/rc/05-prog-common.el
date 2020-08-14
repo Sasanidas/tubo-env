@@ -357,10 +357,20 @@ Call ORIG-FUNC which is 'lsp--imenu-create-index with ARGS."
       (setq yc/document-symbols-tick (buffer-chars-modified-tick)
             yc/cached-symbols (apply orig-func args))))
 
-  (advice-add 'lsp--imenu-create-index :around #'yc/lsp--imenu-create-index-adv)
-  (advice-add 'lsp-enable-imenu :before-until #'yc/lsp-enable-imenu-adv)
-  (advice-add 'lsp--suggest-project-root :before-until
-              #'yc/lsp--suggest-project-root-adv)
+  (defadvice! yc/lsp-enable-imenu-adv (&rest args)
+    "Disable lsp-enable-imenu, which is very slow if there are lots of symbols.
+ORIG-FUNC is called with ARGS."
+    :before-until #'lsp-enable-imenu
+    t)
+
+  (defadvice! yc/lsp--suggest-project-root-adv (&rest args)
+    "Docs
+ORIG-FUNC is called with ARGS."
+    :before-until #'lsp--suggest-project-root
+    (when-let (root-file (yc/lsp-get-root-file))
+      (expand-file-name (file-name-directory root-file))))
+
+
 
   (defun yc/lsp/switch-client (client)
     "Switch to another LSP server."
@@ -391,18 +401,6 @@ Call ORIG-FUNC which is 'lsp--imenu-create-index with ARGS."
               (lsp-mode +1))
           (setf (lsp--client-priority match) old-priority))))))
 
-(defun yc/lsp--suggest-project-root-adv (&rest args)
-  "Advice for 'ccls--suggest-project-root': locate .lsp-conf if possible.
-Call FUNC which is 'ccls--suggest-project-root with ARGS."
-  (when-let (root-file (yc/lsp-get-root-file))
-    (expand-file-name (file-name-directory root-file))))
-
-
-;; does nothing but disable lsp--imenu, which is very slow if there are lots of symbols...
-(defun yc/lsp-enable-imenu-adv (&rest args)
-  "Advice for 'lsp-enable-imenu'.
-Call FUNC which is 'lsp-enable-imenu with ARGS."
-  t)
 
 (defun yc/lsp-format-adv (func &rest args)
   "Advice for 'lsp-format-buffer'.

@@ -160,8 +160,8 @@
 
   (defadvice! yc/sqlup-capitalize-as-you-type-adv (&rest args)
     "Don't invoke original function unless buffer is modified."
-    :before-until #'sqlup-capitalize-as-you-type
-    (not (buffer-modified-p)))
+    :before-while #'sqlup-capitalize-as-you-type
+    (buffer-modified-p))
   :hook ((sql-mode . sqlup-mode)))
 
 

@@ -190,10 +190,10 @@
   (company-frontends '(company-pseudo-tooltip-frontend
                        company-echo-metadata-frontend))
 
-  ;; Only search the current buffer for `company-dabbrev' (a backend that
-  ;; suggests text your open buffers). This prevents Company from causing
-  ;; lag once you have a lot of buffers open.
-  (company-dabbrev-other-buffers nil)
+
+   ;adjust regexp make `company-dabbrev' search words like `dabbrev-expand'
+  (company-dabbrev-char-regexp "[\\.0-9a-z-_'/]")
+  (company-dabbrev-other-buffers 'all)
   ;; Make `company-dabbrev' fully case-sensitive, to improve UX with
   ;; domain-specific words with particular casing.
   (company-dabbrev-ignore-case nil)

@@ -816,7 +816,7 @@ ORIG-FUNC is called with ARGS."
                       (hs-minor-mode 1)
                       )))
   :config
-  (yc/add-company-backends nxml-mode 'company-nxml))
+  (yc/add-company-backends 'nxml-mode 'company-nxml))
 
  ;; **************************** Text Mode ***************************
 

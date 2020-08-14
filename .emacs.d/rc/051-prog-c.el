@@ -8,35 +8,18 @@
 
  ;; cc-mode and derived.
 
-;;;; Include settings
-(defvar yc/system-include-dirs nil
-  "A list of directories where the header files are stored.
-It is derived from `semantic-gcc-get-include-paths,
-and is reversed for better performance.")
-
-(defun yc/add-common-includes ( )
-  "Add common includes."
-  (setq yc/system-include-dirs
-        (reverse (append (semantic-gcc-get-include-paths "c++") '("./"))))
-  (mapc (lambda (dir)
-          (semantic-add-system-include dir 'c-mode)
-          (semantic-add-system-include dir 'c++-mode))
-        yc/system-include-dirs))
-
-
 (use-package member-function
   :commands (expand-member-functions)
+  :bind (:map c++-mode-map
+              ("m" . expand-member-functions))
   :custom
-  (mf--insert-commentary nil)
-  :hook ((c++-mode . (lambda ()
-                       (local-set-key (kbd "C-c m") 'expand-member-functions)))))
+  (mf--insert-commentary nil))
 
 (use-package prog-utils
   :commands (
              yc/asm-post-process
-             yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
-             yc/preprocess-file yc/insert-empty-template yc/header-make
-             uniq-stack gcrash-analyze-buffer c++filt-buffer))
+             uniq-stack gcrash-analyze-buffer
+))
 
 (use-package hideif
   :commands (hide-ifdef-mode hif-set-var)
@@ -62,32 +45,7 @@ and is reversed for better performance.")
 
 (defun yc/update-hide-env-from-symbol-map ()
   "Update hide-env from symbol map."
-  (when (bound-and-true-p semantic-lex-c-preprocessor-symbol-map)
-    (mapc (lambda (x)
-          (hif-set-var (intern (car x)) (cdr x)))
-        semantic-lex-c-preprocessor-symbol-map)))
-
-
-(use-package semantic/bovine/gcc
-  :commands (semantic-gcc-setup))
-
-(use-package semantic/bovine/c
-  :commands (semantic-default-c-setup)
-  :hook ((c-mode-common .
-                        (lambda ()
-                          (yc/run-with-idle-timer
-                           1 nil
-                           (lambda ()
-                             (unless (bound-and-true-p lsp-mode)
-                               (PDEBUG "Lazy hooks for mode " major-mode)
-                               ;; (let ((compiler (getenv "CC")))
-                               ;;   (if (or (and compiler (string= compiler "clang"))
-                               ;;           (eq system-type 'darwin))
-                               ;;       (semantic-clang-setup)
-                               ;;     (semantic-gcc-setup)))
-                               (semantic-gcc-setup)
-                               (semantic-default-c-setup)
-                               (yc/add-common-includes))))))))
+  )
 
 
 (use-package clang-format
@@ -102,39 +60,25 @@ and is reversed for better performance.")
         )
   "List of possible coding styles.")
 
-(defun yc/get-c-style (&optional filename)
-  "Guess c-style based on input filename"
-  (interactive)
-
-  (let* ((dirpath (cond
-                   (filename (file-name-directory filename))
-                   (buffer-file-name (file-name-directory buffer-file-name))
-                   (t default-directory)))
-
-         (style (catch 'p-found
-                  (dolist (kv yc/c-file-mode-mapping)
-                    (when (string-match (car kv) dirpath)
-                      (PDEBUG "MATCH: " kv)
-                      (throw 'p-found (cdr kv))))
-                  "tubo")))
-
-    ;; Print style if called interactively.
-    (when (called-interactively-p 'interactive)
-      (message "Style is %s" style))
-    style))
 
 (use-package cwarn
   :commands (cwarn-mode))
+
+(use-package c-utils
+  :commands (yc/get-c-style yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
+             yc/preprocess-file yc/insert-empty-template yc/header-make
+             c++filt-buffer))
 
 (use-package ccls
   :custom
   (ccls-executable (or (executable-find "ccls.sh") "ccls"))
   ;; (ccls-sem-highlight-method 'font-lock)
   :config
-  (progn
-    (advice-add 'ccls--suggest-project-root :before-until
-                #'yc/ccls--suggest-project-root-adv)
-
+  (defadvice! yc/ccls--suggest-project-root-adv (&rest args)
+      "Only enable ccls for some modes.
+ORIG-FUNC is called with ARGS."
+      :before-while #'ccls--suggest-project-root
+      (memq major-mode '(c-mode c++-mode cuda-mode objc-mode)))
 
     (lsp-register-client
      (make-lsp-client
@@ -148,8 +92,6 @@ and is reversed for better performance.")
               ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
       :initialization-options (lambda () ccls-initialization-options)
       :library-folders-fn nil)))
-
-  )
 
 (defun yc/c-mode-common-hook ()
   "My hooks to run for c-mode-common-hook."
@@ -178,7 +120,11 @@ and is reversed for better performance.")
        (semantic-mode 1)
        (semantic-force-refresh))
 
-     (yc/update-hide-env-from-symbol-map)
+     ;; update hide-env from symbol-map
+     (when (bound-and-true-p semantic-lex-c-preprocessor-symbol-map)
+       (mapc (lambda (x)
+               (hif-set-var (intern (car x)) (cdr x)))
+             semantic-lex-c-preprocessor-symbol-map))
      (condition-case msg
          (hide-ifdef-mode 1)
        (error nil))
@@ -499,15 +445,6 @@ simpler."
                 (file-name-sans-extension file)
                 (or (getenv "CPPFLAGS") "-Wall")
                 file)))))
-
-
- ;; lsp-support for C family.
-
-(defun yc/ccls--suggest-project-root-adv (&rest args)
-  "Advice for 'ccls--suggest-project-root'.
-Call FUNC which is 'ccls--suggest-project-root with ARGS."
-  (and (memq major-mode '(c-mode c++-mode cuda-mode objc-mode))
-       (yc/lsp--suggest-project-root-adv)))
 
 (defun yc/lsp-load-project-configuration-cc-mode (root-file)
   "Advice for 'ccls--suggest-project-root'.
