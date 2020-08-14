@@ -513,9 +513,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   "Advice for 'ccls--suggest-project-root'.
 Call FUNC which is 'ccls--suggest-project-root with ARGS."
   (PDEBUG "ENTER: root-" root-file)
-  (let* ((blacklist '("/.ccls-cache/"  "build/" "build_Debug/"
-                                    "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
-                                    "cmake_build_Release/"  "cmake_build_RelWithDebInfo/")))
+  (let* ((blacklist '("/.ccls-cache/")))
 
     ;;  Use compile database file which is newer...
     (setq ccls-initialization-options nil)
@@ -531,11 +529,12 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
 
         (unless (member :compilationDatabaseDirectory ccls-initialization-options)
           (let (compile-dir last-mod-time)
+            (dolist (dir (append
+                          '("." )
+                          (directory-files root-dir nil (rx(? "cmake_") "build" ))))
+              (unless (string= "." dir)
+                (push dir blacklist))
 
-            (dolist (dir '("."  "build/" "build_Debug/"
-                             "build_RelWithDebInfo/" "build_Release/" "cmake_build_Debug/"
-                             "cmake_build_Release/"
-                             "cmake_build_RelWithDebInfo/"))
               (let* ((file (format "%s/%s/compile_commands.json" root-dir dir))
                      (mod-time (if (file-exists-p file)
                                    (file-attribute-modification-time
@@ -552,8 +551,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
 
             (when compile-dir
               (push compile-dir ccls-initialization-options)
-              (push :compilationDatabaseDirectory ccls-initialization-options)
-              (add-to-list 'blacklist compile-dir ))))
+              (push :compilationDatabaseDirectory ccls-initialization-options))))
 
         (unless (member :index ccls-initialization-options)
           (push (list :blacklist (vconcat blacklist nil)) ccls-initialization-options)

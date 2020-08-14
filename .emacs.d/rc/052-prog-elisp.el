@@ -103,14 +103,14 @@ Call FUNC which is 'byte-compile-file with ARGS."
 
 
   (defun yc/native-compile-file ()
-    "Description."
+    "Native compile selected file."
     (interactive)
     (native-compile-async
      (counsel-list-directory default-directory)
      nil))
 
   (defun yc/native-compile-dir (&optional dir)
-    "Description."
+    "Native compile selected DIR."
     (interactive)
     (unless dir
       (setq dir (let* ((suggestion default-directory)

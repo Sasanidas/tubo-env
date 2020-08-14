@@ -32,6 +32,10 @@
       ('error  (message "Skipped file %s -- %s" fn load-message)))
     )
 
+  ;; set color immediately.
+  (if (fboundp 'yc/setup-display)
+      (yc/setup-display))
+
   (message "\nFinished startup in %.2f seconds.\n"
            (float-time (time-since ts-init))))
 

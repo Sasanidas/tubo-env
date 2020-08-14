@@ -1,4 +1,4 @@
-;;; 059-prog-others.el -- Brief introduction here.
+;;; 056-prog-others.el -- Brief introduction here.
 
 ;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
 
@@ -67,7 +67,7 @@
               ([(meta .)] . 'yc/pws-find-tag)))
 
 (defun yc/pws-find-tag (function)
-  "find defination of function under current poin"
+  "Find defination of FUNCTION under current poin."
   (interactive
    (let* ((fn (thing-at-point 'symbol))
           (val nil))
@@ -96,7 +96,7 @@
         (goto-char (point-min))))))
 
 (defun yc/pws-get-help (function)
-  "display the documentation of function (a symbol)."
+  "Display the documentation of FUNCTION (a symbol)."
   (interactive
    (let ((fn (thing-at-point 'symbol))
          val)
@@ -142,8 +142,7 @@
                   collect (cons (match-string 1)
                                 (point))))))
   (PDEBUG "BUF:" (current-buffer)
-          "FUNC:" imenu-create-index-function)
-  )
+          "FUNC:" imenu-create-index-function))
 
 (use-package bison-mode
   :mode (rx "." (or "yy" "y" "jison") eol)
@@ -152,25 +151,18 @@
     (setq  bison-rule-enumeration-column 10)))
 
  ;; SQL Mode
-(defun yc/sqlup-comment-p-adv (func &rest args)
-  "Advice for `sqlup-comment-p'.
-FUNC is `sqlup-comment-p', and arguments are stored in ARGS.
-It seems `syntax-pass' does not work properly when the buffer contains # -*- ."
-  (looking-back (rx (or "#" "--") (*? nonl))))
-
 (use-package sqlup-mode  :commands (sqlup-mode)
   :config
-  (progn
-    (advice-add 'sqlup-comment-p :around #'yc/sqlup-comment-p-adv)
-    (advice-add 'sqlup-capitalize-as-you-type :around #'yc/sqlup-capitalize-as-you-type))
+  (defadvice! yc/sqlup-comment-p-adv (&rest args)
+    "Check if we are in comment."
+    :override #'sqlup-comment-p
+    (looking-back (rx (or "#" "--") (*? nonl))) nil)
+
+  (defadvice! yc/sqlup-capitalize-as-you-type-adv (&rest args)
+    "Don't invoke original function unless buffer is modified."
+    :before-until #'sqlup-capitalize-as-you-type
+    (not (buffer-modified-p)))
   :hook ((sql-mode . sqlup-mode)))
-
-
-(defun yc/sqlup-capitalize-as-you-type (func &rest args)
-  "Advice for `sqlup-capitalize-as-you-type'.
-Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is modified."
-  (if (buffer-modified-p)
-      (apply func args)))
 
 
 (use-package sql-indent
@@ -186,7 +178,6 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
-
   :commands (sql/eval-sql sql/choose-dbms sql/choose-database company-sql
                          company-sql-update-candidates
                          eshell/restart_pg sql/remove-costs))
@@ -204,19 +195,8 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
                  (: (or "results" "expected") (*? nonl) "/"
                     (+? nonl) ".out")
                  ) eol)  . sql-mode)
-  :hook (
-         (sql-mode . yc/sql-mode-hook)
-         (sql-interactive-mode
-          .
-          (lambda ()
-            (yc/sql-mode-hook)
-            (let ((yc/debug-log-limit -1))
-              (PDEBUG "PRODUCT:"
-                      sql-product))
-
-            (if (equal sql-product 'postgres)
-                (setq sql-prompt-regexp (rx bol (* (or alnum "_" ".")) "=" (or "#" ">") " "))))))
-
+  :init
+  (add-hook! '(sql-mode-hook sql-interactive-mode-hook) #'yc/sql-mode-hook)
   :bind ((;; ,(kbd "C-c C-b")
           "". sql/eval-sql))
   :config
@@ -232,6 +212,13 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 
  ;; scala-mode.
 (use-package ensime
+  :preface
+  (defun yc/ensime-find-definition (pt)
+    "Find definition at PT."
+    (unless (fboundp 'ensime-edit-definition)
+      (require 'ensime))
+    (if (ensime-edit-definition nil)
+        (yc/push-stack (cons 'ensime-pop-find-definition-stack nil))))
   :commands (ensime)
   :custom
   (ensime-startup-notification nil)
@@ -240,45 +227,34 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
   (ensime-startup-dirname (yc/make-cache-path "ensime"))
   :config
   (yc/add-company-backends 'ensime-mode 'ensime-company)
-  )
-
-(defun yc/ensime-find-definition (pt)
-  "Find definition at PT."
-  (unless (fboundp 'ensime-edit-definition)
-    (require 'ensime))
-  (if (ensime-edit-definition nil)
-      (yc/push-stack (cons 'ensime-pop-find-definition-stack nil))))
-
-(defun yc/scala-mode-hook ()
-  "My Hooks for scala-mode."
-  (unless (featurep 'ensime)
-    (require 'ensime))
   (add-to-list 'yc/find-def-func-list 'yc/ensime-find-definition))
 
 (use-package scala-mode
   :mode (rx ".scala" eol)
   :hook ((scala-mode . yc/scala-mode-hook))
   :config
-  (progn
-    (modify-syntax-entry ?\" "\"" scala-syntax:syntax-table)))
+  (modify-syntax-entry ?\" "\"" scala-syntax:syntax-table)
+  (require 'ensime))
 
 
-(defun pgsql-perl-style ()
-  "Perl style adjusted for PostgreSQL project."
-  (interactive)
-  (setq perl-brace-imaginary-offset 0)
-  (setq perl-brace-offset 0)
-  (setq perl-continued-statement-offset 2)
-  (setq perl-continued-brace-offset (- perl-continued-statement-offset))
-  (setq perl-indent-level 4)
-  (setq perl-label-offset -2)
-  ;; Next two aren't marked safe-local-variable, so .dir-locals.el omits them.
-  (setq perl-indent-continued-arguments 4)
-  (setq perl-indent-parens-as-block t)
-  (setq indent-tabs-mode t)
-  (setq tab-width 4))
-
 (use-package cperl-mode
+  :preface
+  (defun pgsql-perl-style ()
+    "Perl style adjusted for PostgreSQL project."
+    (interactive)
+    (setq perl-brace-imaginary-offset 0
+          perl-brace-offset 0
+          perl-continued-statement-offset 2
+          perl-continued-brace-offset (- perl-continued-statement-offset)
+          perl-indent-level 4
+          perl-label-offset -2
+          ;; Next two aren't marked safe-local-variable, so .dir-locals.el omits them.
+          perl-indent-continued-arguments 4
+          perl-indent-parens-as-block t
+          indent-tabs-mode t
+          tab-width 4))
+
+
   :interpreter ("perl" . cperl-mode)
   :mode "\\.\\([pP][Llm]\\|al\\)$"
   :init
@@ -313,76 +289,63 @@ Call FUNC which is `sqlup-capitalize-as-you-type' with ARGS only when buffer is 
 
  ;; rust
 (use-package rust-mode
+  :init
+  (yc/add-compile-unit 'rust 60
+    (if (locate-dominating-file default-directory "Cargo.toml")
+        (lambda ()
+          (interactive)
+          (if (executable-find "cargo")
+              (concat "cargo build" (if current-prefix-arg " --release"))
+            (error "Can't find executable: cargo")))
+      (when (equal major-mode 'rust-mode)
+        (lambda ()
+          (interactive)
+          (if (executable-find "rustc")
+              (concat "rustc " file)
+            (error "Can't find executable: rustc"))))))
+
+  (yc/add-run-unit 'rust 60
+    (aif (locate-dominating-file default-directory "Cargo.toml")
+        (lambda ()
+          (interactive)
+          (let* ((target (if current-prefix-arg "test" "run"))
+                 (custom-script (concat (expand-file-name it) "my_script_"
+                                        target)))
+            (if (and (file-exists-p custom-script)
+                     (file-executable-p custom-script))
+                custom-script
+              (if (executable-find "cargo")
+                  (concat "cargo "
+                          (if current-prefix-arg
+                              (if (listp current-prefix-arg)
+                                  "test -- --nocapture"
+                                "test"
+                                )
+                            "run"))
+                (error "Can't find executable: cargo")))))
+
+      (when (equal major-mode 'rust-mode)
+        (lambda ()
+          (interactive)
+          (if (executable-find "rustc")
+              (concat "rustc " file " && ./" (file-name-sans-extension file))
+            (error "Can't find executable: rustc"))))))
   :hook ((rust-mode
           .
           (lambda ()
             (interactive)
             (yc/lsp--setup "rls" "rustup-init component add rls --toolchain'"))))
   :config
-  (progn
+  (defun yc/rust-trace-on ()
+    "Turn on trace of rust.."
+    (interactive)
+    (setenv "RUST_BACKTRACE" "1"))
 
-    (defun yc/rust-trace-on ()
-      "Turn on trace of rust.."
-      (interactive)
-      (setenv "RUST_BACKTRACE" "1"))
+  (defun yc/rust-trace-off ()
+    "Turn off trace of rust.."
+    (interactive)
+    (setenv "RUST_BACKTRACE" "0"))
 
-    (defun yc/rust-trace-off ()
-      "Turn off trace of rust.."
-      (interactive)
-      (setenv "RUST_BACKTRACE" "0"))
-
-    (defun yc/lsp--suggest-project-root-adv-rust (&rest args)
-      "Advice for 'lsp--suggest-project-root'.
-Call FUNC which is 'lsp--suggest-project-root with ARGS."
-      (and (memq major-mode '(rust-mode))
-           (when-let (dir (locate-dominating-file default-directory "Cargo.toml"))
-             (expand-file-name dir)))
-      )
-
-    (advice-add 'lsp--suggest-project-root :before-until
-                #'yc/lsp--suggest-project-root-adv-rust)
-
-    (yc/add-compile-unit 'rust 60
-      (if (locate-dominating-file default-directory "Cargo.toml")
-          (lambda ()
-            (interactive)
-            (if (executable-find "cargo")
-                (concat "cargo build" (if current-prefix-arg " --release"))
-              (error "Can't find executable: cargo")))
-        (when (equal major-mode 'rust-mode)
-          (lambda ()
-            (interactive)
-            (if (executable-find "rustc")
-                (concat "rustc " file)
-              (error "Can't find executable: rustc"))))))
-
-    (yc/add-run-unit 'rust 60
-      (aif (locate-dominating-file default-directory "Cargo.toml")
-          (lambda ()
-            (interactive)
-            (let* ((target (if current-prefix-arg "test" "run"))
-                   (custom-script (concat (expand-file-name it) "my_script_"
-                                          target)))
-              (if (and (file-exists-p custom-script)
-                       (file-executable-p custom-script))
-                  custom-script
-                (if (executable-find "cargo")
-                    (concat "cargo "
-                            (if current-prefix-arg
-                                (if (listp current-prefix-arg)
-                                    "test -- --nocapture"
-                                  "test"
-                                  )
-                              "run"))
-                  (error "Can't find executable: cargo")))))
-
-
-        (when (equal major-mode 'rust-mode)
-          (lambda ()
-            (interactive)
-            (if (executable-find "rustc")
-                (concat "rustc " file " && ./" (file-name-sans-extension file))
-              (error "Can't find executable: rustc")))))))
   :mode ((rx ".rs" buffer-end)))
 
 
@@ -403,9 +366,8 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
   :mode (rx "." (or "grovvy" "gradle") buffer-end)
   )
 
-
 
-(provide '059-prog-others)
+(provide '056-prog-others)
 
 
 ;; Local Variables:
@@ -413,4 +375,4 @@ Call FUNC which is 'lsp--suggest-project-root with ARGS."
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; 059-prog-others.el ends here
+;;; 056-prog-others.el ends here

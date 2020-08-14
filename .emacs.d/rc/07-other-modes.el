@@ -224,20 +224,15 @@ ORIG-FUNC is called with ARGS."
              yc/copy-current-buffername yc/reload-emacs
              yc/decode-hex-color
              yc/encode-hex-color
-             yc/eval-and-insert
-             yc/eval-and-insert-comment
              yc/http-save-page
              yc/insert-current-date
              yc/insert-current-date-time
              yc/kill-proc yc/move-snapshot  yc/expand-macro
              yc/pack-env yc/unpack-env dos-unix unix-dos
              yc/syntax-color-hex
-
              yc/choose-compiler
              yc/show-compilers
-
              yc/update-env-from
-
              yc/view-with-ediff
              yc/get-cpu-cores
              yc/get-compiling-threads
@@ -253,6 +248,8 @@ ORIG-FUNC is called with ARGS."
           "J" . yc/eval-and-insert-comment)
          (;(kbd "C-x j")
           "j" . yc/eval-and-insert)
+         (;; (kbd "C-x M-e")
+          [24 134217829] . yc/eval-and-kill)
 
          (;; (kbd "C-o")
           "" . zl-newline)
@@ -300,7 +297,7 @@ ORIG-FUNC is called with ARGS."
          ([f5] . yc/open-eshell)
          ([remap shell-command] . yc/exec-command-via-eshell))
 
-  :hook ((before-save  .change-file-permissions-to-writable))
+  :hook ((before-save . change-file-permissions-to-writable))
   )
 
 (use-package yc-dump
@@ -512,7 +509,7 @@ Useful to run after `pdf-tools' updates."
           "spark-shell" "sbt" "watch")))
 
 (use-package vterm
-  :commands (vterm)
+  :commands (vterm vterm-mode)
   :preface
   (defun yc/open-vterm ()
     "Open or switch to vterm.
@@ -533,7 +530,6 @@ create new buffer."
 
  ;; comint hook
 (use-package comint
-
   :defer t
   :init
   (progn

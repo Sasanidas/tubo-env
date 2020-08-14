@@ -374,9 +374,6 @@ This is a variadic `cl-pushnew'."
     (setq-default header-line-format '("%f")))
   (load-theme 'tb-dark))
 
-;; set color immediately.
-(yc/setup-display)
-
 (defun yc/server-create-window-system-frame (func &rest args)
   "Advice for `server-create-window-system-frame'.
 Call FUNC with ARGS."

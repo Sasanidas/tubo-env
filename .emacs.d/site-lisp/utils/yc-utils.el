@@ -228,8 +228,26 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
                  str (int-to-binary-string number))
       (error "Is cursor on a number??"))))
 
+(defun yc/eval-and-kill ()
+  "Evaluate last form and copy result to `kill-ring'."
+  (interactive)
+  (let* ((val (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))
+         (val-str
+          (with-temp-buffer
+            (print val (current-buffer))
+            (goto-char (point-min))
+            (while (search-forward-regexp "\\`[ \t\n\r]+" nil t)
+              (replace-match "" t t))
+            (goto-char (point-max))
+            (delete-char -1)
+            (buffer-substring-no-properties (point-min) (point-max)))))
+
+    (kill-new val-str)
+    (message "%s" val-str)
+    ))
+
 (defun yc/eval-and-insert ()
-  "Evaluate last form and copy result to kill-ring."
+  "Evaluate last form and insert result."
   (interactive)
   (let* ((val (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))
          (pos (save-excursion (backward-list) (point)))
@@ -251,7 +269,7 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
 
 
 (defun yc/eval-and-insert-comment ()
-  "Evaluate last form and copy result to kill-ring."
+  "Evaluate last form and insert result with comment."
   (interactive)
   (let* ((val (eval (eval-sexp-add-defvars (elisp--preceding-sexp))))
          (pos (save-excursion (backward-list) (point)))

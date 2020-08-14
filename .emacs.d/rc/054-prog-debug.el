@@ -72,12 +72,10 @@
   (realgud-safe-mode nil)
   (realgud-file-find-function (lambda (&rest args) nil))
   :config
-
   (defadvice! yc/realgud:gdb-track-mode-hook-adv (&rest args)
-    "ORIG-FUNC is called with ARGS."
+    "Setup realgud-track-mode, to make sure comint-key-map works."
     :override #'realgud:gdb-track-mode-hook
     (realgud-track-mode-setup 't))
-
 
   (defadvice! yc/realgud:cmd-eval-dwim-adv (&rest args)
     "ORIG-FUNC is called with ARGS."
@@ -102,6 +100,11 @@
 
 (use-package realgud-lldb
   :commands (realgud--lldb))
+
+(use-package realgud-gdb
+  :config
+  (require 'realgud))
+
 
 (defalias 'realgud:lldb 'realgud--lldb)
 (defalias 'lldb 'realgud--lldb)
