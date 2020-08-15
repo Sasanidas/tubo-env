@@ -97,12 +97,13 @@
 
   custom-theme-directory "~/.emacs.d/themes"
   custom-safe-themes t
-  )
 
  ;;;; Garbage Collection
-(setq
- garbage-collection-messages nil
- gc-cons-threshold 99999999)
+  garbage-collection-messages nil
+  gc-cons-threshold 99999999
+  )
+
+
 (if (boundp 'after-focus-change-function)
     (add-function :after after-focus-change-function
                   (lambda ()
