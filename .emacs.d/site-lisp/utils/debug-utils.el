@@ -20,7 +20,7 @@
    "PFX:" current-prefix-arg
    "GDB ARGS" cmd)
   (if current-prefix-arg
-      (gdb (concat "gdb -i=mi "  cmd) )
+      (gdb (concat "gdb -i=mi " cmd))
     (realgud:gdb (concat "gdb "cmd))))
 
 (defun yc/directory-files (dir)

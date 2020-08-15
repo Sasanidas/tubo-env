@@ -1,6 +1,6 @@
 ;;; 05-prog-common.el -- Brief introduction here.
 
-;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
+;; Author: Yang,Ying-chao <yangyingchao@icloud.com>
 
 ;;; Commentary:
 
@@ -281,7 +281,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   (lsp-keep-workspace-alive nil)
   ;; capf is the preferred completion mechanism for lsp-mode now
   (lsp-prefer-capf t)
-
+  (read-process-output-max (* 1024 1024))
 
   ;; Disable LSP's superfluous, expensive and/or debatably unnecessary features.
   ;; Some servers implement these poorly. Better to just rely on Emacs' native

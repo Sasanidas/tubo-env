@@ -1,6 +1,6 @@
 ;;; 07-other-modes.el -- Brief introduction here.
 
-;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
+;; Author: Yang,Ying-chao <yangyingchao@icloud.com>
 
 ;;; Commentary:
 
@@ -297,7 +297,7 @@ ORIG-FUNC is called with ARGS."
          ([f5] . yc/open-eshell)
          ([remap shell-command] . yc/exec-command-via-eshell))
 
-  :hook ((before-save . change-file-permissions-to-writable))
+  :hook ((before-save . yc/make-file-writable))
   )
 
 (use-package yc-dump

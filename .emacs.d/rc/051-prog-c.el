@@ -1,6 +1,6 @@
 ;;; 051-prog-c.el -- Brief introduction here.
 
-;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
+;; Author: Yang,Ying-chao <yangyingchao@icloud.com>
 
 ;;; Commentary:
 ;;;  Provides configurations for c family.
@@ -50,15 +50,6 @@
 
 (use-package clang-format
   :commands (clang-format-region clang-format-buffer))
-
-(cdsq yc/c-file-mode-mapping
-  (list (cons (rx (or "linux-" "kernel" "driver" "samba")) "kernel")
-        (cons (rx (or "curl" "emacs" "gnome")) "gnu")
-        (cons (rx (or "mysql") (*? nonl) "/") "mysql")
-        (cons (rx (or "postgresql" "postgres" "gpdb") (*? nonl) "/") "postgres")
-        (cons (rx "/" (or "llvm" "clang")  "/") "llvm.org")
-        )
-  "List of possible coding styles.")
 
 
 (use-package cwarn

@@ -1,6 +1,6 @@
 ;;; 055-prog-make.el -- Brief introduction here.
 
-;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
+;; Author: Yang,Ying-chao <yangyingchao@icloud.com>
 
 ;;; Commentary:
 

@@ -22,7 +22,8 @@
   (enable-recursive-minibuffers t)
   (ivy-height 17)                    ;; Number of result lines to display
   (ivy-initial-inputs-alist nil)     ;; No regexp by default
-  (ivy-wrap nil)                       ;; wrap candidates
+  (ivy-wrap nil)                     ;; wrap candidates
+  (ivy-sort-max-size 7500)
   (ivy-on-del-error-function #'ignore) ;; don't quit minibuffer on delete-error
 
   :bind ((;(kbd "C-c C-r")
@@ -364,7 +365,8 @@ Call FUNC which is 'projectile-find-file with ARGS."
   :functions (counsel-projectile-find-file-action)
   :commands (counsel-projectile-find-file)
   :bind (("C-x M-f" . yc/projectile-find-file)
-         ("C-x M-d" . counsel-projectile-find-dir)))
+         ("C-x M-d" . counsel-projectile-find-dir)
+         ("C-x M-b" . counsel-projectile-switch-to-buffer)))
 
 (use-package smartparens
   :ensure t

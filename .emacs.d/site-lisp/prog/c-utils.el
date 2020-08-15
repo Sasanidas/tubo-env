@@ -15,11 +15,25 @@
 ;;
 ;;; Commentary:
 ;;
-;;  
+;;
 ;;
 ;;; Code:
 
+
+
 (require 'use-package)
+(eval-when-compile
+  (require 'cl))
+
+
+(defvar yc/c-file-mode-mapping
+  (list (cons (rx (or "linux-" "kernel" "driver" "samba")) "kernel")
+        (cons (rx (or "curl" "emacs" "gnome")) "gnu")
+        (cons (rx (or "mysql") (*? nonl) "/") "mysql")
+        (cons (rx (or "postgresql" "postgres" "gpdb") (*? nonl) "/") "postgres")
+        (cons (rx "/" (or "llvm" "clang")  "/") "llvm.org")
+        )
+  "List of possible coding styles.")
 
 
 (defun yc/get-c-style (&optional filename)

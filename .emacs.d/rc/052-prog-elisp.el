@@ -1,106 +1,87 @@
 ;;; 052-prog-elisp.el -- Brief introduction here.
 
-;; Author: Yang,Ying-chao <yangyingchao@g-data.com>
+;; Author: Yang,Ying-chao <yangyingchao@icloud.com>
 
 ;;; Commentary:
 
 ;;; Code:
 
- ;; Lisp mode.
-
-(font-lock-add-keywords
- 'emacs-lisp-mode
- `((,(rx "("
-         (group (or (: "yc/" (+ (or alnum "-" "_")))
-                    "add-to-list" "try-require" "add-hook" "autoload"
-                    "yc/eval-after-load" "try-require-autoloads"
-                    "fboundp" "boundp" "featurep" "cdsq"
-                    "cds" "dsq" "sif" "aif" "font-lock-add-keywords"
-                    "csq" "cdsq"  "defun*" "defmacro*" "define-error"))
-         (? (+ (or space "\n"))
-            (group (* (or alnum "-" "_" "'" "/" "\"")))))
-    (1 font-lock-keyword-face)
-    (2 font-lock-constant-face nil t))))
-
-(define-skeleton skeleton-require
-  "generate req<>" ""
-  > "(require '"
-  (completing-read
-   "Require File:"
-   (apply
-    'append
-    (mapcar
-     (lambda (dir)
-       (when (file-exists-p dir)
-         (mapcar 'file-name-sans-extension
-                 (directory-files dir nil (rx (+? (or alnum "_" "+" "-")) (? (or ".el" ".gz")))))
-         ))
-     load-path)))
-  ")")
-
-(defun yc/insert-key-sequence-kbd ()
-  "Insert key sequence (with kbd function)."
-  (interactive)
-  (let ((key (read-key-sequence "Stoke:")) )
-    (insert (format "(kbd \"%s\")" (key-description key)))))
-
-(defun yc/insert-key-sequence ()
-  "Insert key sequence."
-  (interactive)
-  (yc/insert-key-sequence-kbd)
-  (yc/eval-and-insert-comment))
-
-(defun my-lisp-hook ()
-  "Hook to run for Lisp mode."
-  (set (make-local-variable 'header-field-list)
-       '(lisp_desc blank copyright blank author blank n_emacs gpl
-                   blank e_comment blank))
-
-  (set (make-local-variable 'autopair-skip-whitespace) 'chmop)
-  (eldoc-mode 1)
-  (setq c-basic-offset 8
-        tab-width 8))
-
-(define-abbrev-table 'emacs-lisp-mode-abbrev-table
-  '(("req" "" skeleton-require 1)))
-
-(put 'add-hook 'lisp-indent-function 'defun)
-
-(defun yc/byte-compile-current-elisp ()
-  "Byte compile Lisp file."
-  (interactive)
-  (when (eq major-mode 'emacs-lisp-mode)
-    (if (or (string-match-p (rx ".emacs.d/rc/" (+ nonl) ".el")
-                            buffer-file-name)
-            (not (string-match-p (rx (+? nonl) ".el") buffer-file-name)))
-      (PDEBUG "Byte compile ignored for file: " buffer-file-name)
-    (byte-compile-file buffer-file-name))))
-
 (use-package  elisp-mode
+  :preface
+  (defun yc/insert-key-sequence-kbd ()
+    "Insert key sequence (with kbd function)."
+    (interactive)
+    (let ((key (read-key-sequence "Stoke:")) )
+      (insert (format "(kbd \"%s\")" (key-description key)))))
+
+  (defun yc/insert-key-sequence ()
+    "Insert key sequence."
+    (interactive)
+    (yc/insert-key-sequence-kbd)
+    (yc/eval-and-insert-comment))
+
+
+  (defun yc/byte-compile-current-elisp ()
+    "Byte compile Lisp file."
+    (interactive)
+    (when (eq major-mode 'emacs-lisp-mode)
+      (if (or (string-match-p (rx ".emacs.d/rc/" (+ nonl) ".el")
+                              buffer-file-name)
+              (not (string-match-p (rx (+? nonl) ".el") buffer-file-name)))
+          (PDEBUG "Byte compile ignored for file: " buffer-file-name)
+        (byte-compile-file buffer-file-name))))
+
+  (defun my-lisp-hook ()
+    "Hook to run for Lisp mode."
+    (set (make-local-variable 'header-field-list)
+         '(lisp_desc blank copyright blank author blank n_emacs gpl
+                     blank e_comment blank))
+
+    (set (make-local-variable 'autopair-skip-whitespace) 'chmop)
+    (eldoc-mode 1)
+    (setq c-basic-offset 8
+          tab-width 8))
+
   :mode (((rx "." (or "el" "sexp") eol) . emacs-lisp-mode))
   :bind (:map emacs-lisp-mode-map
               (;; (kbd "C-c M-k")
                [3 134217835] . yc/insert-key-sequence-kbd)
               (;; (kbd "C-c M-K")
-               [3 134217803] . yc/insert-key-sequence)
-              )
+               [3 134217803] . yc/insert-key-sequence))
+
   :hook ((emacs-lisp-mode . my-lisp-hook)
-         (lisp-mode my-lisp-hook))
+         (after-save .  yc/byte-compile-current-elisp))
+
   :config
-  (add-hook 'after-save-hook 'yc/byte-compile-current-elisp)
-  (yc/add-company-backends 'emacs-lisp-mode 'company-elisp 'company-dabbrev-code)
+  (put 'add-hook 'lisp-indent-function 'defun)
+
+  (font-lock-add-keywords
+   'emacs-lisp-mode
+   `((,(rx "("
+           (group (or (: "yc/" (+ (or alnum "-" "_")))
+                      "add-to-list" "try-require" "add-hook" "autoload"
+                      "yc/eval-after-load" "try-require-autoloads"
+                      "fboundp" "boundp" "featurep" "cdsq"
+                      "cds" "dsq" "sif" "aif" "font-lock-add-keywords"
+                      "csq" "cdsq"  "defun*" "defmacro*" "define-error"))
+           (? (+ (or space "\n"))
+              (group (* (or alnum "-" "_" "'" "/" "\"")))))
+      (1 font-lock-keyword-face)
+      (2 font-lock-constant-face nil t))))
+  (yc/add-company-backends 'emacs-lisp-mode
+    'company-elisp 'company-dabbrev-code)
+  (yc/add-auto-delete-spaces 'emacs-lisp-mode)
   )
 
  ;; native compile..
 
 (when (fboundp 'native-compile-async)
-  (defun yc/byte-compile-file-adv (&rest args)
-    "Advice for 'byte-compile-file'.
-Call FUNC which is 'byte-compile-file with ARGS."
+  (defadvice! yc/byte-compile-file-adv (&rest args)
+    "Native compile it!
+ORIG-FUNC is called with ARGS."
+    :after #'byte-compile-file
     (let ((file (car args)) )
-      (native-compile-async (car args) (file-directory-p file))))
-  (advice-add 'byte-compile-file :after #'yc/byte-compile-file-adv)
-
+      (native-compile-async file (file-directory-p file))))
 
   (defun yc/native-compile-file ()
     "Native compile selected file."
@@ -131,7 +112,7 @@ Call FUNC which is 'byte-compile-file with ARGS."
                                                                nil
                                                                t))
                                        (t nil))))
-                      project-root)))
+                  project-root)))
     (PDEBUG "Native compile: " dir)
     (native-compile-async (expand-file-name dir) t)))
 

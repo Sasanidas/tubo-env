@@ -617,6 +617,24 @@ Cancels itself, if this buffer was killed."
                     (apply (function ,function) args))))))
     (fset fns fn)
     fn))
+
+(defvar yc/auto-delete-trailing-spaces-modes nil
+  "List of modes in which trailing spaces should be deleted automatically.")
+
+(defun yc/add-auto-delete-spaces (&rest modes)
+  "Add modes to `yc/auto-delete-trailing-spaces-modes'."
+  (mapc (lambda (x)
+          (unless (member x yc/auto-delete-trailing-spaces-modes)
+            (push x yc/auto-delete-trailing-spaces-modes)))
+        modes))
+
+(add-hook 'before-save-hook
+  (lambda ()
+    (when (and (buffer-modified-p)
+               (member major-mode yc/auto-delete-trailing-spaces-modes))
+      (delete-trailing-whitespace))) t t )
+
+
  
 ;; Local Variables:
 ;; coding: utf-8
