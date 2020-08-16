@@ -113,7 +113,8 @@
 (defvar new-script-list nil "List of newly created scripts.")
 (defun check-script-status ()
   "Check status of scripts."
-  (unless (file-exists-p buffer-file-name)
+  (unless (and buffer-file-name
+               (file-exists-p buffer-file-name))
     (save-excursion
       (save-restriction
         (widen)

@@ -1642,7 +1642,8 @@ args should be a list, but to make caller's life easier, it can accept one atom 
   "Make file writable.
 Should be run from find-file-hook, change write permissions."
   (interactive)
-  (when (file-exists-p buffer-file-name)
+  (when (and buffer-file-name
+             (file-exists-p buffer-file-name))
     (let ((attr (file-attributes buffer-file-name))
           (msg (format "Make file: %s writable... " buffer-file-name)))
       ;; Change file mode if this file belongs to me, and it is writeable.

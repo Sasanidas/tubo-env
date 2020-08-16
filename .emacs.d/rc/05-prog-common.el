@@ -370,9 +370,7 @@ ORIG-FUNC is called with ARGS."
     (when-let (root-file (yc/lsp-get-root-file))
       (expand-file-name (file-name-directory root-file))))
 
-
-
-  (defun yc/lsp/switch-client (client)
+  (defun yc/lsp-switch-client (client)
     "Switch to another LSP server."
     (interactive
      (progn
