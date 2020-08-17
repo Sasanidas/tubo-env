@@ -3,13 +3,17 @@
 # key: adva
 # --
 (defadvice! yc/$1-adv (${2:$(if (string-match "^ar" yas-text) "orig-func ")}&rest args)
-  "${3:Docs}
+  "${2:Docs}
 ORIG-FUNC is called with ARGS."$>
- :${2:b}${2:$(cond
-((string-match "^b" yas-text) "efore")
-((string-match "^ar" yas-text) "ound")
-((string-match "^af" yas-text) "ter")
-((string-match "^o" yas-text) "verride")
-(t ""))} #'${1:orig-fn}
+ :${2:$$(yas-choose-value '("after-until"
+"after-while"
+"after"
+"around"
+"before-until"
+"before-while"
+"before"
+"filter-args"
+"filter-return"
+"override"))}  #'${1:orig-fn}
 $0$>
 )

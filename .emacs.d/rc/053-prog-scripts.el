@@ -28,6 +28,8 @@
             (unless (buffer-file-name)
               (flycheck-mode -1))))))
 
+;;
+;; @Deprecated: Mon Aug 17 08:25:45 2020, switch to pyright.
 ;; (use-package lsp-pyls
 ;;   :config
 ;;   (let ((pyls (expand-file-name (executable-find "pyls")))

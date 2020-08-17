@@ -123,16 +123,6 @@ plantuml is a cross-platform, open-source make system."
                         (format-time-string "%Y-%m-%d %H:%M:%S"))
               ""))))
 
-(defun yc/org-download-screenshot-adv (func &rest args)
-  "Advice for 'org-download-screenshot'.
-Call FUNC which is 'org-download-screenshot with ARGS.
-Change default filename before applying original function."
-  (let ((org-download-screenshot-file
-         (expand-file-name (format-time-string "screenshot@%Y-%m-%d_%H:%M:%S.png")
-                           temporary-file-directory)))
-    (apply func args)))
-
-
 (defun yc/get-image-width (filename)
   "Returns width of file FILENAME in pixel."
   (unless (file-exists-p filename)
@@ -141,60 +131,6 @@ Change default filename before applying original function."
     (insert-image-file filename)
     (car (image-size
           (image-get-display-property) t))))
-
-(defun yc/org-download-insert-link-adv (func link filename)
-  "Advice for 'org-download-insert-link'.
-Call FUNC which is 'org-download-insert-link with ARGS."
-  (let* ((width (if (fboundp 'image-size)
-                    ;; if function `image-size' is avaiable,  we can do some calculation.
-                    (if (file-exists-p filename)
-                        ;; if file exists, calculate width to be used.
-                        (let ((actual-width (yc/get-image-width filename)))
-                          (if (> actual-width 960)
-                              960 0))
-                      ;; or, set to -1, and update it later.
-                      -1)
-                  ;; otherwise, return 0 to disable this feature.
-                  0))
-           (org-download-image-html-width width)
-           (org-download-image-org-width width))
-    (PDEBUG "width: " width)
-    (funcall func link filename)))
-
-(defun yc/org-download--image/url-retrieve-adv (link filename)
-  "advice for 'org-download--image/url-retrieve'.
-call func which is 'org-download--image/url-retrieve with args."
-(url-retrieve
-   link
-   (lambda (status filename buffer)
-     (org-download--write-image status filename)
-     (cond ((org-download-org-mode-p)
-            (with-current-buffer buffer
-              (org-download--display-inline-images)))
-           ((eq major-mode 'dired-mode)
-            (let ((inhibit-message t))
-              (with-current-buffer (dired (file-name-directory filename))
-                (revert-buffer nil t)))))
-     (with-current-buffer buffer
-       (let* ((width (round (yc/get-image-width filename)))
-              (width-str (concat (number-to-string (if (> width 960) 960 width)) "px")) )
-         (save-excursion
-           (let ((end (point)))
-             (forward-line -4)
-             (PDEBUG "W:" (point) end (buffer-substring-no-properties (point) end))
-             (narrow-to-region (point) end)
-             (while (search-forward "-1px" nil t)
-               (replace-match width-str nil t)))
-           (widen)))
-
-       (org-download--display-inline-images)
-       )
-     )
-   (list
-    (expand-file-name filename)
-    (current-buffer))
-   nil t))
-
 
 (use-package org-download
   :commands (org-download-image org-download-screenshot)
@@ -217,11 +153,73 @@ call func which is 'org-download--image/url-retrieve with args."
   (setq org-download-annotate-function 'yc/org-download-annotate-func
         org-download-file-format-function 'identity)
 
-  (advice-add 'org-download-screenshot :around #'yc/org-download-screenshot-adv)
-  (advice-add 'org-download-insert-link :around
-              #'yc/org-download-insert-link-adv)
+  (defadvice! yc/org-download-screenshot-adv (orig-func &rest args)
+    "Assign file name for screenshot before calling ORIG-FUNC with ARGS."
+    :around #'org-download-screenshot
+    (let ((org-download-screenshot-file
+           (expand-file-name (format-time-string "screenshot@%Y-%m-%d_%H:%M:%S.png")
+                             temporary-file-directory)))
+      (apply orig-func args))
+    )
+
+  (defadvice! yc/org-download-insert-link-adv (orig-func &rest args)
+    "Set image width to proper value before calling ORIG-FUNC is called with ARGS.
+This will add proper attributes into org file so image won't be too large."
+    :around #'org-download-insert-link
+    (let* ((width (if (fboundp 'image-size)
+                      ;; if function `image-size' is avaiable,  we can do some calculation.
+                      (if (file-exists-p filename)
+                          ;; if file exists, calculate width to be used.
+                          (let ((actual-width (yc/get-image-width filename)))
+                            (if (> actual-width 960)
+                                960 0))
+                        ;; or, set to -1, and update it later.
+                        -1)
+                    ;; otherwise, return 0 to disable this feature.
+                    0))
+           (org-download-image-html-width width)
+           (org-download-image-org-width width))
+      (PDEBUG "width: " width)
+      (funcall orig-func link filename))
+    )
+
   (advice-add 'org-download--image/url-retrieve :override
               #'yc/org-download--image/url-retrieve-adv)
+
+  (defadvice! yc/org-download--image/url-retrieve-adv (link filename)
+    "Retrieve LINK and save as FILENAME."
+    :override #'org-download--image/url-retrieve
+    (url-retrieve
+     link
+     (lambda (status filename buffer)
+       (org-download--write-image status filename)
+       (cond ((org-download-org-mode-p)
+              (with-current-buffer buffer
+                (org-download--display-inline-images)))
+             ((eq major-mode 'dired-mode)
+              (let ((inhibit-message t))
+                (with-current-buffer (dired (file-name-directory filename))
+                  (revert-buffer nil t)))))
+       (with-current-buffer buffer
+         (let* ((width (round (yc/get-image-width filename)))
+                (width-str (concat (number-to-string (if (> width 960) 960 width)) "px")) )
+           (save-excursion
+             (let ((end (point)))
+               (forward-line -4)
+               (PDEBUG "W:" (point) end (buffer-substring-no-properties (point) end))
+               (narrow-to-region (point) end)
+               (while (search-forward "-1px" nil t)
+                 (replace-match width-str nil t)))
+             (widen)))
+
+         (org-download--display-inline-images)
+         )
+       )
+     (list
+      (expand-file-name filename)
+      (current-buffer))
+     nil t)
+    )
   )
 
 
@@ -298,51 +296,18 @@ call func which is 'org-download--image/url-retrieve with args."
 
   ;; modify syntax-entry, so electric-pair can work better.
   (modify-syntax-entry ?$ "\$")
-  (modify-syntax-entry ?= "(=")
-  )
-
-(defun yc/org-html-paragraph-adv (func &rest args)
-  "Advice for 'org-html-paragraph'.
-Call FUNC which is 'org-html-paragraph with ARGS."
-       "Join consecutive Chinese lines into a single long line without
-unwanted space when exporting org-mode to html."
-       (let ((orig-contents (cadr args))
-             (reg-han "[[:multibyte:]]"))
-         (setf (cadr args) (replace-regexp-in-string
-                            (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
-                            "\\1\\2" orig-contents))
-         (apply func args)))
-
-
-(defun yc/org-latex-special-block-adv (func &rest args)
-  "Advice for 'org-latex-special-block'.
-Call FUNC which is 'org-latex-special-block with ARGS."
-  (if (string= (org-element-property :type (car args)) "NOTES")
-      (cadr args)
-    (apply func args)))
-
+  (modify-syntax-entry ?= "(="))
 
 (defun org-summary-todo (n-done n-not-done)
   "Switch entry to DONE when all subentries are done, to TODO otherwise."
   (let (org-log-done org-log-states)   ; turn off logging
     (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 
-(defun yc/org-open-at-point-adv (func &rest args)
-  "Advice for 'org-open-at-point'.
-Call FUNC which is 'org-open-at-point with ARGS."
-  (let ((m (point-marker)))
-    (progn
-      (apply func args)
-      (yc/push-stack m))))
-
-
 
 (defun yc/org-comment-line-break-function (func &rest args)
   "Wrapper of: `org-comment-line-break-function'.
 Ignore error signal in `org-comment-line-break-function'."
-  (condition-case var
-      (apply func args)
-    (error nil)))
+)
 
 
 
@@ -407,14 +372,6 @@ Ignore error signal in `org-comment-line-break-function'."
   ;; remove trailing space
   (delete-trailing-whitespace))
 
-(defun yc/org-ctrl-c-ctrl-c-adv (&rest args)
-  "Advice for 'org-ctrl-c-ctrl-c'.
-Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
-
-  (PDEBUG "ENTER2: " (current-buffer))
-
-  (when window-system
-    (org-redisplay-inline-images)))
 
  ;; auto-insert for org-mode.
 
@@ -464,7 +421,6 @@ Call FUNC which is 'org-ctrl-c-ctrl-c with ARGS."
   (org-superstar-headline-bullets-list '( "●"  "◎" "○" "✸" "✿" "✤" "✜" "◆" "▶")))
 
 (use-package ox-latex
-
   :custom
   (org-latex-compiler "xelatex")
   (org-latex-default-figure-position "htbp";; "H"
@@ -485,32 +441,26 @@ urlcolor={blue},
 menucolor={blue}}
 ")
   :config
-  (advice-add 'org-latex-special-block :around #'yc/org-latex-special-block-adv))
+  (defadvice! yc/org-latex-special-block-adv (orig-func &rest args)
+    "Docs
+ORIG-FUNC is called with ARGS."
+    :around #'org-latex-special-block
 
-
-(defun yc/org-publish-needed-p-adv (func &rest args)
-  "Advice for 'org-publish-needed-p'.
-Call FUNC which is 'org-publish-needed-p with ARGS.
-Restore to current location after executing."
-  (save-excursion
-    (apply func args)))
+      (if (string= (org-element-property :type (car args)) "NOTES")
+      (cadr args)
+    (apply orig-func args))))
 
 (use-package ox-publish
-
   :commands (org-publish-needed-p)
   :config
-  (advice-add 'org-publish-needed-p :around #'yc/org-publish-needed-p-adv))
-
-
-(defun yc/org-publish-file-adv (func &rest args)
-  "Advice for 'org-publish-file'.
-Call FUNC which is 'org-publish-file with ARGS."
-  (unless (string-match "gtd.org" "/Volumes/yyc/Documents/Database/org/gtd.org")
-    (apply func args)))
+  (defadvice! yc/org-publish-needed-p-adv (orig-func &rest args)
+    "Save current execution before calling ORIG-FUNC with ARGS."
+    :around  #'org-publish-needed-p
+    (save-excursion
+      (apply orig-func args))))
 
 
 (use-package org
-
   :commands (org-load-modules-maybe)
   :custom
   (org-image-actual-width nil)
@@ -575,13 +525,54 @@ Call FUNC which is 'org-publish-file with ARGS."
        (,(rx bow (group "DOING "))
         (1 font-lock-function-name-face))))
 
-    (advice-add 'org-html-paragraph :around 'yc/org-html-paragraph-adv)
-    (advice-add 'org-open-at-point :around #'yc/org-open-at-point-adv)
-    (advice-add 'org-ctrl-c-ctrl-c :after #'yc/org-ctrl-c-ctrl-c-adv)
+    (defadvice! yc/org-html-paragraph-adv (orig-func &rest args)
+      "ORIG-FUNC is called with ARGS.
+Join consecutive Chinese lines into a single long line without unwanted space
+when exporting org-mode to html."
+      :around #'org-html-paragraph
+      (let ((orig-contents (cadr args))
+            (reg-han "[[:multibyte:]]"))
+        (setf (cadr args) (replace-regexp-in-string
+                           (concat "\\(" reg-han "\\) *\n *\\(" reg-han "\\)")
+                           "\\1\\2" orig-contents))
+        (apply orig-func args)))
+
+    (defadvice! yc/org-open-at-point-adv (orig-func &rest args)
+      "Save current location before open new file/location.
+ORIG-FUNC is called with ARGS."
+      :around #'org-open-at-point
+      (let ((m (point-marker)))
+        (progn
+          (apply orig-func args)
+          (yc/push-stack m))))
+
+    (defadvice! yc/org-ctrl-c-ctrl-c-adv (&rest args)
+      "Redisplay buffer.
+ORIG-FUNC is called with ARGS."
+      :after #'org-ctrl-c-ctrl-c
+      (PDEBUG "ENTER2: " (current-buffer))
+
+      (when window-system
+        (org-redisplay-inline-images)))
+
+
     (advice-add 'org-edit-special :before #'layout-save-current)
     (advice-add 'org-edit-src-exit :after #'layout-restore)
-    (advice-add 'org-comment-line-break-function :around #'yc/org-comment-line-break-function)
-    (advice-add 'org-publish-file :around #'yc/org-publish-file-adv)
+
+    (defadvice! yc/org-comment-line-break-function-adv (orig-func &rest args)
+      "Docs
+ORIG-FUNC is called with ARGS."
+      :around #'org-comment-line-break-function
+      (condition-case var
+          (apply orig-func args)
+        (error nil)))
+
+    (defadvice! yc/org-publish-file-adv (&rest args)
+      "Don't publish it if this is gtd file.
+ORIG-FUNC is called with ARGS."
+      :before-while #'org-publish-file
+      (string-match "gtd.org" "/Volumes/yyc/Documents/Database/org/gtd.org"))
+
 
     (substitute-key-definition
      'org-cycle-agenda-files  'backward-page org-mode-map)

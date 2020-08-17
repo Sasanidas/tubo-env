@@ -96,37 +96,37 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
  ;; Common Settings for prog-mode.
 (yc/defmacro yc/add-keyword (sym type)
   `(font-lock-add-keywords
-    nil (list
-         (list ,sym 1 ,type t ))))
+    nil (list (list ,sym 1 ,type t))))
 
 ;;;; Function and macro to add an regular expression string formed by (rx)
 ;;;; macro into specified face.
+
+(defun yc/warning-keywords-matcher (limit)
+  "Setup warning keywords.
+LIMIT is the limit of search."
+  (let ((case-fold-search t))
+    (re-search-forward
+     (rx (group (or "@" bow)
+                    (or "bug" "fixme" "note" "todo" "todolist" "xxx" "yyc"
+                        "deprecated"  "obsolete"
+                        )
+                    ":"))
+     limit 'no-error)))
+
 (defun setup-prog-keywords ()
   "Highlight additional keywords."
-  (let ((r-match-warning
-         (rx (group (or "@" bow)
-                    (or "bug" "fixme" "note" "todo" "todolist" "xxx" "yyc"
-                        "BUG" "FIXME" "NOTE" "TODO" "TODOLIST" "XXX" "YYC"
-                        )
-                    ":")))
-        (r-match-longline
-         (rx (repeat 120 not-newline) (group (+? not-newline)) eol))
-        (r-match-const (rx bow (group (or "NIL" "nil")) eow)))
+  (font-lock-add-keywords nil '((yc/warning-keywords-matcher
+                                 1 font-lock-warning-face t)))
 
-    (yc/add-keyword r-match-warning 'font-lock-warning-face)
-    (unless (member major-mode '(mhtml-mode html-mode nxml-mode))
-        (yc/add-keyword r-match-longline 'font-lock-warning-face))
-
-    (yc/add-keyword r-match-const 'font-lock-constant-face)))
+  (unless (member major-mode '(mhtml-mode html-mode nxml-mode))
+    (yc/add-keyword (rx (repeat 120 not-newline) (group (+? not-newline)) eol) 'font-lock-warning-face))
+  (yc/add-keyword (rx bow (group (or "NIL" "nil")) eow) 'font-lock-constant-face)
+  )
 
  ;;;; CEDET Settings
-;; http://lists.gnu.org/archive/html/help-gnu-emacs/2012-04/msg00430.html
-(unless (boundp 'x-max-tooltip-size)
-  (setq x-max-tooltip-size (cons 80 40)))
 
 ;; Semantic mode.
 (use-package semantic
-
   :commands (semantic-mode)
   :hook (;; (prog-mode . semantic-mode)
          (semantic-init . (lambda ()
@@ -149,7 +149,6 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
   )
 
 (use-package semantic/decorate/mode
-
   :defer t
   :config
   (progn
@@ -160,7 +159,6 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
 ;;;; Semanticdb 定制
 ;; Semantic DataBase存储位置
 (use-package semantic/db-mode
-
   :commands (global-semanticdb-minor-mode)
   :config
   (setq-mode-local c-mode semanticdb-find-default-throttle
@@ -169,7 +167,6 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
                    '(project unloaded system recursive)))
 
 (use-package srecode/mode
-
   :commands (srecode-minor-mode)
   :hook ((prog-mode . srecode-minor-mode))
   :custom
@@ -180,17 +177,9 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
                    "~/.emacs.d/templates/srecode/private"))
       (add-to-list 'srecode-map-load-path (expand-file-name dir)))))
 
-(defun yc/print-cur-tag ( )
-  "Print current tag."
-  (interactive)
-  (let ((tag (semantic-current-tag)))
-    (if tag
-        (PDEBUG tag)
-      (error "No tag retrieved"))))
 
  ;; *************************** TAGS Database Settings *********************
 (use-package counsel-xgtags
-
   :commands (counsel-xgtags-find-header counsel-xgtags-mode counsel-xgtags-find-definition
                                         counsel-xgtags-update-tags counsel-xgtags-parse-file)
   :custom

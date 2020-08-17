@@ -119,39 +119,6 @@
 
     (yc/push-stack m)))
 
-(defun yc/counsel-git-grep-action-adv (x)
-  "Advice for 'counsel-git-grep-action'.
-Call FUNC which is 'counsel-git-grep-action with X."
-  (PDEBUG "X:" x)
-  (when (string-match "\\`\\(.*?\\):\\([0-9]+\\):\\(.*\\)\\'" x)
-    (let* ((file-name (match-string-no-properties 1 x))
-           (line-number (match-string-no-properties 2 x))
-           (buffer (get-file-buffer (expand-file-name
-                                     file-name
-                                     (ivy-state-directory ivy-last)))))
-      (PDEBUG "BUF:" buffer
-              "FILE:" file-name
-              "LINE:" line-number)
-      (when buffer
-        (with-current-buffer buffer
-          (switch-to-buffer buffer );; (display-buffer buffer)
-          (goto-char (point-min))
-          (forward-line (1- (string-to-number line-number)))
-
-          (when (re-search-forward (ivy--regex ivy-text t) (line-end-position) t)
-            (when swiper-goto-start-of-match
-              (goto-char (match-beginning 0))))
-
-          (swiper--ensure-visible)
-          (recenter)
-
-          (run-hooks 'counsel-grep-post-action-hook)
-          (unless (eq ivy-exit 'done)
-            (swiper--cleanup)
-            (swiper--add-overlays (ivy--regex ivy-text))))
-        t))))
-
-
 (defun counsel-find-file-as-user (x)
   "Find file X with root privileges."
   (counsel-require-program counsel-root-command)
