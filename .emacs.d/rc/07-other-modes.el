@@ -81,7 +81,12 @@
   (flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
   ;; messages for every word when checking the entire buffer
-  (flyspell-issue-message-flag nil))
+  (flyspell-issue-message-flag nil)
+  :config
+  (substitute-key-definition
+   'flyspell-goto-next-error  'backward-page flyspell-mode-map)
+  (substitute-key-definition
+   'flyspell-auto-correct-word 'forward-page flyspell-mode-map))
 
 
  ;;; Dictionary.
