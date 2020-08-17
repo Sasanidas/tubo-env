@@ -75,6 +75,30 @@
   :config
   (message "Loading ivy-rich...")
 
+  (defadvice! yc/ivy-rich-switch-buffer-indicators-adv (orig-func candidate)
+  "Append gdb status for gdb buffers.
+ORIG-FUNC is called with CANDIDATE."
+  :around  #'ivy-rich-switch-buffer-indicators
+  (PDEBUG "ENTER" candidate)
+  (let* ((status (funcall orig-func candidate))
+         (buffer (get-buffer candidate))
+         (name (buffer-name buffer)))
+    (PDEBUG "NAME: " name (string-match-p (rx "*gdb" (+ space) (+ digit) "shell*") name))
+
+    (if (string-match-p (rx "*gdb" (+ space) (+ digit) (+ space) "shell*") name)
+        (concat status "-"
+                (with-current-buffer buffer
+                  (if (process-live-p (get-buffer-process buffer))
+                      (if comint-last-prompt
+                          (if (= (marker-position (car comint-last-prompt))
+                                 (marker-position (cdr comint-last-prompt)))
+                              "R" ;; running
+                            "S")  ;; stopped
+                        "U") ;; unkown
+                    "D") ;; dead
+                  ))
+      status)))
+
   (plist-put! ivy-rich-display-transformers-list
     'counsel-bookmark
     '(:columns
