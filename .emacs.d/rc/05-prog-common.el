@@ -219,7 +219,12 @@ LIMIT is the limit of search."
 
 
 (use-package semantic-uml
-  :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml))
+  :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml)
+  :bind (:map prog-mode-map
+              ("\C-csD" . uml/struct-to-dot)
+              ("\C-csd" . uml/struct-to-puml)
+              (;; (kbd "C-c s M-d")
+               [3 115 134217828] . uml/struct-to-puml-fields-only)))
 
  ;; lsp
 (defvar yc/lsp-warned-mode-list nil "List of modes already been warn for disabling LSP.")
@@ -571,8 +576,6 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
   "Common program-keybindings."
   (interactive)
   (local-set-key (kbd "M-|") 'align)
-  (local-set-key "\C-csD" 'uml/struct-to-dot)
-  (local-set-key "\C-csd" 'uml/struct-to-puml)
   (local-set-key "\C-co"    'yc/open-header)
   (local-set-key "\C-cp" 'semantic-ia-show-doc)
   (local-set-key "\C-cdp" 'yc/show-doc-at-point)

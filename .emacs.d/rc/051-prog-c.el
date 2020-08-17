@@ -18,8 +18,7 @@
 (use-package prog-utils
   :commands (
              yc/asm-post-process
-             uniq-stack gcrash-analyze-buffer
-))
+             uniq-stack gcrash-analyze-buffer))
 
 (use-package hideif
   :commands (hide-ifdef-mode hif-set-var)
@@ -43,17 +42,12 @@
 
   (define-key hide-ifdef-mode-map "\C-c@t" 'hide-ifdef-toggle-shadowing))
 
-(defun yc/update-hide-env-from-symbol-map ()
-  "Update hide-env from symbol map."
-  )
-
 
 (use-package clang-format
   :commands (clang-format-region clang-format-buffer))
 
-
 (use-package cwarn
-  :commands (cwarn-mode))
+  :hook ((c-mode-common . cwarn-mode)))
 
 (use-package c-utils
   :commands (yc/get-c-style yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
@@ -87,15 +81,9 @@ ORIG-FUNC is called with ARGS."
 (defun yc/c-mode-common-hook ()
   "My hooks to run for c-mode-common-hook."
   (interactive)
-  (local-set-key (kbd "C-c s M-d")
-                 (lambda ()
-                   (interactive)
-                   (let ((uml/extract-type 'fields))
-                     (uml/struct-to-puml (region-beginning) (region-end)))))
 
   (c-setup-doc-comment-style)
   (ede-turn-on-hook)
-  (cwarn-mode 1)
 
   (yc/run-with-idle-timer
    0.5 nil

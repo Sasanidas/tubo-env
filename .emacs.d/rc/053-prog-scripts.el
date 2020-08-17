@@ -47,9 +47,8 @@
 ;; )
 
 (use-package lsp-pyright
-  :quelpa (lsp-pyright
-           :fetcher github :repo "emacs-lsp/lsp-pyright")
-
+  ;; :quelpa (lsp-pyright
+  ;;          :fetcher github :repo "emacs-lsp/lsp-pyright")
   :hook (python-mode . (lambda ()
                          (yc/lsp--setup
                           "pyright-langserver"

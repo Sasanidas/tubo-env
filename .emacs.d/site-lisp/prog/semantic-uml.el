@@ -471,6 +471,12 @@ Possible choices:
   (deactivate-mark)
   (message "Finished, node copied to killing-ring."))
 
+(defun uml/struct-to-puml-fields-only (start end)
+  "Similar with `uml/struct-to-puml', but ignore member-functions."
+  (interactive "rp")
+  (let ((uml/extract-type 'fields))
+    (uml/struct-to-puml start end)))
+
  ;; dot support, used to plot relationship between structures, e.g linked list.
 
 (defun uml/dot-fmt-attrs (attrs)
