@@ -18,14 +18,11 @@
 .adobe/
 .aliedit/
 .android
-.autojump.txt*
-.autojump_py
-.autojump_py.bak
-.bash_history
-.bash_profile.*
+.autojump*
+.bash_*
 .cache/
 .cargo/
-.ccache/
+.ccache*
 .ccls
 .ccls-cache
 .ccls-root
@@ -179,27 +176,6 @@
 /.easytag/
 /.eclipse/*
 /.elementary/
-/.emacs.d/.lsp-session
-/.emacs.d/.lsp-session-v1
-/.emacs.d/amx-items
-/.emacs.d/build/
-/.emacs.d/ensime/
-/.emacs.d/eww-bookmarks
-/.emacs.d/image-dired/
-/.emacs.d/mspyls/
-/.emacs.d/projectile-bookmarks.eld
-/.emacs.d/rc/*-priv*.el
-/.emacs.d/rc/10-emacs-custome.el
-/.emacs.d/recentf
-/.emacs.d/site-lisp/org+/reveal.js/
-/.emacs.d/site-lisp/priv/
-/.emacs.d/srecode-map.el
-/.emacs.d/templates/srecode/private/
-/.emacs.d/templates/yasnippets-private/
-/.emacs.d/tools/post-pack_emacs_env.sh
-/.emacs.d/url/
-/.emacs.d/viper
-/.emacs.d/wcy_desktop_save
 /.face
 /.fehbg
 /.fltk/
@@ -274,21 +250,12 @@
 /AndroidstudioProjects/
 /Applications (Parallels)/
 /Applications/
-/Calibre Library/
-/Calibre 书库/
-/Documents
-/Downloads
-/Google 云端硬盘/
-/Musics
-/Musics/*
-/MyPaint/
-/Parallels/
+
+
 /PlayOnLinux's virtual drives
 /RTXC File List/
 /System Volume Information/
-/Ubuntu One/
 /Videos
-/Work
 /derby.log
 /flymake.log
 /fontconfig/*
@@ -323,39 +290,37 @@ Pictures/
 Public/
 Python27/
 RECYCLER/
-Softwares/
-Ubuntu One/*
 Untracked
-Videos/
-VirtualBox VMs/
-Windows/
-Work/
-autojump_errors
+
 cmake_build_Debug/
 cmake_build_Release/
 compile_commands.json
 core.*
-flycheck_*.el
-gnu/
-iPad
+
 library/
-libray/
 tmp/
+
+/Videos/
+/Documents
+/Downloads
+/Work
+/Musics
+
 下载/
 下载/*
 公共的/*
 图片/
-图片/*
-文档/*
-桌面/*
-模板/*
-视频/*
+文档/
+桌面/
+模板/
+视频/
 音乐/
-音乐/*
+
 /.annotations
 /.emacs.d/site-lisp/github/
-eln-*/
 wt_*/
 /.tooling
 /pxf/
 /workspace/
+eln-cache/
+eln-x86_64-pc*

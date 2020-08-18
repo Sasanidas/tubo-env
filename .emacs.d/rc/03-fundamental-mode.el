@@ -83,9 +83,9 @@ ORIG-FUNC is called with CANDIDATE."
     (let* ((status (funcall orig-func candidate))
            (buffer (get-buffer candidate))
            (name (buffer-name buffer)))
-      (PDEBUG "NAME: " name (string-match-p (rx "*gdb" (+ space) (+ digit) "shell*") name))
+      (PDEBUG "NAME: " name (string-match-p (rx "*gdb" (+ space) (+? nonl) "shell*") name))
 
-      (if (string-match-p (rx "*gdb" (+ space) (+ digit) (+ space) "shell*") name)
+      (if (string-match-p (rx "*gdb" (+ space) (+? nonl) (+ space) "shell*") name)
           (concat (if (string-empty-p status) "  " (concat status "-"))
                   (with-current-buffer buffer
                     (if (process-live-p (get-buffer-process buffer))
@@ -543,9 +543,30 @@ With REVERSE is t, switch to previous window."
 )
 
 ;; Preview when `goto-line`
+
 (use-package goto-line-preview
+  :preface
+  (defvar-local preview-hl-overlay nil "Nil.")
   :ensure t
-  :bind ([remap goto-line] . goto-line-preview))
+  :bind ([remap goto-line] . goto-line-preview)
+  :config
+  (defun yc/remove-preview-overlay ()
+    "Remove preview overlay."
+    (when preview-hl-overlay
+      (delete-overlay preview-hl-overlay))
+    (setq preview-hl-overlay nil))
+
+  (defadvice! yc/goto-line-preview--do-adv (line-num)
+    "Highlight LINE-NUM to improve focus.
+ORIG-FUNC is called with ARGS."
+    :after  #'goto-line-preview--do
+    (yc/remove-preview-overlay)
+    (setq preview-hl-overlay (make-overlay
+                              (line-beginning-position)
+                              (1+ (line-end-position))))
+    (overlay-put preview-hl-overlay 'face 'swiper-line-face))
+
+  :hook ((goto-line-preview-after . yc/remove-preview-overlay)))
 
 
 (use-package layout-restore

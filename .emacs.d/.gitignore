@@ -25,3 +25,17 @@ emacs.pdmp
 /straight/
 /workspace/
 /.dap-breakpoints
+
+/.lsp-session-v1
+/amx-items
+/eww-bookmarks
+/projectile-bookmarks.eld
+/rc/11-priv-sb.el
+/recentf
+/templates/yasnippets-private/c++-mode/
+/templates/yasnippets-private/cc-mode/
+/templates/yasnippets-private/sql-interactive-mode/
+/templates/yasnippets-private/sql-mode/
+/templates/yasnippets-private/text-mode/
+/url/
+
