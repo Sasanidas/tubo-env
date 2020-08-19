@@ -32,18 +32,12 @@
 
  ;; Javascript mode
 (use-package js-mode
-
   :commands (js-mode)
   :mode (rx (or (: bow "manifest") ".json" ".js" ".pac") eol)
-  ;; :init
-  ;; (progn
-  ;;   (custom-set-variables
-  ;;    '(safe-local-variable-values
-  ;;      (quote
-  ;;       ((js2-basic-offset . 4))))))
   :config
-  (progn
-    (define-key js2-mode-map "\C-c\C-x" 'executable-interpret)))
+  (yc/add-safe-local-var '(js2-basic-offset . 4))
+  :bind (:map js2-mode-map
+              ("\C-c\C-x" . executable-interpret)))
 
 
 ;; (use-package java
@@ -239,35 +233,15 @@
 
 
 (use-package cperl-mode
-  :preface
-  (defun pgsql-perl-style ()
-    "Perl style adjusted for PostgreSQL project."
-    (interactive)
-    (setq perl-brace-imaginary-offset 0
-          perl-brace-offset 0
-          perl-continued-statement-offset 2
-          perl-continued-brace-offset (- perl-continued-statement-offset)
-          perl-indent-level 4
-          perl-label-offset -2
-          ;; Next two aren't marked safe-local-variable, so .dir-locals.el omits them.
-          perl-indent-continued-arguments 4
-          perl-indent-parens-as-block t
-          indent-tabs-mode t
-          tab-width 4))
-
-
   :interpreter ("perl" . cperl-mode)
   :mode "\\.\\([pP][Llm]\\|al\\)$"
-  :init
-  (progn
-    (custom-set-variables
-     '(cperl-extra-newline-before-brace t )
-     '(cperl-brace-offset -2              )
-     '(cperl-merge-trailing-else nil      )))
-  :hook ((perl-mode . (lambda ()
-                        (when (and buffer-file-name
-                                   (string-match "/postgres\\(ql\\)?/" buffer-file-name))
-                          (pgsql-perl-style))))))
+  :custom
+  (cperl-extra-newline-before-brace t )
+  (cperl-brace-offset -2              )
+  (cperl-merge-trailing-else nil      )
+  :config
+  (yc/add-company-backends 'cperl-mode 'company-dabbrev-code 'company-dabbrev)
+  (yc/add-safe-local-var '(cperl-brace-imaginary-offset . 0)))
 
  ;; swig
 (yc/add-compile-unit 'swig 55

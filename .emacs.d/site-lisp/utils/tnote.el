@@ -224,8 +224,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
   (ivy-rich-mode 1))
 
 (yc/eval-after-load
-  "ivy"
-
+  'ivy
   (ivy-add-actions
    'tnote/find-note
    (append  '(("g" counsel-grep-in-dir "Grep in current directory")

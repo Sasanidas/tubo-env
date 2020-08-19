@@ -68,14 +68,20 @@
               (group (* (or alnum "-" "_" "'" "/" "\"")))))
       (1 font-lock-keyword-face)
       (2 font-lock-constant-face nil t))))
-  (yc/add-company-backends 'emacs-lisp-mode
-    'company-elisp 'company-dabbrev-code)
+  (yc/add-company-backends 'emacs-lisp-mode 'company-elisp 'company-dabbrev-code)
   (yc/add-auto-delete-spaces 'emacs-lisp-mode)
   )
 
  ;; native compile..
 
 (when (fboundp 'native-compile-async)
+  (defadvice! yc/byte-compile-file-adv (&rest args)
+    "Native compile it!
+ORIG-FUNC is called with ARGS."
+    :after #'byte-compile-file
+    (let ((file (car args)))
+      (PDEBUG "Byte compile file: " file)
+      (native-compile-async file (file-directory-p file))))
   (defun yc/native-compile-file ()
     "Native compile selected file."
     (interactive)

@@ -204,28 +204,32 @@
 
    (buffer-list)))
 
-(cdsq gdb-kwlist nil "List of gdb keywords")
+(defvar gdb-kwlist nil "List of gdb keywords.")
 
 (defun company-gdb--candidates (prefix)
   "Return candidates for `PREFIX'."
   (interactive)
-  (all-completions prefix
-                   (or gdb-kwlist
-                       (let ((output (shell-command-to-string "gdb --batch -ex \"help all\"")))
-                         (dolist (item (s-split "\n" output))
-                           (when (s-contains? " -- " item)
-                             (let ((iitem (car (s-split "--" item))))
-                               (dolist (subitem (s-split " " iitem))
-                                 (add-to-list 'gdb-kwlist subitem )))))
-                         gdb-kwlist))))
+  (all-completions prefix gdb-kwlist))
 
 (defun company-gdb (command &optional arg &rest ignored)
   "Comapny backend for gdb."
   (interactive (list 'interactive))
+
+  (unless gdb-kwlist
+    (let ((output (shell-command-to-string "gdb --batch -ex \"help all\"")))
+      (dolist (item (s-split "\n" output))
+        (when (s-contains? " -- " item)
+          (let ((iitem (car (s-split "--" item))))
+            (dolist (subitem (s-split " " iitem))
+              (add-to-list 'gdb-kwlist subitem )))))))
+
   (cl-case command
     (interactive (company-begin-backend 'company-gdb))
     (init t)
-    (prefix (or (company-grab-symbol) 'stop))
+    (prefix
+     (let ((res (company-grab-symbol)))
+       (if (all-completions res gdb-kwlist)
+           res)))
     (candidates (company-gdb--candidates arg))))
 
 

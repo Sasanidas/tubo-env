@@ -15,9 +15,7 @@
   :hook ((cmake-mode . cmake-font-lock-activate)))
 
 (use-package company-cmake
-  :commands (company-cmake)
-  :config
-  (yc/add-company-backends 'cmake-mode 'company-cmake 'company-dabbrev-code))
+  :commands (company-cmake))
 
 (use-package cmake-mode
   :init
@@ -61,7 +59,9 @@
               ("\C-cl" . cmake-help-list-commands)
               ("\C-cu" .  unscreamify-cmake-buffer))
   :custom
-  (cmake-tab-width 4))
+  (cmake-tab-width 4)
+  :config
+  (yc/add-company-backends 'cmake-mode 'company-cmake 'company-dabbrev-code 'company-dabbrev))
 
 (use-package compile
   :commands (compile)

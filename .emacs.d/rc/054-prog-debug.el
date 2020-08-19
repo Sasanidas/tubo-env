@@ -17,7 +17,7 @@
   (gdb-switch-when-another-stopped nil)
   (gdb-speedbar-auto-raise t)
   :config
-  (yc/set-company-backends 'gud-mode 'company-gdb 'company-dabbrev)
+  (yc/set-company-backends 'gud-mode 'company-gdb 'company-dabbrev-code)
   ;; (yc/set-keys (list
   ;;                 (cons "\C-c\C-c" 'comint-interrupt-subjob))
   ;;              gud-minor-mode-map)

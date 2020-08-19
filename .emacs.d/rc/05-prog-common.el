@@ -258,7 +258,7 @@ call this function to setup LSP.  Or show INSTALL-TIP."
 
 (use-package lsp-mode
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
-                 lsp-format-buffer lsp-flycheck-enable)
+                 lsp-format-buffer)
   :custom
   (lsp-diagnostic-package :auto)
   (lsp-restart 'interactive)
@@ -325,17 +325,13 @@ Loading project specific settings before starting LSP."
         (when (yc/lsp-load-project-configuration)
           ;; Calls lsp...
           (apply orig-func args)
-
-          (when (bound-and-true-p lsp-mode)
-            (semantic-mode -1)
-            (PDEBUG "updating company-backends...")
-            (PDEBUG "Backends: " company-backends))
-
-          ;; functions to run after lsp...
-          (lsp-flycheck-enable t)
-
           (flycheck-mode 1))
-      (error nil)))
+      (error nil))
+
+    (unless (bound-and-true-p lsp-mode)
+      (semantic-mode 1)
+      ;; (semantic-force-refresh)
+      ))
 
   (advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
   (advice-add 'lsp-format-region :around #'yc/lsp-format-adv)
@@ -536,7 +532,6 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
           (when (fboundp mode-specific-func)
             (PDEBUG "Loading: " mode-specific-func)
             (funcall mode-specific-func root-file)))
-      (semantic-mode 1)
       (user-error "LSP disabled at: %s, but no .lsp-conf is avaiable " root-file))
 
     (PDEBUG "leave")
@@ -551,7 +546,8 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
 
 ;;;; Common Program settings
 (use-package prog-utils
-  :commands (yc/doc-at-point yc/insert-single-comment yc/show-methods-dwim)
+  :commands (yc/doc-at-point yc/insert-single-comment yc/show-methods-dwim
+                             yc/open-header)
   ;; :bind ((;; (kbd "M-m")
   ;;         [134217837] . yc/show-methods-dwim))
   :bind (:map esc-map

@@ -95,10 +95,6 @@ ORIG-FUNC is called with ARGS."
 
      (lsp)
 
-     (unless (bound-and-true-p lsp-mode)
-       (semantic-mode 1)
-       (semantic-force-refresh))
-
      ;; update hide-env from symbol-map
      (when (bound-and-true-p semantic-lex-c-preprocessor-symbol-map)
        (mapc (lambda (x)
@@ -183,15 +179,13 @@ simpler."
 
   :config
   (require 'smartparens-c)
-  (custom-set-variables
-   '(safe-local-variable-values
-     (quote
-      ((eval c-set-offset
-             (quote innamespace)
-             0)
-       (eval c-set-offset
-             (quote substatement-open)
-             0)))))
+  (yc/add-safe-local-var
+   '(eval c-set-offset
+               (quote innamespace)
+               0)
+   '(eval c-set-offset
+               (quote substatement-open)
+               0))
 
   ;; Customized doc-font
   (cdsq tbdoc-font-lock-doc-comments
@@ -216,17 +210,17 @@ simpler."
   (cdsq tbdoc-font-lock-keywords
     `((,(lambda (limit)
           (c-font-lock-doc-comments "/\\*\\*.*$" limit
-                                    tbdoc-font-lock-doc-comments)
+            tbdoc-font-lock-doc-comments)
           (c-font-lock-doc-comments "/\\*!.*" limit
-                                    tbdoc-font-lock-doc-comments)
+            tbdoc-font-lock-doc-comments)
           (c-font-lock-doc-comments "/\\*!-+" limit
-                                    tbdoc-font-lock-doc-comments)
+            tbdoc-font-lock-doc-comments)
           (c-font-lock-doc-comments "/\\*!< " limit
-                                    tbdoc-font-lock-doc-comments)
+            tbdoc-font-lock-doc-comments)
           (c-font-lock-doc-comments "/\\*< " limit
-                                    tbdoc-font-lock-doc-protection)
+            tbdoc-font-lock-doc-protection)
           (c-font-lock-doc-comments "///.*$" limit
-                                    tbdoc-font-lock-doc-comments)))))
+            tbdoc-font-lock-doc-comments)))))
 
  ;;;; This is a sample, real c-doc-comment-style will be set in "10-emacs-custome.el"
   (defun c-lineup-arglist-tabs-only (ignored)

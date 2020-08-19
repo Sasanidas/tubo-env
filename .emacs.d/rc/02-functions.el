@@ -174,6 +174,10 @@ This is a variadic `cl-pushnew'."
     `(dolist (,var (list ,@values) (with-no-warnings ,place))
        (cl-pushnew ,var ,place :test #'equal))))
 
+(defmacro yc/add-safe-local-var (&rest vars)
+  "Add VARS as `safe-local-variable-values'."
+  `(setq safe-local-variable-values (append ,(push 'list vars) safe-local-variable-values)))
+
  ;; Functions
 (defun yc/get-key-code (key &optional recursive)
   "Return code of KEY."

@@ -186,7 +186,6 @@ ORIG-FUNC is called with ARGS."
     (yc/ediff-prepare buffer-A)
     (yc/ediff-prepare buffer-B))
 
-
   (setq ediff-diff-ok-lines-regexp
         (concat
          "^\\("
@@ -643,10 +642,6 @@ create new buffer."
 
 
  ;; Dired
-(use-package wdired
-  :bind (:map dired-mode-map
-              ("r" . wdired-change-to-wdired-mode)))
-
 (use-package dired
   :commands (dired)
   :custom
@@ -699,6 +694,11 @@ ORIG-FUNC is called with ARGS."
 
   (load-library "ls-lisp")
   (define-key ctl-x-map "d" nil))
+
+(use-package wdired
+  :after dired
+  :bind (:map dired-mode-map
+              ("r" . wdired-change-to-wdired-mode)))
 
 (use-package dired-x
   :commands (dired-jump)

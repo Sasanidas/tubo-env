@@ -203,18 +203,30 @@
   :hook ((after-init . global-company-mode))
 )
 
-(defmacro yc/add-company-backends (modes &rest backends)
-  "Prepend BACKENDS (in order) to `company-backends' in MODES.."
+(defmacro yc/add-company-backends (modes first &rest others)
+  "Add backends to `company-backends' for MODES.
+FIRST is grouped with ('company-capf :with company-yasnippet).
+OTHERS are added without modification.
+FIRST can also be `NIL', means use '(company-capf :with company-yasnippet) as
+first backend."
   (declare (indent defun))
-
   `(dolist (mode (doom-enlist ,modes))
      (let* ((mode-name (symbol-name mode))
             (func-name (format "yc/set-company-backends-%s" mode-name)))
        (defalias (intern func-name)
          (lambda (&rest args)
            (set (make-local-variable 'company-backends)
-                (list (append ,(push 'list backends)
-                              '(company-capf :with company-yasnippet)))))
+                (let ((backends ,(push 'list others)))
+                  (push
+                   (append
+                    ;; XXX: why (if ...) can't be evaluated ...
+                    (if (listp ,first)
+                        ,first
+                      (list ,first))
+                    '(company-capf :with company-yasnippet))
+                   backends)
+                  )
+                ))
          (format "Setup company backends for %s mode" mode-name))
        (add-hook (intern (concat (symbol-name mode) "-hook"))
          (intern func-name)))))
@@ -229,7 +241,7 @@
        (defalias (intern func-name)
          (lambda (&rest args)
            (set (make-local-variable 'company-backends)
-                (list ,(push 'list backends))))
+                ,(push 'list backends)))
          (format "Setup company backends for %s mode" mode-name))
        (add-hook (intern (concat (symbol-name mode) "-hook"))
          (intern func-name)))))
