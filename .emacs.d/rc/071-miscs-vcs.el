@@ -7,15 +7,8 @@
 ;;; Code:
 (use-package mule  :commands (recode-region))
 
- ;; ************************** magit ****************************
-
 (use-package git-commit
   :defer t
-  :hook (git-commit-mode . (lambda ()
-                        (setq fill-column 72)
-                        (turn-on-flyspell)
-                        (goto-char (point-min))
-                        (PDEBUG "CURR-POINT: " (point))))
   :config
     (substitute-key-definition
      'kill-buffer  'git-commit-abort git-commit-mode-map)
@@ -23,7 +16,12 @@
      'ido-kill-buffer  'git-commit-abort git-commit-mode-map)
     (yc/add-company-backends 'git-commit-mode 'company-dabbrev-code 'company-dabbrev)
   :custom
-  (git-commit-summary-max-length 72))
+  (git-commit-summary-max-length 72)
+  (git-commit-major-mode 'text-mode))
+
+(use-package git-timemachine
+  :ensure t
+  :bind (:map ctl-x-map ("gt" . git-timemachine)))
 
 (use-package magit-repos
   :custom
@@ -37,12 +35,7 @@
   (progn
     (define-key magit-file-mode-map "\C-xg" nil)))
 
-
 (use-package magit-log  :bind (:map ctl-x-map ("gl" . magit-log-buffer-file)))
-
-(use-package git-timemachine
-  :ensure t
-  :bind (:map ctl-x-map ("gt" . git-timemachine)))
 
 (use-package magit-counsel
   :bind (:map ctl-x-map
@@ -113,8 +106,10 @@ This function accept file name as argument, and return t if file is merged autom
   (magit-save-repository-buffers 'dontask)
   (magit-commit-show-diff nil)
   (magit-push-always-verify nil)
-  (magit-revision-insert-related-refs t)
   (magit-revision-show-gravatars nil)
+  ;; Don't display parent/related refs in commit buffers; they are rarely
+  ;; helpful and only add to runtime costs.
+  (magit-revision-insert-related-refs nil)
   (magit-revision-headers-format "Author:     %aN <%aE>\nDate: %ad\n")
   (magit-no-confirm nil)
   (magit-delete-by-moving-to-trash nil)
@@ -125,7 +120,7 @@ This function accept file name as argument, and return t if file is merged autom
     ("--strategy=recursive" "--strategy-option=ignore-space-change")))
   (magit-visit-ref-behavior
    (quote (focus-on-ref create-branch checkout-any check-branch)))
-  (git-commit-major-mode 'text-mode)
+
   (magit-status-sections-hook
    (quote
     (
@@ -151,11 +146,9 @@ This function accept file name as argument, and return t if file is merged autom
           (lambda () ;; Guess proper encoding for files.
             (setq buffer-read-only nil)
             (recode-region (point-min) (point-max) 'undecided 'utf-8)
-            (setq buffer-read-only t)))
-         )
+            (setq buffer-read-only t))))
   :config
-  (progn
-    (magit-auto-revert-mode 1)))
+  (magit-auto-revert-mode 1))
 
 (use-package dsvn
   :commands (svn-status))

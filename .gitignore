@@ -324,3 +324,4 @@ wt_*/
 /workspace/
 eln-cache/
 eln-x86_64-pc*
+flycheck_*
