@@ -257,8 +257,51 @@ call this function to setup LSP.  Or show INSTALL-TIP."
                executable install-tip)))))
 
 (use-package lsp-mode
+  :preface
+  (defun yc/modeline-update-lsp ()
+    "Update `lsp-mode' status."
+    (setq-local yc/modeline--lsp (lsp-mode-line)))
+
+  (defun yc/lsp-format-adv (func &rest args)
+    "Advice for 'lsp-format-buffer'.
+Call FUNC which is 'lsp-format-buffer with ARGS."
+    (let ((p (point)) )
+      (apply func args)
+      (if (= (point-min) (point))
+          (goto-char p))))
+
+
+  (defun yc/lsp-kill ()
+    "Kill LSP of current workspace."
+    (interactive)
+    (let* ((pids (-map (lambda (x)
+                         (--> x lsp--workspace-cmd-proc process-id number-to-string))
+                       (lsp-workspaces)))
+           (len (length pids))
+           (pid-str (mapconcat 'identity pids " "))
+           (cmd (if (or (= len 1)
+                        (and (> len 1)
+                             (yes-or-no-p
+                              (format "Going to kill multiple processes: %s, continue? "
+                                      pid-str))))
+                    (format "kill -9 %s" pid-str))))
+
+      (when cmd
+        (PDEBUG "KILL: " cmd)
+        (shell-command-to-string cmd))))
+
+  (defun yc/lsp-restart ()
+    "Restart lsp."
+    (interactive)
+    (yc/lsp-kill)
+    (lsp))
+
+  (defalias 'yc/kill-lsp 'yc/lsp-kill)
+
+
+
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
-                 lsp-format-buffer)
+                 lsp-format-buffer lsp-mode-line)
   :custom
   (lsp-diagnostic-package :auto)
   (lsp-restart 'interactive)
@@ -292,7 +335,11 @@ call this function to setup LSP.  Or show INSTALL-TIP."
   :hook
   ((lsp-after-open . (lambda ()
                        (setq-local xref-backend-functions
-                                   (cons #'lsp--xref-backend xref-backend-functions)))))
+                                   (cons #'lsp--xref-backend
+                                         xref-backend-functions)))))
+  (lsp-mode . yc/modeline-update-lsp)
+  (lsp-after . yc/modeline-update-lsp)
+
 
   :config
   (defvar +lsp--deferred-shutdown-timer nil)
@@ -390,70 +437,10 @@ ORIG-FUNC is called with ARGS."
           (setf (lsp--client-priority match) old-priority))))))
 
 
-(defun yc/lsp-format-adv (func &rest args)
-  "Advice for 'lsp-format-buffer'.
-Call FUNC which is 'lsp-format-buffer with ARGS."
-  (let ((p (point)) )
-    (apply func args)
-    (if (= (point-min) (point))
-        (goto-char p))))
-
-
-;; advice for format-buffer & format-region: save execution before format.
-;; some servers (pyls) will move point to other unexpected place....
-(defun yc/modeline-update-lsp (&rest args)
-  "Update `lsp-mode' status."
-  (setq-local yc/modeline--lsp
-       (if-let (workspaces (lsp-workspaces))
-           (concat " LSP"
-                   (string-join
-                    (--map
-                     (format "[%s:%s]"
-                             (-> it lsp--workspace-client lsp--client-server-id symbol-name (propertize 'face 'bold-italic))
-                             (propertize (format "%s" (process-id (lsp--workspace-cmd-proc it))) 'face 'italic))
-                     workspaces)))
-         (concat " LSP" (propertize "[Disconnected]" 'face 'warning)))
-       )
-  )
-
-(add-hook 'lsp-mode-hook #'yc/modeline-update-lsp)
-(add-hook 'lsp-after-uninitialized-hook #'yc/modeline-update-lsp)
-
-(defun yc/lsp-kill ()
-  "Kill LSP of current workspace."
-  (interactive)
-  (let* ((pids (-map (lambda (x)
-                       (--> x lsp--workspace-cmd-proc process-id number-to-string))
-                     (lsp-workspaces)))
-         (len (length pids))
-         (pid-str (mapconcat 'identity pids " "))
-         (cmd (if (or (= len 1)
-                      (and (> len 1)
-                           (yes-or-no-p
-                            (format "Going to kill multiple processes: %s, continue? "
-                                    pid-str))))
-                  (format "kill -9 %s" pid-str))))
-
-    (when cmd
-      (PDEBUG "KILL: " cmd)
-      (shell-command-to-string cmd))))
-
-(defun yc/lsp-restart ()
-  "Restart lsp."
-  (interactive)
-  (yc/lsp-kill)
-  (lsp))
-
-(defalias 'yc/kill-lsp 'yc/lsp-kill)
-
 
 (defvar-local yc/cached-symbols nil "last cached index.")
 (defvar-local yc/document-symbols-tick -1 "last tick of modification.")
-
-
-
 (add-to-list 'auto-mode-alist (cons ".lsp-conf" 'emacs-lisp-mode))
-
 
 (defun yc/lsp-get-root-file ()
   "Return root-file for lsp."

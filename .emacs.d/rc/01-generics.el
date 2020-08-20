@@ -132,7 +132,9 @@
    ") ")
 
  mode-line-format
- '(" %Z "
+ '("%e"
+   mode-line-front-space
+   "%Z "
    ;; mode-line-buffer-identification
    (:eval
     (cond (buffer-read-only
@@ -165,8 +167,6 @@
                 local-map ,which-func-keymap
                 face which-func)
    "] "
-
-   ;; global-mode-string
 
    " "
    (:eval (format-time-string "%H:%M:%S" (current-time)))
