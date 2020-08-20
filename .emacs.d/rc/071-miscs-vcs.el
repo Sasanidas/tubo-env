@@ -21,7 +21,7 @@
      'kill-buffer  'git-commit-abort git-commit-mode-map)
     (substitute-key-definition
      'ido-kill-buffer  'git-commit-abort git-commit-mode-map)
-    (yc/add-company-backends 'git-commit-mode 'company-dabbrev)
+    (yc/add-company-backends 'git-commit-mode 'company-dabbrev-code 'company-dabbrev)
   :custom
   (git-commit-summary-max-length 72))
 

@@ -109,8 +109,11 @@ Sql is a cross-platform, open-source make system."
     (interactive (company-begin-backend 'company-sql))
     (init (unless (memq major-mode company-sql-modes)
             (error "Not sql-mode")))
-    (prefix (and (not (company-in-string-or-comment))
-                 (company-grab-symbol)))
+    (prefix
+     (and (not (company-in-string-or-comment))
+          (let ((res (company-grab-symbol)))
+       (if (company-sql--candidates res)
+           res))))
     (candidates (company-sql--candidates arg))))
 
 

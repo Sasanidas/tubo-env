@@ -54,7 +54,6 @@
 
   :config
   (put 'add-hook 'lisp-indent-function 'defun)
-
   (font-lock-add-keywords
    'emacs-lisp-mode
    `((,(rx "("

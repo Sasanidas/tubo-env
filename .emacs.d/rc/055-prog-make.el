@@ -61,7 +61,7 @@
   :custom
   (cmake-tab-width 4)
   :config
-  (yc/add-company-backends 'cmake-mode 'company-cmake 'company-dabbrev-code 'company-dabbrev))
+  (yc/set-company-backends 'cmake-mode 'company-yasnippet 'company-cmake 'company-dabbrev-code 'company-dabbrev))
 
 (use-package compile
   :commands (compile)

@@ -78,7 +78,8 @@ ORIG-FUNC is called with ARGS."
       (if (region-active-p)
           (deactivate-mark)))))
 
-  (yc/set-company-backends 'realgud:gdb-track-mode 'company-gdb 'company-dabbrev))
+  (yc/set-company-backends 'realgud:gdb-track-mode 'company-gdb
+    'company-dabbrev-code 'company-dabbrev))
 
 (use-package realgud-lldb
   :commands (realgud--lldb))
