@@ -647,13 +647,15 @@ create new buffer."
   :custom
   (ls-lisp-dirs-first t)
   (ls-lisp-use-insert-directory-program nil)
-  (dired-dwim-target t)
-  (dired-hide-details-hide-symlink-targets nil)
+  (ls-lisp-verbosity '(uid gid))
+
+  (dired-auto-revert-buffer t)  ; don't prompt to revert; just do it
   (dired-dnd-protocol-alist nil)
+  (dired-dwim-target t)   ; suggest a target for moving/copying intelligently
+  (dired-hide-details-hide-symlink-targets nil)
+  ;; Always copy/delete recursively
   (dired-recursive-copies 'always)
   (dired-recursive-deletes 'top)
-  (dired-auto-revert-buffer t)  ; don't prompt to revert; just do it
-  (ls-lisp-verbosity '(uid gid))
   (dired-listing-switches "-alh")
   :hook ((dired-mode . (lambda () (setq fill-column 9999))))
   :bind (:map dired-mode-map
@@ -703,13 +705,31 @@ ORIG-FUNC is called with ARGS."
 (use-package dired-x
   :commands (dired-jump)
   :init
-  (progn
-    (define-key ctl-x-map "\C-j" 'dired-jump))
+  (define-key ctl-x-map "\C-j" 'dired-jump)
   :config
-  (progn
-    (load-library "ls-lisp")
-    (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$"
-                                        'dired-virtual-mode))))
+  (load-library "ls-lisp")
+  (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$"
+                                      'dired-virtual-mode))
+  :hook
+  (dired-mode . dired-omit-mode)
+  :bind (:map dired-mode-map
+              ("h" . dired-omit-mode))
+  :config
+  (setq
+   dired-omit-verbose nil
+   dired-omit-files
+        (concat dired-omit-files
+           "\\|^.DS_Store\\'"
+           "\\|^.project\\(?:ile\\)?\\'"
+           "\\|^.\\(svn\\|git\\)\\'"
+           "\\|^.ccls-cache\\'"
+           "\\|\\(?:\\.js\\)?\\.meta\\'"
+           "\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")))
+
+(use-package fd-dired
+  :defer t
+  :init
+  (global-set-key [remap find-dired] #'fd-dired))
 
 
 (use-package hl-line

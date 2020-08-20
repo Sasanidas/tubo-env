@@ -75,6 +75,7 @@
  ;; native compile..
 
 (when (fboundp 'native-compile-async)
+
   (defadvice! yc/byte-compile-file-adv (&rest args)
     "Native compile it!
 ORIG-FUNC is called with ARGS."
@@ -82,6 +83,7 @@ ORIG-FUNC is called with ARGS."
     (let ((file (car args)))
       (PDEBUG "Byte compile file: " file)
       (native-compile-async file (file-directory-p file))))
+
   (defun yc/native-compile-file ()
     "Native compile selected file."
     (interactive)
