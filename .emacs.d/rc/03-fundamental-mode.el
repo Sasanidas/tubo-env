@@ -79,12 +79,9 @@
     "Append gdb status for gdb buffers.
 ORIG-FUNC is called with CANDIDATE."
     :around  #'ivy-rich-switch-buffer-indicators
-    (PDEBUG "ENTER" candidate)
     (let* ((status (funcall orig-func candidate))
            (buffer (get-buffer candidate))
            (name (buffer-name buffer)))
-      (PDEBUG "NAME: " name (string-match-p (rx "*gdb" (+ space) (+? nonl) "shell*") name))
-
       (if (string-match-p (rx "*gdb" (+ space) (+? nonl) (+ space) "shell*") name)
           (concat (if (string-empty-p status) "  " (concat status "-"))
                   (with-current-buffer buffer

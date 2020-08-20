@@ -40,6 +40,14 @@
      (hide-ifdef-guts)
      (setq buffer-read-only (or hide-ifdef-read-only hif-outside-read-only))))
 
+  (defadvice! yc/hif-set-var-adv (key val)
+    "Don't set hide-ifdef-env if KEY VAL is already added."
+    :override  #'hif-set-var
+    (let ((pair (cons key val)))
+      (unless (member pair hide-ifdef-env)
+        (setq hide-ifdef-env (cons pair hide-ifdef-env)))))
+
+
   (define-key hide-ifdef-mode-map "\C-c@t" 'hide-ifdef-toggle-shadowing))
 
 
@@ -95,11 +103,22 @@ ORIG-FUNC is called with ARGS."
 
      (lsp)
 
-     ;; update hide-env from symbol-map
-     (when (bound-and-true-p semantic-lex-c-preprocessor-symbol-map)
+     ;; update hide-env
+     (cond
+      ((bound-and-true-p lsp-mode)
+       (let* ((ccls-info (ccls-file-info))
+              (args (seq-into (gethash "args" ccls-info) 'list)))
+         (PDEBUG "ARGS:" args)
+         (dolist (arg args)
+           (when (s-starts-with-p "-D" arg)
+             (let* ((kv (s-split "=" (substring arg 2))))
+               (hif-set-var (intern (car kv)) (or (cadr kv) 1)))))))
+      ((bound-and-true-p semantic-lex-c-preprocessor-symbol-map)
        (mapc (lambda (x)
                (hif-set-var (intern (car x)) (cdr x)))
              semantic-lex-c-preprocessor-symbol-map))
+      (t nil))
+
      (condition-case msg
          (hide-ifdef-mode 1)
        (error nil))
@@ -477,9 +496,7 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
   'yc/lsp-load-project-configuration-cc-mode)
 
 (use-package modern-cpp-font-lock
-  :commands (modern-c++-font-lock-mode)
-  :hook ((c++-mode . modern-c++-font-lock-mode))
-)
+  :hook ((c++-mode . modern-c++-font-lock-mode)))
 
 
 (provide '051-prog-c)

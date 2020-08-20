@@ -129,7 +129,7 @@
           (clang-format-region yas-snippet-beg yas-snippet-end))
 
         (when (and (not (looking-back (rx (or (: bol (* space))
-                                              (: (or ")""}"";"))))))
+                                              (: (or ")""}"";")))) nil))
                    (< (point) yas-snippet-end))
           (newline-and-indent)
           (if (looking-at "\n\n") (kill-line)))))
@@ -162,17 +162,21 @@
  ;; company mode..
 (use-package company
   :ensure t
-  :commands (global-company-mode)
-  :bind (([(meta ?/)] .
-          (lambda ()
-            (interactive)
-            (call-interactively
-             (if (yc/in-comment-or-string-p)
-                 'company-dabbrev
-                 'company-complete
-                 )
-             ))
-          ))
+  :preface
+  (defun yc/compelete ()
+    "Complete at point.
+It will try complete via `company' and then switch to `hippie-expand' as fallback."
+    (interactive)
+    (or
+     (if (yc/in-comment-or-string-p)
+         (let ((company-backends '(company-dabbrev)))
+           (company-auto-begin))
+       (company-auto-begin))
+
+     (call-interactively 'hippie-expand)))
+
+  :commands (global-company-mode company-auto-begin)
+  :bind (([(meta ?/)] . yc/compelete))
   :bind (:map company-active-map
               ([tab] . company-complete)
               (;; ,(kbd "TAB")
@@ -200,8 +204,7 @@
   ;; disable auto-complete, or " " will trigger complete.
   (company-auto-complete nil)
 
-  :hook ((after-init . global-company-mode))
-)
+  :hook ((after-init . global-company-mode)))
 
 (defmacro yc/add-company-backends (modes first &rest others)
   "Add backends to `company-backends' for MODES.
