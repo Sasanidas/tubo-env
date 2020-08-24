@@ -40,4 +40,7 @@ emacs.pdmp
 /url/
 
 10-emacs-custome.el
-
+100-priv.el
+image-dired/
+srecode-map.el
+tools/post-pack_emacs_env.sh

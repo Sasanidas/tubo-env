@@ -323,5 +323,5 @@ wt_*/
 /pxf/
 /workspace/
 eln-cache/
-eln-x86_64-pc*
+eln-x86_64-*
 flycheck_*
