@@ -270,36 +270,6 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
       (if (= (point-min) (point))
           (goto-char p))))
 
-
-  (defun yc/lsp-kill ()
-    "Kill LSP of current workspace."
-    (interactive)
-    (let* ((pids (-map (lambda (x)
-                         (--> x lsp--workspace-cmd-proc process-id number-to-string))
-                       (lsp-workspaces)))
-           (len (length pids))
-           (pid-str (mapconcat 'identity pids " "))
-           (cmd (if (or (= len 1)
-                        (and (> len 1)
-                             (yes-or-no-p
-                              (format "Going to kill multiple processes: %s, continue? "
-                                      pid-str))))
-                    (format "kill -9 %s" pid-str))))
-
-      (when cmd
-        (PDEBUG "KILL: " cmd)
-        (shell-command-to-string cmd))))
-
-  (defun yc/lsp-restart ()
-    "Restart lsp."
-    (interactive)
-    (yc/lsp-kill)
-    (lsp))
-
-  (defalias 'yc/kill-lsp 'yc/lsp-kill)
-
-
-
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
                  lsp-format-buffer lsp-mode-line)
   :custom

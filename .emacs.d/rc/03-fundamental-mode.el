@@ -111,60 +111,21 @@ ORIG-FUNC is called with CANDIDATE."
     (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
 
 
-  (ivy-rich-mode +1)
-  )
+  (ivy-rich-mode +1))
 
 
-(defun yc/counsel-grep (&optional deep)
-  "Description."
-  (interactive "P")
-  (let ((m (point-marker))
-        (init (aif (symbol-at-point) (symbol-name it))))
+(use-package counsel-utils
+  :commands (yc/counsel-grep counsel-find-file-as-user counsel-grep-in-dir yc/projectile-grep)
+  :bind (
+         (;; ,(kbd "C-c k")
+          "k"  . yc/counsel-grep)
 
-    (cond
-     ;; use rga if specified...
-     ((and deep (executable-find "rg"))
-      (let ((counsel-rg-base-command (concat counsel-rg-base-command " -uuu ")))
-        (counsel-rg init default-directory)))
+         (;; ,(kbd "C-c K")
+          "K"  . (lambda ()
+                     (interactive)
+                     (yc/counsel-grep t)))
+         ([remap project-find-regexp] . yc/projectile-grep )))
 
-     ;; ;; or, prefer to rg if possible..
-     ((executable-find "rg")
-      (counsel-rg init default-directory))
-
-     ;; or, the-silver-searcher if possible
-     ((executable-find "ag") (counsel-ag init default-directory))
-
-     ;; at last, grep..
-     ((executable-find "grep") (counsel-grep init))
-     (t (error "Can't find proper grep function")))
-
-    (yc/push-stack m)))
-
-(defun counsel-find-file-as-user (x)
-  "Find file X with root privileges."
-  (counsel-require-program counsel-root-command)
-  (let* ((host (file-remote-p x 'host))
-         (user-name (ivy-read "open file as user: " nil))
-         (file-name (format "/%s:%s@%s:%s"
-                            counsel-root-command
-                            user-name
-                            (or host "127.0.0.1")
-                            (expand-file-name
-                             (if host
-                                 (file-remote-p x 'localname)
-                               x)))))
-    (PDEBUG "FILE:" file-name)
-    ;; If the current buffer visits the same file we are about to open,
-    ;; replace the current buffer with the new one.
-    (if (eq (current-buffer) (get-file-buffer x))
-        (find-alternate-file file-name)
-      (find-file file-name))))
-
-(defun counsel-grep-in-dir (x)
-  "Grep in curtent dir X."
-  (PDEBUG "X: " x)
-  (interactive)
-  (yc/counsel-grep))
 
 (defvar yc/ivy-common-actions
   '(("u" counsel-find-file-as-user "Open as other user")
@@ -211,17 +172,7 @@ ORIG-FUNC is called with CANDIDATE."
          ([remap unicode-chars-list-chars] .  counsel-unicode-char)
          ([remap yank-pop]                 .  counsel-yank-pop)
          ([remap execute-extended-command] .  counsel-M-x)
-         ([remap eshell-previous-matching-input] . counsel-esh-history)
-
-         (;; ,(kbd "C-c k")
-          "k"  . yc/counsel-grep)
-
-         (;; ,(kbd "C-c K")
-          "K"  . (lambda ()
-                     (interactive)
-                     (yc/counsel-grep t)))
-
-         )
+         ([remap eshell-previous-matching-input] . counsel-esh-history))
   :bind (:map ctl-x-map
               ("\C-f" . counsel-find-file)
               ("\C-r" . counsel-recentf)
@@ -295,15 +246,35 @@ ORIG-FUNC is called with ARGS."
 
  ;; Projectile...
 (use-package projectile
+  :preface
+  (defun yc/kill-non-project-buffers (&optional kill-special)
+    "Kill buffers that do not belong to a `projectile' project.
+
+With prefix argument (`C-u'), also kill the special buffers."
+    (interactive "P")
+    (let ((bufs (buffer-list (selected-frame))))
+      (dolist (buf bufs)
+        (with-current-buffer buf
+          (let ((buf-name (buffer-name buf)))
+            (when (or (null (projectile-project-p))
+                      (and kill-special
+                           (string-match "^\*" buf-name)))
+              ;; Preserve buffers with names starting with *scratch or *Messages
+              (unless (string-match "^\\*\\(\\scratch\\|Messages\\)" buf-name)
+                (message "Killing buffer %s" buf-name)
+                (kill-buffer buf))))))))
   :commands (projectile-project-root projectile-find-other-file)
   :bind (("C-x M-k" . projectile-kill-buffers)
          ("C-x M-j" . projectile-dired)
          ("C-x M-s" . projectile-save-project-buffers))
+
   :custom
   (projectile-completion-system 'ivy)
   (projectile-globally-ignored-files '(".DS_Store" "TAGS"))
   (projectile-globally-ignored-file-suffixes '(".elc" ".pyc" ".o"))
+  (counsel-projectile-switch-project-action 'find-file)
 
+  :hook ((after-init . projectile-mode))
   :config
   (cond
    ;; If fd exists, use it for git and generic projects. fd is a rust program
@@ -343,9 +314,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
                 :require-match t
                 :sort counsel-projectile-sort-files
                 :action counsel-projectile-find-file-action
-                :caller 'counsel-projectile-find-file)
-      )
-
+                :caller 'counsel-projectile-find-file))
      (t
       (counsel-projectile-find-file))))
   :defines (counsel-projectile-find-file-matcher counsel-projectile-sort-files
@@ -354,7 +323,9 @@ Call FUNC which is 'projectile-find-file with ARGS."
   :commands (counsel-projectile-find-file)
   :bind (("C-x M-f" . yc/projectile-find-file)
          ("C-x M-d" . counsel-projectile-find-dir)
-         ("C-x M-b" . counsel-projectile-switch-to-buffer)))
+         ("C-x M-b" . counsel-projectile-switch-to-buffer)
+         ([remap project-switch-to-buffer] . counsel-projectile-switch-to-buffer)
+         ([remap project-switch-project] . counsel-projectile-switch-project)))
 
 (use-package smartparens
   :ensure t
