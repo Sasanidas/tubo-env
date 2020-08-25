@@ -75,6 +75,7 @@
 
  ;; native compile..
 (when (fboundp 'native-compile-async)
+  (setq comp-deferred-compilation nil)
   (defadvice! yc/package--compile-adv (pkg-desc)
     "Native compile files in this PKG-DESC."
     :after  #'package--compile
