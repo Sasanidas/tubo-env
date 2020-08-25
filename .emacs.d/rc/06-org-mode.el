@@ -278,8 +278,10 @@ This will add proper attributes into org file so image won't be too large."
              (file-exists-p buffer-file-name)
              (eq major-mode 'org-mode))
     (delete-trailing-whitespace)
-    (save-excursion
-      (org-map-entries (lambda () (yc/org-custom-id-get (point) 'create)) nil 'file))))
+
+    (unless (member (file-name-base buffer-file-name) '("elfeed"))
+      (save-excursion
+      (org-map-entries (lambda () (yc/org-custom-id-get (point) 'create)) nil 'file)))))
 
 (add-hook 'before-save-hook 'yc/org-add-ids-to-headlines-in-file)
 
@@ -304,19 +306,10 @@ This will add proper attributes into org file so image won't be too large."
     (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 
 
-(defun yc/org-comment-line-break-function (func &rest args)
-  "Wrapper of: `org-comment-line-break-function'.
-Ignore error signal in `org-comment-line-break-function'."
-)
-
-
-
 (use-package ol
-
   :bind (("\C-cl" . org-store-link)))
 
 (use-package org-agenda
-
   :custom
   (org-agenda-files (list (expand-file-name "~/Documents/Database/org/")))
   (org-agenda-dim-blocked-tasks (quote invisible))

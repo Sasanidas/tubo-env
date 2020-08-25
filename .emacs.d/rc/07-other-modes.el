@@ -1062,6 +1062,9 @@ ORIG-FUNC is called with ARGS."
 (use-package dockerfile-mode
   :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end))
 
+(use-package elfeed-org
+  :commands (elfeed-org))
+
 ;; not used, yet.
 (use-package elfeed
   :commands (elfeed)
@@ -1069,10 +1072,12 @@ ORIG-FUNC is called with ARGS."
   (elfeed-db-directory (yc/make-cache-path "elfeed/db/"))
   (elfeed-enclosure-default-dir (yc/make-cache-path "elfeed/enclosures/"))
 
-  (elfeed-search-filter "@2-week-ago ")
+  ;; (elfeed-search-filter "@2-week-ago ")
   (elfeed-show-entry-switch #'pop-to-buffer)
   ;; (elfeed-show-entry-delete #'+rss/delete-pane)
-  (shr-max-image-proportion 0.8))
+  (shr-max-image-proportion 0.8)
+  :config
+  (elfeed-org))
 
 
 (provide '07-other-modes)
