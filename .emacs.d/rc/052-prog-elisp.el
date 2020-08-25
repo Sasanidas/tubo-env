@@ -29,7 +29,9 @@
                               buffer-file-name)
               (not (string-match-p (rx (+? nonl) ".el") buffer-file-name)))
           (PDEBUG "Byte compile ignored for file: " buffer-file-name)
-        (byte-compile-file buffer-file-name))))
+        (byte-compile-file buffer-file-name)
+        (when (fboundp 'native-compile-async)
+          (native-compile-async buffer-file-name)))))
 
   (defun my-lisp-hook ()
     "Hook to run for Lisp mode."
@@ -72,16 +74,31 @@
   )
 
  ;; native compile..
-
 (when (fboundp 'native-compile-async)
+  (defadvice! yc/package--compile-adv (pkg-desc)
+    "Native compile files in this PKG-DESC."
+    :after  #'package--compile
+    (let ((src-dir (package-desc-dir pkg-desc))
+          (tgt-dir (expand-file-name "~/.emacs.d/eln-cache")))
 
-  (defadvice! yc/byte-compile-file-adv (&rest args)
-    "Native compile it!
-ORIG-FUNC is called with ARGS."
-    :after #'byte-compile-file
-    (let ((file (car args)))
-      (PDEBUG "Byte compile file: " file)
-      (native-compile-async file (file-directory-p file))))
+      ;; clean up previously compiled files.
+      (when (file-exists-p tgt-dir)
+        (let ((subdirs (directory-files tgt-dir t "x86.*")))
+          (if (> (length subdirs) 1)
+              ;; don't know which version to load, simply clear all
+              ;; subdirectories.
+              (delete-directory tgt-dir t)
+
+            (setq tgt-dir (car subdirs))
+            (PDEBUG "Cleaning: " tgt-dir)
+            (dolist (file (directory-files src-dir nil ".*\.el"))
+              (let ((bname (file-name-sans-extension file)))
+                (dolist (fn (directory-files tgt-dir t (concat bname "-.*\\.eln")))
+                  (PDEBUG "Deleting old file: " fn)
+                  (delete-file fn)))))))
+
+      ;; now starts compile.
+      (native-compile-async src-dir t)))
 
   (defun yc/native-compile-file ()
     "Native compile selected file."
@@ -96,8 +113,8 @@ ORIG-FUNC is called with ARGS."
     (unless dir
       (setq dir (let* ((suggestion default-directory)
                        (choices (list
-                                 (format "    Choose directory %s" suggestion)
-                                 "    Choose by selecting directory interactively."))
+                                 (format "    Choose src-dir %s" suggestion)
+                                 "    Choose by selecting src-dir interactively."))
                        (action-index (cl-position
                                       (completing-read "Select directory: "
                                                        choices

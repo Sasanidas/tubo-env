@@ -74,9 +74,8 @@
              #'flyspell-mode)
   (add-hook! '(yaml-mode-hook
                conf-mode-hook
-                 prog-mode-hook)
+               prog-mode-hook)
              #'flyspell-prog-mode)
-
   :custom
   (flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
@@ -357,11 +356,8 @@ ORIG-FUNC is called with ARGS."
   :custom
   (tramp-default-method
      (cond
-      ;; PuTTY is installed.  We don't take it, if it is installed on a
-      ;; non-windows system, or pscp from the pssh (parallel ssh) package
-      ;; is found.
-      ((and (eq system-type 'windows-nt) (executable-find "plink")) "plink")
       ((and (eq system-type 'windows-nt) (executable-find "pscp")) "pscp")
+      ((and (eq system-type 'windows-nt) (executable-find "plink")) "plink")
       ;; There is an ssh installation.
       ((executable-find "scp") "scp")
       ;; Fallback.
@@ -378,24 +374,11 @@ ORIG-FUNC is called with ARGS."
 
 
   :config
-  (progn
-    (tramp-set-completion-function "ssh"
+  (tramp-set-completion-function "ssh"
                                    '((tramp-parse-sconfig "/etc/ssh_config")
-                                     (tramp-parse-sconfig "~/.ssh/config")))))
+                                     (tramp-parse-sconfig "~/.ssh/config"))))
 
  ;; ****************** eww ***************************
-(use-package shr
-  :custom
-  (shr-use-fonts nil)
-  (shr-use-colors t)
-  (shr-blocked-images
-      (rx
-       (or (: "https://www.postgresql.org"
-              (or
-               "/media/img/about/press/elephant.png"
-               "/media/img/atpostgresql.png"
-               "/media/img/git.png"))))))
-
 (use-package browse-url
   :commands (browse-url-generic)
   :custom
@@ -410,6 +393,18 @@ ORIG-FUNC is called with ARGS."
                                       (executable-find "firefox-bin")
                                       "/usr/bin/xdg-open"))
                                     (t nil))))
+
+(use-package shr
+  :custom
+  (shr-use-fonts nil)
+  (shr-use-colors t)
+  (shr-blocked-images
+      (rx
+       (or (: "https://www.postgresql.org"
+              (or
+               "/media/img/about/press/elephant.png"
+               "/media/img/atpostgresql.png"
+               "/media/img/git.png"))))))
 
 (use-package eww
   :defer t
@@ -437,6 +432,20 @@ ORIG-FUNC is called with ARGS."
 
  ;; PDF
 (use-package pdf-tools
+  :preface
+  (defun yc/pdf-tools-re-install ()
+    "Re-install `epdfinfo' even if it is installed.
+The re-installation is forced by deleting the existing `epdfinfo'
+binary.
+Useful to run after `pdf-tools' updates."
+    (interactive)
+    (unless (featurep 'pdf-tools)
+      (require 'pdf-tools))
+    (when (pdf-info-running-p)
+      (pdf-info-kill))
+    (delete-file pdf-info-epdfinfo-program)
+    (pdf-tools-install :no-query-p))
+
   :commands (pdf-tools-install pdf-tools-enable-minor-modes)
   :mode (("\\.pdf\\'" . pdf-view-mode))
   :hook ((pdf-view-mode . pdf-tools-enable-minor-modes))
@@ -453,22 +462,8 @@ ORIG-FUNC is called with ARGS."
     (message "Tool %s does not exist, compiling ...")
     (pdf-tools-install)))
 
-(defun yc/pdf-tools-re-install ()
-  "Re-install `epdfinfo' even if it is installed.
-The re-installation is forced by deleting the existing `epdfinfo'
-binary.
-Useful to run after `pdf-tools' updates."
-  (interactive)
-  (unless (featurep 'pdf-tools)
-    (require 'pdf-tools))
-  (when (pdf-info-running-p)
-    (pdf-info-kill))
-  (delete-file pdf-info-epdfinfo-program)
-  (pdf-tools-install :no-query-p))
-
 
 (use-package stringtemplate-mode
-
   :mode "\\.st\\'")
 
 
@@ -563,64 +558,65 @@ create new buffer."
   :bind (("\C-cff"  . find-function)
          ( "\C-cfc" . find-function-on-key))
   :config
-  (advice-add 'find-function :before (lambda (&rest args)
-                                         (condition-case error
-                                             (yc/push-stack)
-                                           ('error nil)))))
+  (defadvice! yc/find-function-adv (&rest args)
+    "Save location before `find-function' with ARGS."
+    :before  #'find-function
+    (condition-case error
+        (yc/push-stack)
+      ('error nil))))
 
 
 (use-package hexview-mode :bind ((;; ,(kbd "C-x M-F")
                                   [24 134217798]. hexview-find-file)))
 
  ;; *********************** graphviz dot mode ***********
-
-(defun yc/graphviz-dot-preview ()
-  "Preview current buffer."
-  (interactive)
-  (unless (executable-find "dot")
-    (error "Graphviz is required but not found"))
-
-  (let* ((tempname (make-temp-file "dot-"))
-         (output (concat tempname ".png"))
-         (ob-name "*dot-preview*")
-         (ob (get-buffer ob-name)))
-    (write-region (point-min) (point-max) tempname)
-
-    (when ob
-      (kill-buffer ob))
-
-    (setq ob (get-buffer-create ob-name))
-    (set-buffer ob)
-    (erase-buffer)
-    (condition-case var
-        (if (= (call-process "dot" nil ob nil "-Tpng" tempname "-o" output) 0)
-            (progn
-              (erase-buffer)
-              (insert-file-contents output)
-              (image-mode)
-              (set-buffer-multibyte t)
-              (display-buffer ob))
-
-          (progn
-            (message "Failed to compile: %s" (buffer-string))))
-
-      (error (message "error: %s" var)))
-
-    (dolist (fn (list tempname output))
-      (when (file-exists-p fn)
-        (delete-file fn)))))
-
-
-(defun yc/graphviz-dot-view-external ()
-  "View with external tool."
-  (interactive)
-  (let ((fn (concat (file-name-sans-extension buffer-file-name)
-                    "." graphviz-dot-preview-extension)))
-    (unless (file-exists-p fn)
-      (error "File not compiled??"))
-    (yc/open-with-external-app fn)))
-
 (use-package graphviz-dot-mode
+  :preface
+  (defun yc/graphviz-dot-preview ()
+    "Preview current buffer."
+    (interactive)
+    (unless (executable-find "dot")
+      (error "Graphviz is required but not found"))
+
+    (let* ((tempname (make-temp-file "dot-"))
+           (output (concat tempname ".png"))
+           (ob-name "*dot-preview*")
+           (ob (get-buffer ob-name)))
+      (write-region (point-min) (point-max) tempname)
+
+      (when ob
+        (kill-buffer ob))
+
+      (setq ob (get-buffer-create ob-name))
+      (set-buffer ob)
+      (erase-buffer)
+      (condition-case var
+          (if (= (call-process "dot" nil ob nil "-Tpng" tempname "-o" output) 0)
+              (progn
+                (erase-buffer)
+                (insert-file-contents output)
+                (image-mode)
+                (set-buffer-multibyte t)
+                (display-buffer ob))
+
+            (progn
+              (message "Failed to compile: %s" (buffer-string))))
+
+        (error (message "error: %s" var)))
+
+      (dolist (fn (list tempname output))
+        (when (file-exists-p fn)
+          (delete-file fn)))))
+
+
+  (defun yc/graphviz-dot-view-external ()
+    "View with external tool."
+    (interactive)
+    (let ((fn (concat (file-name-sans-extension buffer-file-name)
+                      "." graphviz-dot-preview-extension)))
+      (unless (file-exists-p fn)
+        (error "File not compiled??"))
+      (yc/open-with-external-app fn)))
   :defer t
   :commands (graphviz-dot-mode graphviz-compile-command)
   :bind (:map graphviz-dot-mode-map
@@ -639,7 +635,6 @@ create new buffer."
 
 (defalias 'dot-mode 'graphviz-dot-mode)
 (defalias 'org-babel-execute:graphviz-dot 'org-babel-execute:dot)
-
 
  ;; Dired
 (use-package dired
@@ -731,18 +726,16 @@ ORIG-FUNC is called with ARGS."
   :init
   (global-set-key [remap find-dired] #'fd-dired))
 
-
 (use-package hl-line
   :hook ((bookmark-bmenu-mode . hl-line-mode)
          (ibuffer-mode . hl-line-mode)
          (grep-setup-mode . hl-line-mode)
          (dired-mode . hl-line-mode)))
 
- ;; vimrc-mode
+;; vimrc-mode
 (use-package vimrc-mode
   :mode (rx (or ".vim" (: "." (? "_") (? "g")  "vimrc") ".exrc")))
 
-
 (use-package ztree
   :commands (ztree-dir ztree-diff))
 
@@ -750,14 +743,12 @@ ORIG-FUNC is called with ARGS."
 
 (use-package x86-help   :bind (("x" . x86-help))) ;;(kbd "C-h x")
 
-
 (use-package image-file
-  :defer
-  :config
-  (progn
-    (auto-image-file-mode t))) ; 自动加载图像
+  :commands (auto-image-file-mode)
+  :init
+  (when window-system
+    (auto-image-file-mode 1))) ; 自动加载图像
 
-
 (use-package t-report  :commands (yc/new-wp yc/new-mail))
 
  ;; edit-indirect mode.
@@ -766,20 +757,20 @@ ORIG-FUNC is called with ARGS."
           "'". edit-indirect-region)))
 
  ;; fold
-(defun yc/vimish-fold-toggle (beg end)
-  "Description."
-  (interactive "r")
-  (unless (featurep 'vimish-fold)
-    (load "vimish-fold"))
-  (if mark-active
-      (progn
-        (dolist (overlay (overlays-in beg end))
-          (when (vimish-fold--vimish-overlay-p overlay)
-            (vimish-fold--delete overlay)))
-        (vimish-fold beg end))
-    (vimish-fold-toggle)))
-
 (use-package vimish-fold
+  :preface
+  (defun yc/vimish-fold-toggle (beg end)
+    "Description."
+    (interactive "r")
+    (unless (featurep 'vimish-fold)
+      (load "vimish-fold"))
+    (if mark-active
+        (progn
+          (dolist (overlay (overlays-in beg end))
+            (when (vimish-fold--vimish-overlay-p overlay)
+              (vimish-fold--delete overlay)))
+          (vimish-fold beg end))
+      (vimish-fold-toggle)))
   :commands (vimish-fold vimish-fold-toggle vimish-fold-delete)
   :bind ((;; ,(kbd "C-c hr")
           "hr". yc/vimish-fold-toggle)))
@@ -802,16 +793,15 @@ ORIG-FUNC is called with ARGS."
 
  ;; ****************************** HTML Mode ******************************
 (use-package sgml-mode
+  :preface
+  (defun yc/html-mode-hook ()
+    "My hook for html mode."
+    (html-autoview-mode -1)
+    (remove-hook 'after-save-hook 'browse-url-of-buffer t)
+    (flyspell-mode 1))
   :mode ("/itsalltext/" . html-mode)
   :commands (html-autoview-mode)
   :hook ((html-mode . yc/html-mode-hook)))
-
-(defun yc/html-mode-hook ()
-  "My hook for html mode."
-  (html-autoview-mode -1)
-  (remove-hook 'after-save-hook 'browse-url-of-buffer t)
-  (flyspell-mode 1))
-
 
  ;; css & scss & sass
 (use-package css-mode
@@ -872,45 +862,45 @@ ORIG-FUNC is called with ARGS."
             nil))))
   yc/ditaa-package)
 
-(defun yc/txt-to-png ()
-  "Change a txt file into png file using ditaa."
-  (interactive)
-  (unless (executable-find "java")
-    (error "Function `txt-to-png' requires java"))
-
-  (unless yc/ditaa-package
-    (yc/load-ditaa))
-
-  (let* ((infile (buffer-file-name))
-         (txt2png-buf-name "*txt2png*"))
-    (get-buffer-create txt2png-buf-name)
-    (pop-to-buffer txt2png-buf-name)
-    (erase-buffer)
-    (insert "\nInvoking command: java -jar"
-            yc/ditaa-package
-            infile "--overwrite")
-    (set-process-sentinel
-     (start-process "txt-to-png" txt2png-buf-name "java" "-jar"
-                    yc/ditaa-package
-                    infile "--overwrite")
-     (lambda (process state)
-       (when (and (string-match "finished" state)
-                  (yes-or-no-p "Open generated file?"))
-
-         (save-excursion
-           (goto-char (point-min))
-           (unless (search-forward-regexp
-                    (rx "Rendering to file:" (* space) (group (+ nonl))) nil t)
-             (error "Can't find output file")))
-
-         (let ((outfile (match-string 1)))
-           (unless (file-exists-p outfile)
-             (error "File %s does not exist" outfile))
-           (kill-current-buffer)
-           (find-file outfile)))))
-    (message "This may take for a while, refer to *txt2png* to check progress...")))
-
 (use-package text-mode
+  :preface
+  (defun yc/txt-to-png ()
+    "Change a txt file into png file using ditaa."
+    (interactive)
+    (unless (executable-find "java")
+      (error "Function `txt-to-png' requires java"))
+
+    (unless yc/ditaa-package
+      (yc/load-ditaa))
+
+    (let* ((infile (buffer-file-name))
+           (txt2png-buf-name "*txt2png*"))
+      (get-buffer-create txt2png-buf-name)
+      (pop-to-buffer txt2png-buf-name)
+      (erase-buffer)
+      (insert "\nInvoking command: java -jar"
+              yc/ditaa-package
+              infile "--overwrite")
+      (set-process-sentinel
+       (start-process "txt-to-png" txt2png-buf-name "java" "-jar"
+                      yc/ditaa-package
+                      infile "--overwrite")
+       (lambda (process state)
+         (when (and (string-match "finished" state)
+                    (yes-or-no-p "Open generated file?"))
+
+           (save-excursion
+             (goto-char (point-min))
+             (unless (search-forward-regexp
+                      (rx "Rendering to file:" (* space) (group (+ nonl))) nil t)
+               (error "Can't find output file")))
+
+           (let ((outfile (match-string 1)))
+             (unless (file-exists-p outfile)
+               (error "File %s does not exist" outfile))
+             (kill-current-buffer)
+             (find-file outfile)))))
+      (message "This may take for a while, refer to *txt2png* to check progress...")))
   :bind (:map text-mode-map
               ("\C-c\C-e" . yc/txt-to-png))
   :config
@@ -935,20 +925,22 @@ ORIG-FUNC is called with ARGS."
 (use-package org-table
   :commands (orgtbl-mode))
 
-(defun yc/translate-markdown-filename (in)
-  "Translate IN into filename.."
-  (let ((out   (catch 'p-found
-    (dolist (ext '("" ".org" ".md"))
-      (aif (yc/file-exists-p (concat in ext))
-          (throw 'p-found it))
-      )
-    (concat in ".md"))))
-
-    (PDEBUG "IN: " in
-      "OUT: " out)
-    out))
-
 (use-package markdown-mode
+  :preface
+  (defun yc/translate-markdown-filename (in)
+    "Translate IN into filename.."
+    (let ((out   (catch 'p-found
+                   (dolist (ext '("" ".org" ".md"))
+                     (aif (yc/file-exists-p (concat in ext))
+                         (throw 'p-found it))
+                     )
+                   (concat in ".md"))))
+
+      (PDEBUG "IN: " in
+              "OUT: " out)
+      out))
+
+
   :commands (markdown-mode markdown-follow-link-at-point)
   :hook ((markdown-mode . orgtbl-mode)
          (before-save . (lambda ()
@@ -1024,7 +1016,6 @@ ORIG-FUNC is called with ARGS."
 
 (use-package tblog :commands (tblog/new-post tblog/export tblog/find-file))
 
-
 (use-package conf-mode
 
   :mode (rx (or "Doxyfile"
@@ -1040,13 +1031,11 @@ ORIG-FUNC is called with ARGS."
             eol))
 
 (use-package fvwm-mode
-  :mode (rx ".fvwm/" (+ alnum) eol)
-  )
-
+  :mode (rx ".fvwm/" (+ alnum) eol))
+
 (use-package thrift
   :commands (thrift-mode)
-  :mode (((rx ".thrift" eol) . thrift-mode))
-  )
+  :mode (((rx ".thrift" eol) . thrift-mode)))
 
  ;; latex
 (yc/add-compile-unit 'latex 10
