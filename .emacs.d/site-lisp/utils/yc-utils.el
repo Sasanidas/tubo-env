@@ -1291,11 +1291,10 @@ inserts comment at the end of the line."
   "Return number of core."
   (cl-case system-type
     ((gnu/linux cygwin)
-     (when (file-exists-p "/proc/cpuinfo")
-       (with-temp-buffer
-         (insert-file-contents "/proc/cpuinfo")
-         (how-many "^processor[[:space:]]+:")))
-     )
+     (with-temp-buffer
+       (ignore-errors
+         (when (zerop (call-process "bash" nil t nil "-c" "cat /proc/cpuinfo| grep '^processor' | wc -l"))
+           (string-to-number (buffer-string))))))
     ((gnu/kfreebsd darwin)
      (with-temp-buffer
        (ignore-errors
@@ -1310,11 +1309,11 @@ inserts comment at the end of the line."
 (defun yc/get-compiling-threads ()
   "Return proper number of threads."
   (if current-prefix-arg
-      (if (listp current-prefix-arg)
-          (car current-prefix-arg)
-        current-prefix-arg)
-    (yc/get-cpu-cores)))
-
+      (prefix-numeric-value current-prefix-arg)
+    (let ((threads (yc/get-cpu-cores)))
+      (if (> threads 16)
+          (truncate (* threads 0.75)) ;; leave some cores for other users...
+        threads))))
 
 (defun yc/get-env (env &optional func &rest backups)
   (aif (getenv env)

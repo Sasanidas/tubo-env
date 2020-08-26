@@ -80,6 +80,7 @@
   (defadvice! yc/package-unpack-adv (pkg-desc &rest args)
     "Native compile files in this PKG-DESC."
     :after  #'package-unpack
+    (PDEBUG "DESC:" pkg-desc (package-desc-dir pkg-desc))
     (let ((src-dir (package-desc-dir pkg-desc))
           (tgt-dir (expand-file-name "~/.emacs.d/eln-cache")))
 
