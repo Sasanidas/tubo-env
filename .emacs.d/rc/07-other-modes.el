@@ -1101,7 +1101,7 @@ ORIG-FUNC is called with ARGS."
   (elfeed-db-directory (yc/make-cache-path "elfeed/db/"))
   (elfeed-enclosure-default-dir (yc/make-cache-path "elfeed/enclosures/"))
 
-  ;; (elfeed-search-filter "@2-week-ago ")
+  (elfeed-search-filter "@2-week-ago +unread")
   (elfeed-show-entry-switch #'pop-to-buffer)
   (elfeed-show-entry-delete #'+rss/delete-pane)
 

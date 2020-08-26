@@ -75,7 +75,8 @@ When DEEP is t, don't respect .gitignore."
   "Grep in curtent dir X."
   (interactive)
   (PDEBUG "X: " x)
-  (let ((default-directory x) )
+  (let ((default-directory (if (file-directory-p x) x
+                             (file-name-directory x))))
     (yc/counsel-grep)))
 
 (defun yc/projectile-grep ()

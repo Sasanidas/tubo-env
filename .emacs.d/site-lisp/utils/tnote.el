@@ -21,6 +21,7 @@
 
 (require 'ivy)
 (require 'ivy-rich)
+(require 'counsel-utils)
 
 (require 's)
 
