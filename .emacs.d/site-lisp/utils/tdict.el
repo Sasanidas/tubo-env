@@ -169,14 +169,14 @@ Otherwise return word around point."
                     )))))))
 
 ;;;###autoload
-(defun tdict-search (&optional pfx)
-  "Description."
-  (interactive "P")
+(defun tdict-search ()
+  "Search word under point."
+  (interactive)
 
-  (let* ((default (and (not pfx) (tdict--region-or-word)))
+  (let* ((default (tdict--region-or-word))
          (prompt  (if default (format "Define (%s): " default)
                     "Define: "))
-         (word (read-string prompt nil nil default)))
+         (word (if current-prefix-arg (read-string prompt nil nil default) default)))
     (tdict--view-result word)))
 
 (provide 'tdict)

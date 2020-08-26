@@ -1068,16 +1068,53 @@ ORIG-FUNC is called with ARGS."
 ;; not used, yet.
 (use-package elfeed
   :commands (elfeed)
+  :preface
+  (defun yc/elfeed-search-eww ()
+    "Open feed item via eww."
+    (interactive)
+    (let ((entries (elfeed-search-selected)))
+      (cl-loop for entry in entries
+               do (elfeed-untag entry 'unread)
+               when (elfeed-entry-link entry)
+               do (eww it))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (or elfeed-search-remain-on-entry (use-region-p))
+        (forward-line))))
+
+  (defun yc/elfeed-show-eww ()
+    "Visit the current entry in eww."
+    (interactive)
+    (let ((link (elfeed-entry-link elfeed-show-entry)))
+      (when link
+        (eww link))))
+
+  (defun +rss/delete-pane ()
+  "Delete the *elfeed-entry* split pane."
+  (interactive)
+  (let* ((buf (get-buffer "*elfeed-entry*"))
+         (window (get-buffer-window buf)))
+    (delete-window window)
+    (when (buffer-live-p buf)
+      (kill-buffer buf))))
+
   :custom
   (elfeed-db-directory (yc/make-cache-path "elfeed/db/"))
   (elfeed-enclosure-default-dir (yc/make-cache-path "elfeed/enclosures/"))
 
   ;; (elfeed-search-filter "@2-week-ago ")
   (elfeed-show-entry-switch #'pop-to-buffer)
-  ;; (elfeed-show-entry-delete #'+rss/delete-pane)
+  (elfeed-show-entry-delete #'+rss/delete-pane)
+
   (shr-max-image-proportion 0.8)
+  (elfeed-use-curl t)
+  (elfeed-curl-extra-arguments '("-x" "127.0.0.1:7890"))
   :config
-  (elfeed-org))
+  (elfeed-org)
+  :bind
+  (:map elfeed-show-mode-map
+        ("e" . yc/elfeed-show-eww))
+  (:map elfeed-search-mode-map
+        ("e" . yc/elfeed-search-eww)))
 
 
 (provide '07-other-modes)
