@@ -75,10 +75,11 @@
 
  ;; native compile..
 (when (fboundp 'native-compile-async)
-  (setq comp-deferred-compilation nil)
-  (defadvice! yc/package--compile-adv (pkg-desc)
+  (setq comp-deferred-compilation t)
+
+  (defadvice! yc/package-unpack-adv (pkg-desc &rest args)
     "Native compile files in this PKG-DESC."
-    :after  #'package--compile
+    :after  #'package-unpack
     (let ((src-dir (package-desc-dir pkg-desc))
           (tgt-dir (expand-file-name "~/.emacs.d/eln-cache")))
 
