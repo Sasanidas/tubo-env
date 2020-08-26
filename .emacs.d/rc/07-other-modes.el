@@ -704,22 +704,7 @@ ORIG-FUNC is called with ARGS."
   :config
   (load-library "ls-lisp")
   (add-to-list 'auto-mode-alist (cons "[^/]\\.dired$"
-                                      'dired-virtual-mode))
-  :hook
-  (dired-mode . dired-omit-mode)
-  :bind (:map dired-mode-map
-              ("h" . dired-omit-mode))
-  :config
-  (setq
-   dired-omit-verbose nil
-   dired-omit-files
-        (concat dired-omit-files
-           "\\|^.DS_Store\\'"
-           "\\|^.project\\(?:ile\\)?\\'"
-           "\\|^.\\(svn\\|git\\)\\'"
-           "\\|^.ccls-cache\\'"
-           "\\|\\(?:\\.js\\)?\\.meta\\'"
-           "\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")))
+                                      'dired-virtual-mode)))
 
 (use-package fd-dired
   :defer t
