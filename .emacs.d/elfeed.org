@@ -11,6 +11,8 @@
 *** [[https://emacs-china.org/latest.rss][Emacs China]]
 *** [[http://feeds.feedburner.com/sachac][sacha chua]]
 *** [[https://nullprogram.com/tags/emacs/feed/][Null Program]]
+*** [[http://www.reddit.com/r/emacs/.rss][Reddit]]
+*** [[http://feeds.feedburner.com/XahsEmacsBlog][Xah Emacs]]
 ** Video                                                             :video:
 *** [[http://feeds.feedburner.com/tedtalks_video][TED Talks]]
 ** 媒体
@@ -47,4 +49,3 @@
                collect url)))
   (+rss-dead-feeds)
 #+END_SRC
-
