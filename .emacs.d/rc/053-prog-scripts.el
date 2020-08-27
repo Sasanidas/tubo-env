@@ -8,12 +8,6 @@
   "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
   (PDEBUG "ENTER, ROOT:" root-file)
 
-  ;; (unless (featurep 'lsp-pyls)
-  ;;   (require 'lsp-pyls))
-  ;; (setq-default
-  ;;     lsp-pyls-server-command (list "pyls"  "-v" "--log-file"
-  ;;                                   (yc/lsp-get-log-file "pyls" root-file)))
-
   (unless (featurep 'lsp-pyright)
     (require 'lsp-pyright)))
 
@@ -28,32 +22,11 @@
             (unless (buffer-file-name)
               (flycheck-mode -1))))))
 
-;;
-;; @Deprecated: Mon Aug 17 08:25:45 2020, switch to pyright.
-;; (use-package lsp-pyls
-;;   :config
-;;   (let ((pyls (expand-file-name (executable-find "pyls")))
-;;         (lsp-py-lib-dirs
-;;          '("/usr")))
-;;     (aif (file-name-directory (substring (file-name-directory pyls) 0 -1))
-;;         (push it
-;;               lsp-clients-python-library-directories)))
-
-;;   :hook
-;;   (python-mode . (lambda ()
-;;                          (yc/lsp--setup
-;;                           "pyls"
-;;                           "pip install 'python-language-server[yapf]'")))
-;; )
-
 (use-package lsp-pyright
-  ;; :quelpa (lsp-pyright
-  ;;          :fetcher github :repo "emacs-lsp/lsp-pyright")
   :hook (python-mode . (lambda ()
                          (yc/lsp--setup
                           "pyright-langserver"
-                          "pip install -g pyright")))
-  )
+                          "pip install -g pyright"))))
 
 (use-package py-autopep8
   :commands (py-autopep8-buffer)

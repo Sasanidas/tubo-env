@@ -14,19 +14,19 @@
 (defmacro yc/defmacro (name &rest args)
   "Define macro with NAME and ARGS.
 This is macro to generate macro, and put it to proper indentation."
+  (declare (doc-string 3) (indent 2))
   `(progn
      (put (quote ,name) 'lisp-indent-function 'defun)
      (defmacro ,name ,@args)))
 
-(put 'yc/defmacro 'lisp-indent-function 'defun)
-
-(yc/defmacro cdsq (sym val &optional doc)
+(defmacro cdsq (sym val &optional doc)
   "Customize, Define or Set value of SYM to VAL, with DOC as document."
+  (declare (doc-string 3) (indent 2))
   `(if (boundp ',sym)
        (setq ,sym ,val)
      (defvar ,sym ,val ,doc)))
 
-(yc/defmacro aif (test-form then-form &rest else-forms)
+(defmacro aif (test-form then-form &rest else-forms)
   "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
 THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (declare (indent 2) (debug t))
