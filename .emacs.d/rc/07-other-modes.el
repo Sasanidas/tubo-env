@@ -1092,14 +1092,23 @@ ORIG-FUNC is called with ARGS."
 
   (shr-max-image-proportion 0.8)
   (elfeed-use-curl t)
+  (elfeed-curl-program-name (aif (file-executable-p "/usr/local/Cellar/curl/7.72.0/bin/curl")
+                                "/usr/local/Cellar/curl/7.72.0/bin/curl" "curl"))
   (elfeed-curl-extra-arguments '("-x" "127.0.0.1:7890"))
   :config
   (elfeed-org)
+  (defadvice! yc/elfeed-adv ()
+    "Refresh content."
+    :after  #'elfeed
+    (elfeed-update))
+
   :bind
   (:map elfeed-show-mode-map
         ("e" . yc/elfeed-show-eww))
   (:map elfeed-search-mode-map
-        ("e" . yc/elfeed-search-eww)))
+        ("e" . yc/elfeed-search-eww))
+  :bind ((;; (kbd "<C-f12>")
+          [C-f12] . elfeed)))
 
 
 (provide '07-other-modes)

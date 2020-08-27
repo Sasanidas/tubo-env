@@ -27,7 +27,8 @@
 *** [[http://coolshell.cn/feed/][酷 壳 – CoolShell]]
 ** 技术与人文
 *** [[http://www.ruanyifeng.com/blog/atom.xml][阮一峰的网络日志]]
-
+** Database                                                       :database:
+*** [[http://mysql.taobao.org/monthly/feed.xml][数据库内核月报]]
 
 * Function to help find out dead feeds
 
