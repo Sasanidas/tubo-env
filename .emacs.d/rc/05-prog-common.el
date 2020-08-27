@@ -347,8 +347,8 @@ Loading project specific settings before starting LSP."
 
     (unless (bound-and-true-p lsp-mode)
       (semantic-mode 1)
-      ;; (semantic-force-refresh)
-      ))
+      (when (buffer-file-name)
+        (semantic-force-refresh))))
 
   (advice-add 'lsp-format-buffer :around #'yc/lsp-format-adv)
   (advice-add 'lsp-format-region :around #'yc/lsp-format-adv)

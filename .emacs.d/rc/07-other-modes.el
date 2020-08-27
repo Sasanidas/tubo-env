@@ -522,7 +522,7 @@ create new buffer."
         (unless vbuffer
           (with-current-buffer (setq vbuffer (get-buffer-create name))
             (vterm-mode)))
-        (pop-to-buffer vbuffer))))
+        (switch-to-buffer vbuffer))))
   :bind (([S-f5] . yc/open-vterm))
   :custom
   (vterm-kill-buffer-on-exit t))
