@@ -286,11 +286,7 @@
    '(message-separator-face ((t (:foreground "LightSkyBlue1"))))
    '(message-url ((t (:bold t :foreground "blue" :weight bold))))
    '(minibuffer-prompt ((t ( :foreground "#00ffff" :bold t))))
-   '(mode-line ((t ( :foreground "black" :background "#bfbfbf"))))
-   '(mode-line-buffer-id ((t ( :foreground "#000080" :bold t))))
-   '(mode-line-emphasis ((t (:bold t :weight bold))))
-   '(mode-line-highlight ((t (:box (:line-width 2 :color "grey40" :style released-button :height 0.9)))))
-   '(mode-line-inactive ((t ( :foreground "#4d4d4d" :background "#cccccc"))))
+
    '(mouse ((t (:background "OrangeRed"))))
    '(next-error ((t (:background "blue3"))))
    '(nobreak-space ((t (:foreground "cyan" :underline t))))
@@ -427,8 +423,14 @@
    '(woman-bold-face ((t (:bold t :foreground "#a52a2a"))))
    '(woman-italic-face ((t (:foreground "#1e90ff"))))
    '(woman-unknown-face ((t (:foreground "LightSalmon"))))
+
+   '(mode-line ((t ( :foreground "black" :background "#bfbfbf"))))
+   '(mode-line-buffer-id ((t ( :foreground "#000080" :bold t))))
+   '(mode-line-emphasis ((t (:bold t :weight bold))))
+   '(mode-line-highlight ((t (:box (:line-width 2 :color "grey40" :style released-button :height 0.9)))))
+   '(mode-line-inactive ((t ( :foreground "#4d4d4d" :background "#cccccc"))))
    '(mode-line-read-only-face ((t (:inherit 'mode-line-buffer-id :foreground "#4271ae"))))
-   '(mode-line-modified-face ((t (:inherit 'mode-line-buffer-id :foreground "#c82829"))))
+   '(mode-line-modified-face ((t (:inherit 'mode-line-buffer-id :foreground "#8b0000"))))
    '(mode-line-80col-face ((t (:inherit 'mode-line-face :foreground "black" :background "#eab700"))))
 
    `(hl-line  ((t (:background ,current-line :underline nil))))
