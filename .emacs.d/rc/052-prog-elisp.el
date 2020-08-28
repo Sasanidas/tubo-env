@@ -20,6 +20,28 @@
     (yc/insert-key-sequence-kbd)
     (yc/eval-and-insert-comment))
 
+  (defun yc/clean-native-compiled-file (file)
+    "Clean up previous native-compiled FILE."
+    (let* ((tgt-dir (expand-file-name "~/.emacs.d/eln-cache"))
+           (bname (file-name-base file))
+           (yc/debug-log-limit -1)
+           deleted-files)
+
+      ;; clean up previously compiled files.
+      (when (file-exists-p tgt-dir)
+        (let ((subdirs (directory-files tgt-dir t "x86.*")))
+          (if (> (length subdirs) 1)
+              (progn
+                (delete-directory tgt-dir t)
+                (warn "don't know which version to load, simply clear all subdirectories."))
+
+            (setq tgt-dir (car subdirs))
+            (PDEBUG "Cleaning in: " tgt-dir " for file: " file ", base name: " bname)
+            (dolist (fn (directory-files tgt-dir t (concat bname  "-.*\\.eln")))
+              (push fn deleted-files)
+              (delete-file fn))
+            (PDEBUG "Deleted " (length deleted-files) " files:\n"
+                    (mapconcat 'identity deleted-files "\n\t")))))))
 
   (defun yc/byte-compile-current-elisp ()
     "Byte compile Lisp file."
@@ -31,6 +53,7 @@
           (PDEBUG "Byte compile ignored for file: " buffer-file-name)
         (byte-compile-file buffer-file-name)
         (when (fboundp 'native-compile-async)
+          (yc/clean-native-compiled-file buffer-file-name)
           (native-compile-async buffer-file-name)))))
 
   (defun my-lisp-hook ()
@@ -82,24 +105,10 @@
     :after  #'package-unpack
     (let* ((name (package-desc-name pkg-desc))
            (dirname (package-desc-full-name pkg-desc))
-           (src-dir (expand-file-name dirname package-user-dir))
-           (tgt-dir (expand-file-name "~/.emacs.d/eln-cache")))
+           (src-dir (expand-file-name dirname package-user-dir)))
 
       ;; clean up previously compiled files.
-      (when (file-exists-p tgt-dir)
-        (let ((subdirs (directory-files tgt-dir t "x86.*")))
-          (if (> (length subdirs) 1)
-              ;; don't know which version to load, simply clear all
-              ;; subdirectories.
-              (delete-directory tgt-dir t)
-
-            (setq tgt-dir (car subdirs))
-            (PDEBUG "Cleaning: " tgt-dir)
-            (dolist (file (directory-files src-dir nil ".*\.el"))
-              (let ((bname (file-name-sans-extension file)))
-                (dolist (fn (directory-files tgt-dir t (concat bname "-.*\\.eln")))
-                  (PDEBUG "Deleting old file: " fn)
-                  (delete-file fn)))))))
+      (mapc 'yc/clean-native-compiled-file (directory-files src-dir nil ".*\.el"))
 
       ;; now starts compile.
       (native-compile-async src-dir t)))
