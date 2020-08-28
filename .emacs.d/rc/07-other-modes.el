@@ -245,6 +245,7 @@ ORIG-FUNC is called with ARGS."
              yc/git-copy-file-path
              yc/new-snippet
              yc/dired-compress-file
+             yc/list-attentions
              )
 
   :bind ((;(kbd "C-x J")

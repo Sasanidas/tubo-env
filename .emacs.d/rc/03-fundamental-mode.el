@@ -119,11 +119,6 @@ ORIG-FUNC is called with CANDIDATE."
   :bind (
          (;; ,(kbd "C-c k")
           "k"  . yc/counsel-grep)
-
-         (;; ,(kbd "C-c K")
-          "K"  . (lambda ()
-                     (interactive)
-                     (yc/counsel-grep t)))
          ([remap project-find-regexp] . yc/projectile-grep )))
 
 
@@ -176,7 +171,8 @@ ORIG-FUNC is called with CANDIDATE."
   :bind (:map ctl-x-map
               ("\C-f" . counsel-find-file)
               ("\C-r" . counsel-recentf)
-              ("F" . 'counsel-fzf))
+              ("F" . 'counsel-fzf)
+              ("gg" . 'counsel-git-grep))
   :config
   (defalias 'git-grep 'counsel-git-grep)
   (setq counsel-fzf-dir-function
@@ -224,8 +220,15 @@ ORIG-FUNC is called with ARGS."
               (swiper--add-overlays (ivy--regex ivy-text))))
           t))))
 
-  (ivy-add-actions 'counsel-find-file  yc/ivy-common-actions))
+  (ivy-add-actions 'counsel-find-file  yc/ivy-common-actions)
 
+  (defadvice! yc/counsel-git-grep-adv (orig-func &optional initial-input &rest args)
+    "Wrapper of ORIG-FUNC, provide proper INITIAL-INPUT value, and save original position."
+    :around  #'counsel-git-grep
+    (let ((m (point-marker)))
+      (push (or initial-input (aif (symbol-at-point) (symbol-name it))) args)
+      (apply orig-func args)
+      (yc/push-stack m))))
 
 (use-package bookmark
   :custom

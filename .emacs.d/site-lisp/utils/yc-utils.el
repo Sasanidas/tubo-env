@@ -1660,6 +1660,16 @@ Should be run from find-file-hook, change write permissions."
         (setq msg (concat msg (if (file-writable-p buffer-file-name)
                                   "Succeeded\n" "Failed\n" )))
         (message msg)))))
+
+(defun yc/list-attentions ()
+  "List items needs attention.
+If `current-prefix-arg' is given, search for all files under default-folder."
+  (interactive)
+  (let ((r-match-attentions "\\(xxx\\|yyc\\|todo\\|bug\\):"))
+  (if current-prefix-arg
+      (yc/counsel-grep r-match-attentions)
+    (counsel-grep-or-swiper r-match-attentions))))
+
 
 (provide 'yc-utils)
 

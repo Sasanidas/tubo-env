@@ -46,14 +46,6 @@
 (use-package magit-auto-revert
   :commands (magit-auto-revert-mode))
 
-(defun yc/counsel-git-grep ()
-  "Description."
-  (interactive)
-  (let ((m (point-marker))
-        (init (aif (symbol-at-point) (symbol-name it))))
-    (counsel-git-grep init)
-    (yc/push-stack m)))
-
 (defvar yc/auto-merge-func nil
   "Function try to merge file automatically.
 This function accept file name as argument, and return t if file is merged automatically.")
@@ -97,7 +89,6 @@ This function accept file name as argument, and return t if file is merged autom
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
               ("gb" . magit-blame-addition)
-              ("gg" . 'yc/counsel-git-grep)
               ("ga" . 'yc/git-add-current-file))
   :hook ((magit-process-mode . goto-address-mode))
   :custom

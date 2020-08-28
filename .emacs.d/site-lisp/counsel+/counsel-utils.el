@@ -23,18 +23,21 @@
 (require 'counsel)
 (require '02-functions)
 
-
-(defun yc/counsel-grep (&optional deep)
+(defun yc/counsel-grep (&optional initial-input)
   "Grep with rg or ag.
-When DEEP is t, don't respect .gitignore."
-  (interactive "P")
-  (PDEBUG "CURRENT_DIR: " default-directory)
+When called with prefix arg, don't respect .gitignore.
+If INITIAL-INPUT is not nil, use it."
+  (interactive)
+
+  (PDEBUG "CURRENT-DIR: " default-directory
+          "INITIAL-INPUT:" initial-input)
+
   (let ((m (point-marker))
-        (init (aif (symbol-at-point) (symbol-name it))))
+        (init (or initial-input (aif (symbol-at-point) (symbol-name it)))))
 
     (cond
      ;; use rga if specified...
-     ((and deep (executable-find "rg"))
+     ((and current-prefix-arg (executable-find "rg"))
       (let ((counsel-rg-base-command (concat counsel-rg-base-command " -uuu ")))
         (counsel-rg init default-directory)))
 
