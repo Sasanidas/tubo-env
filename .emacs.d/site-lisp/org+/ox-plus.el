@@ -11,6 +11,88 @@
 
 (autoload 'yc/file-exists-p "yc-utils" ""  t)
 
+ ;; utilities
+
+(defun yc/plantuml-path ()
+  "Get path of plantUML."
+  (catch 'path-found
+    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
+                    "/usr/share/plantuml/lib/plantuml.jar"
+                    "/usr/local/plantuml/lib/plantuml.jar"
+                    "/usr/local/opt/plantuml/libexec/plantuml.jar"))
+      (PDEBUG "CHECKING: " path)
+      (when (file-exists-p path)
+        (throw 'path-found path)))
+    ""))
+
+(defun yc/ditaa-path ()
+  "Get path of plantUML."
+  (cond
+   ((executable-find "ditaa")
+    (progn
+      (let ((content (shell-command-to-string (format "cat %s" (executable-find "ditaa")))))
+        (PDEBUG "CONTENT: " content)
+
+        (catch 'p-found
+          (dolist (item (s-split " " content))
+            (PDEBUG "ITEM: " item)
+            (PDEBUG "MATCH: " (string-match (rx "ditaa" (+? nonl) ".jar") item))
+
+            (when (string-match (rx "ditaa" (+? nonl) ".jar") item)
+              (throw 'p-found item)))
+          nil))))
+   (t
+    (warn "yc/ditaa-package not setup")
+    nil))
+  (catch 'path-found
+    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
+                    "/usr/share/plantuml/lib/plantuml.jar"
+                    "/usr/local/plantuml/lib/plantuml.jar"
+                    "/usr/local/opt/plantuml/libexec/plantuml.jar"))
+      (PDEBUG "CHECKING: " path)
+      (when (file-exists-p path)
+        (throw 'path-found path)))
+    ""))
+
+
+(defun uml/parse-stringfied-nodes (&optional silent)
+  "Parse all stringfied nodes.
+If `silent' is nil, print collected nodes before exit."
+  (interactive)
+  (setq uml/stringified-nodes nil)
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp
+            (rx bol (* space)
+                (or "enum" "class" "interface")
+                (+ space)
+                (group (+? nonl))
+                (* space)
+                "{" eol) nil t)
+      (add-to-list 'uml/stringified-nodes (match-string-no-properties 1))))
+  (unless silent
+    (message "Stringfied notes: %s" (s-join ", " uml/stringified-nodes))))
+
+
+(defun company-plantuml--candidates (prefix)
+  "Return candiates for `PREFIX'."
+  (all-completions prefix plantuml-kwdList))
+
+;;;###autoload
+(defun company-plantuml (command &optional arg &rest ignored)
+  "`company-mode' completion backend for plantuml.
+plantuml is a cross-platform, open-source make system."
+  (interactive (list 'interactive))
+  (cl-case command
+    (interactive (company-begin-backend 'company-plantuml))
+    (init (unless (equal major-mode 'plantuml-mode)
+            (error "Major mode is not plantuml-mode")))
+    (prefix (and (not (company-in-string-or-comment))
+                 (company-grab-symbol)))
+    (candidates (company-plantuml--candidates arg))))
+
+ ;; publish related
+
 (defcustom my-link-home  "http://localhost"  "Link to homepage."
   :type 'string
   :group 'ox-plus)

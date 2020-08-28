@@ -76,7 +76,6 @@
     ("\\.tex$" . ["insert.tex" auto-update-defaults])
     ("\\.yy$" . ["insert.yy" auto-update-defaults])
     ("\\.ccls$" . ["insert.ccls" auto-update-defaults])
-    ("\\.org$" . ["insert.org" auto-insert--org-mode])
     ("\\.gp$" . ["insert.gp" auto-update-defaults])
     (,(rx "." (or "perl" "pl") eol)
      . ["insert.pl" auto-update-defaults])

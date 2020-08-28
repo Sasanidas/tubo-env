@@ -6,86 +6,12 @@
 
 ;;; Code:
 
+(use-package ox-plus
+  :commands (yc/ditaa-path yc/plantuml-path uml/parse-stringfied-nodes company-plantuml))
+
  ;; PlantUML,
-(defun yc/plantuml-path ()
-  "Get path of plantUML."
-  (catch 'path-found
-    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
-                    "/usr/share/plantuml/lib/plantuml.jar"
-                    "/usr/local/plantuml/lib/plantuml.jar"
-                    "/usr/local/opt/plantuml/libexec/plantuml.jar"))
-      (PDEBUG "CHECKING: " path)
-      (when (file-exists-p path)
-        (throw 'path-found path)))
-    ""))
-
-(defun yc/ditaa-path ()
-  "Get path of plantUML."
-  (cond
-   ((executable-find "ditaa")
-    (progn
-      (let ((content (shell-command-to-string (format "cat %s" (executable-find "ditaa")))))
-        (PDEBUG "CONTENT: " content)
-
-        (catch 'p-found
-          (dolist (item (s-split " " content))
-            (PDEBUG "ITEM: " item)
-            (PDEBUG "MATCH: " (string-match (rx "ditaa" (+? nonl) ".jar") item))
-
-            (when (string-match (rx "ditaa" (+? nonl) ".jar") item)
-              (throw 'p-found item)))
-          nil))))
-   (t
-    (warn "yc/ditaa-package not setup")
-    nil))
-  (catch 'path-found
-    (dolist (path `(,(expand-file-name "~/.local/share/plantuml/lib/plantuml.jar")
-                    "/usr/share/plantuml/lib/plantuml.jar"
-                    "/usr/local/plantuml/lib/plantuml.jar"
-                    "/usr/local/opt/plantuml/libexec/plantuml.jar"))
-      (PDEBUG "CHECKING: " path)
-      (when (file-exists-p path)
-        (throw 'path-found path)))
-    ""))
-
-
-(defun uml/parse-stringfied-nodes (&optional silent)
-  "Parse all stringfied nodes.
-If `silent' is nil, print collected nodes before exit."
-  (interactive)
-  (setq uml/stringified-nodes nil)
-  (save-excursion
-    (goto-char (point-min))
-    (while (search-forward-regexp
-            (rx bol (* space)
-                (or "enum" "class" "interface")
-                (+ space)
-                (group (+? nonl))
-                (* space)
-                "{" eol) nil t)
-      (add-to-list 'uml/stringified-nodes (match-string-no-properties 1))))
-  (unless silent
-    (message "Stringfied notes: %s" (s-join ", " uml/stringified-nodes))))
-
 (use-package flycheck-plantuml
   :commands (flycheck-plantuml-setup))
-
-(defun company-plantuml--candidates (prefix)
-  "Return candiates for `PREFIX'."
-  (all-completions prefix plantuml-kwdList))
-
-;;;###autoload
-(defun company-plantuml (command &optional arg &rest ignored)
-  "`company-mode' completion backend for plantuml.
-plantuml is a cross-platform, open-source make system."
-  (interactive (list 'interactive))
-  (cl-case command
-    (interactive (company-begin-backend 'company-plantuml))
-    (init (unless (equal major-mode 'plantuml-mode)
-            (error "Major mode is not plantuml-mode")))
-    (prefix (and (not (company-in-string-or-comment))
-                 (company-grab-symbol)))
-    (candidates (company-plantuml--candidates arg))))
 
 (use-package plantuml-mode
   :mode (rx "." (or "plantuml" "puml" "plu" "pu") eow)
@@ -107,32 +33,34 @@ plantuml is a cross-platform, open-source make system."
 (use-package ffap
   :commands (ffap-url-p))
 
-(defun yc/org-download-annotate-func (link)
-  "Annotate LINK with the time of download."
-  (let ((lable (format "fig:%s"
-                       (replace-regexp-in-string
-                        (rx (+ space)) "_"
-                        (file-name-sans-extension (file-name-nondirectory link)) t t))))
-
-    (kill-new (format "[[%s]]" lable))
-    (concat "#+CAPTION: \n"
-            (format "#+NAME: %s\n" lable)
-            (if (ffap-url-p link)
-                (format "#+DOWNLOADED: %s @ %s\n"
-                        link
-                        (format-time-string "%Y-%m-%d %H:%M:%S"))
-              ""))))
-
-(defun yc/get-image-width (filename)
-  "Returns width of file FILENAME in pixel."
-  (unless (file-exists-p filename)
-    (error "File %s does not exist!" filename))
-  (with-temp-buffer
-    (insert-image-file filename)
-    (car (image-size
-          (image-get-display-property) t))))
-
 (use-package org-download
+  :preface
+  (defun yc/org-download-annotate-func (link)
+    "Annotate LINK with the time of download."
+    (let ((lable (format "fig:%s"
+                         (replace-regexp-in-string
+                          (rx (+ space)) "_"
+                          (file-name-sans-extension (file-name-nondirectory link)) t t))))
+
+      (kill-new (format "[[%s]]" lable))
+      (concat "#+CAPTION: \n"
+              (format "#+NAME: %s\n" lable)
+              (if (ffap-url-p link)
+                  (format "#+DOWNLOADED: %s @ %s\n"
+                          link
+                          (format-time-string "%Y-%m-%d %H:%M:%S"))
+                ""))))
+
+  (defun yc/get-image-width (filename)
+    "Returns width of file FILENAME in pixel."
+    (unless (file-exists-p filename)
+      (error "File %s does not exist!" filename))
+    (with-temp-buffer
+      (insert-image-file filename)
+      (car (image-size
+            (image-get-display-property) t))))
+
+
   :commands (org-download-image org-download-screenshot)
   :custom
   (org-download-method 'directory)
@@ -218,14 +146,11 @@ This will add proper attributes into org file so image won't be too large."
      (list
       (expand-file-name filename)
       (current-buffer))
-     nil t)
-    )
-  )
+     nil t)))
 
 
  ;; *************************** Org Mode ********************************
 (use-package org-indent
-
   :commands (org-indent-mode))
 
 ;; hide blocks marked as :hidden
@@ -279,7 +204,7 @@ This will add proper attributes into org file so image won't be too large."
              (eq major-mode 'org-mode))
     (delete-trailing-whitespace)
 
-    (unless (member (file-name-base buffer-file-name) '("elfeed"))
+    (unless (member (file-name-base buffer-file-name) '("elfeed" "gtd"))
       (save-excursion
       (org-map-entries (lambda () (yc/org-custom-id-get (point) 'create)) nil 'file)))))
 
@@ -325,7 +250,6 @@ This will add proper attributes into org file so image won't be too large."
   )
 
 (use-package org-capture
-
   :bind ((;; ,(kbd "<M-S-f10>")
           [M-S-f10]. org-capture))
   :config
@@ -365,48 +289,6 @@ This will add proper attributes into org file so image won't be too large."
   ;; remove trailing space
   (delete-trailing-whitespace))
 
-
- ;; auto-insert for org-mode.
-
-(defun auto-insert--org-mode (&optional fn)
-  "Update for `org-mode'.
- Update file name, replace '-' or '_' with whitespace."
-  (interactive)
-  (auto-update-defaults)
-
-  (let* ((fn (or fn (file-name-sans-extension (file-name-nondirectory buffer-file-name))))
-         (bname (if (string-match
-                     (rx bol
-                         (repeat 4 digit) "-"   ;; year
-                         (repeat 1 2 digit) "-" ;; month
-                         (repeat 1 2 digit)     ;; day
-                         "-" (group (* anything)) eol)
-                     fn)
-                    (match-string 1 fn)
-                  fn))
-         (replacement (replace-regexp-in-string (regexp-quote "-") " " bname t t )))
-
-    (yc/auto-update-template "FILE_NO_EXT_MINUS" replacement))
-
-
-  ;; create directory for images...
-  (unless (file-directory-p "images")
-    (mkdir "images"))
-
-  (if (executable-find "latex")
-      (yc/auto-update-template "TEX_PREVIEW" "latexpreview")
-    (yc/auto-update-template "TEX_PREVIEW" "")))
-
-(defun counsel/org-link-target ()
-  "List files under point??"
-  (interactive)
-  (let* ((text (buffer-substring-no-properties (point-at-bol) (point))))
-    (if (string-match (rx "[[" (group (+ nonl)) eol) text)
-        (let* ((dir (match-string 1 text))
-               (target (counsel-list-directory dir nil 'identity)))
-
-          (insert (file-name-nondirectory target)))
-      (error "Can't find target for %s" text))))
 
 (use-package org-superstar
   :hook ((org-mode . org-superstar-mode))
@@ -454,12 +336,48 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package org
-  :commands (org-load-modules-maybe)
+  :preface
+  (defun yc/open-gtd ()
+    "Open my gtd file."
+    (interactive)
+    (find-file (expand-file-name "gtd.org" org-directory)))
+
+  (defun auto-insert--org-mode (&optional fn)
+    "Update for `org-mode'.
+ Update file name, replace '-' or '_' with whitespace."
+    (interactive)
+    (auto-update-defaults)
+
+    (let* ((fn (or fn (file-name-sans-extension (file-name-nondirectory buffer-file-name))))
+           (bname (if (string-match
+                       (rx bol
+                           (repeat 4 digit) "-"   ;; year
+                           (repeat 1 2 digit) "-" ;; month
+                           (repeat 1 2 digit)     ;; day
+                           "-" (group (* anything)) eol)
+                       fn)
+                      (match-string 1 fn)
+                    fn))
+           (replacement (replace-regexp-in-string (regexp-quote "-") " " bname t t )))
+
+      (yc/auto-update-template "FILE_NO_EXT_MINUS" replacement))
+
+
+    ;; create directory for images...
+    (unless (file-directory-p "images")
+      (mkdir "images"))
+
+    (if (executable-find "latex")
+        (yc/auto-update-template "TEX_PREVIEW" "latexpreview")
+      (yc/auto-update-template "TEX_PREVIEW" "")))
+
+  (push '("\\.org$" . ["insert.org" auto-insert--org-mode]) auto-insert-alist)
+
   :custom
   (org-image-actual-width nil)
   (org-confirm-babel-evaluate nil)
-  (org-default-notes-file (expand-file-name "~/Documents/Database/org/notes.org"))
   (org-directory (expand-file-name "~/Documents/Database/org/"))
+  (org-default-notes-file (expand-file-name "notes.org" org-directory))
   (org-export-time-stamp-file nil)
   (org-hide-leading-stars t)
   (org-html-head-include-default-style nil)
@@ -497,8 +415,7 @@ ORIG-FUNC is called with ARGS."
     ;; some variables are customized after package loaded.
     (custom-set-variables
      '(org-ditaa-jar-path (yc/ditaa-path))
-     '(org-plantuml-jar-path (yc/plantuml-path))
-     )
+     '(org-plantuml-jar-path (yc/plantuml-path)))
 
     (sp-with-modes 'org-mode
       (sp-local-pair "$" "$")
@@ -564,8 +481,7 @@ ORIG-FUNC is called with ARGS."
       "Don't publish it if this is gtd file.
 ORIG-FUNC is called with ARGS."
       :before-while #'org-publish-file
-      (string-match "gtd.org" "/Volumes/yyc/Documents/Database/org/gtd.org"))
-
+      (string-match "gtd.org" filename))
 
     (substitute-key-definition
      'org-cycle-agenda-files  'backward-page org-mode-map)
@@ -585,44 +501,24 @@ ORIG-FUNC is called with ARGS."
               (;; ,(kbd "C-c j")
                "j". org-meta-return)
 
-
               (;;(kbd "M-m")
                [134217837] . yc/show-methods-dwim)
 
               (;; (kbd "C-x ds")
                "ds" . org-download-screenshot)
               (;; (kbd "C-x du")
-               "du" . org-download-image)
+               "du" . org-download-image))
 
-              (;; (kbd "C-x n t")
-               "nt" . org-roam-buffer-toggle-display)
-              (;; (kbd "C-x n i")
-               "ni" . org-roam-insert)))
-
-(defun yc/tnote-mode-hook ()
-  "Description."
-  (unless (layout-restore)
-    (PDEBUG "BUF" (current-buffer))
-    (PDEBUG "FILE:" buffer-file-name)
-    ;; (when (s-ends-with? ".pdf" buffer-file-name)
-    ;;   (enlarge-window-horizontally (truncate (* (window-width) 0.5))))
-    (dolist (win (window-list))
-      (select-window win)
-      (layout-save-current)))
-  ;; (tnote-sync-pdf-page-next)
+  :bind (([C-f1] . yc/open-gtd))
   )
 
 (use-package tnote
-
   :commands (tnote
              tnote/dispatch-file tnote/dispatch-directory
              tnote/find-note)
   :bind (:map ctl-x-map
               ("nn" . tnote)
-              ("nf" . tnote/find-note))
-
-  :hook ((tnote-mode . yc/tnote-mode-hook))
-  )
+              ("nf" . tnote/find-note)))
 
 ;; Local Variables:
 ;; coding: utf-8
