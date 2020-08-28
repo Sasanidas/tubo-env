@@ -361,7 +361,8 @@ Call FUNC which is 'projectile-find-file with ARGS."
   )
 
 (use-package files
-
+  :custom
+  (large-file-warning-threshold (* 20 1024 1024))
   :config
   ;;Handle file-error and suggest to install missing packages...
   (advice-add 'set-auto-mode :around #'yc/install-package-on-error)
@@ -383,16 +384,17 @@ ORIG-FUNC is called with ARGS."
 If file SIZE larger than `large-file-warning-threshold', allow user to use
 `vlf' to view part of this file, or call original FUNC which is
 `abort-if-file-too-large' with OP-TYPE, FILENAME."
-    :before-until #'abort-if-file-too-large
+    :before-while #'abort-if-file-too-large
     (when (and (string= op-type "open")
                large-file-warning-threshold size
-               (> size large-file-warning-threshold))
+               (> size (* 100 1024 1024))
+               (not (member (file-name-extension filename) '("pdf")))) ;; 100 MB
       (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
                             (file-name-nondirectory filename)
                             (file-size-human-readable size)))
           (progn
             (vlf filename)
-            (error "File %s opened in VLF mode" filename))))))
+            t)))))
 
 
 (use-package server

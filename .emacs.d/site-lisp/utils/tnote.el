@@ -264,7 +264,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
               :caller 'tnote/find-note)))
 
 (defun tnote/do-dispatch-file (item)
-  "Dispatch single ITEM."
+  "Dispatch single ITEM, returns file name after dispatch."
   (interactive)
   (unless (file-exists-p item)
     (error "File: %s not accessible" item))
@@ -311,16 +311,18 @@ recursively, that is, when `tnote/recursive' is non-nil.")
                             (save-excursion
                               (find-file (buffer-file-name))))))
 
-    (message "%s --> %s" item target-dir)))
+    (message "%s --> %s" item target-dir)
+    target-dir))
 
 (defun tnote/dispatch-file ()
-  "Dispatch single ITEM."
+  "Dispatch single ITEM.
+If this file is currently be visited, reopen it after dispatching."
   (interactive)
   (cond
    (buffer-file-name
-
-    (tnote/do-dispatch-file buffer-file-name)
-    (kill-buffer))
+    (let ((filename buffer-file-name))
+    (kill-buffer)
+    (find-file  (tnote/do-dispatch-file filename))))
 
    ((equal major-mode 'dired-mode)
     (mapc 'tnote/do-dispatch-file (dired-get-marked-files))
