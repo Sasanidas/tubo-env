@@ -277,7 +277,6 @@ With prefix argument (`C-u'), also kill the special buffers."
   (projectile-globally-ignored-file-suffixes '(".elc" ".pyc" ".o"))
   (counsel-projectile-switch-project-action 'find-file)
 
-  :hook ((after-init . projectile-mode))
   :config
   (cond
    ;; If fd exists, use it for git and generic projects. fd is a rust program

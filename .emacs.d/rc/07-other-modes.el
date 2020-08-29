@@ -453,12 +453,15 @@ Useful to run after `pdf-tools' updates."
   :custom
   (pdf-info-epdfinfo-program (expand-file-name "~/.local/bin/epdfinfo"))
   (pdf-view-display-size 'fit-width)
-  (pdf-view-resize-factor 1.10)
   :bind (:map pdf-view-mode-map
               ("l" . pdf-history-backward)
               ("r" . pdf-history-forward)
               ("i" . tnote))
   :config
+  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil)
+
   (unless (file-executable-p pdf-info-epdfinfo-program)
     (message "Tool %s does not exist, compiling ...")
     (pdf-tools-install)))

@@ -125,7 +125,7 @@ This setting may be overridden in a document with the function
   :group 'tnote
   :type 'number)
 
-(defcustom tnote/default-notes-file-names '("Notes.org")
+(defcustom tnote/default-notes-file-names '("Inbox.org")
   "List of possible names for the default notes file, in increasing order of priority."
   :group 'tnote
   :type 'string)
@@ -249,7 +249,8 @@ recursively, that is, when `tnote/recursive' is non-nil.")
       (insert "#+TITLE: " title)
       (goto-char (point-max))
       (insert "\n")
-      (save-buffer))))
+      (save-buffer)))
+  (buffer-file-name))
 
 ;;;###autoload
 (defun tnote/find-note ()
@@ -984,12 +985,8 @@ Keybindings (org-mode buffer):
 (defun tnote ()
   "Start `tnote' session."
   (interactive)
-
   (if (eq major-mode 'org-mode)
-      ;; Creating session from notes file.
-      (progn
-        (tnote/notes-mode))
-
+      (tnote/notes-mode)
     ;; Creating the session from the annotated document
     (let* ((document-path
             (or buffer-file-name
@@ -1015,13 +1012,19 @@ Keybindings (org-mode buffer):
            notes-files                ; List of found notes files (annotating or not)
            )
 
+      (PDEBUG "SEARCH-NAMES: " search-names)
+
       ;; NOTE(nox): Check the search path
       (dolist (name search-names)
           (let ((file-name (expand-file-name name (tnote/get-notes-dir))))
             (when (file-exists-p file-name)
               (push file-name notes-files)
-              (when (tnote/check-if-document-is-annotated-on-file
-                     document-path file-name)
+              (when (or
+                     ;; file with same name
+                     (string= (file-name-base name) (file-name-base document-name))
+                     ;; note file contains document-file.
+                     (tnote/check-if-document-is-annotated-on-file
+                      document-path file-name))
                 (PDEBUG "Annotated file:" file-name)
                 (push file-name notes-files-annotating)))))
 
@@ -1056,14 +1059,16 @@ Keybindings (org-mode buffer):
           (PDEBUG "INDEX: " action-index)
 
           (case action-index
-            (0 (push (tnote/title-to-path
-                                        (completing-read "Input title of new note: "
-                                                         nil nil)) notes-files))
+            (0
+             (push (tnote/find-or-create-file
+                    (completing-read "Input title of new note: "
+                                      nil nil nil (file-name-base buffer-file-name)))
+                     notes-files))
             (1
              (push (read-file-name "Select note file: "
                                    (expand-file-name (tnote/get-notes-dir)))
                    notes-files))
-            (t nil)))
+            (t (error "Wrong result"))))
 
         (when (> (length notes-files) 1)
           (setq notes-files (list (completing-read "In which notes file should we create the heading? "
@@ -1073,10 +1078,11 @@ Keybindings (org-mode buffer):
             ;; NOTE(nox): This is needed in order to override with the arg
             (setq notes-files-annotating notes-files)
           (with-current-buffer (find-file-noselect (car notes-files))
-            (goto-char (point-max))
-            (insert (if (save-excursion (beginning-of-line) (looking-at "[[:space:]]*$")) "" "\n")
-                    "* " document-base)
-            (org-entry-put nil tnote/property-doc-file (tnote/get-relative-name document-path)))
+            (goto-char (point-min))
+            (unless (search-forward (concat "#+" tnote/property-doc-file ": ") nil t)
+              (goto-char (point-max))
+              (insert  "#+" tnote/property-doc-file ": " (tnote/get-relative-name document-path))
+              (insert "\n")))
           (setq notes-files-annotating notes-files)))
 
       (when (> (length (cl-delete-duplicates notes-files-annotating :test 'equal)) 1)
@@ -1085,8 +1091,8 @@ Keybindings (org-mode buffer):
 
       (PDEBUG "Notes files: " notes-files-annotating)
 
-      (find-file (car notes-files-annotating))
-      (tnote))))
+      (with-current-buffer (find-file (car notes-files-annotating))
+        (tnote/notes-mode)))))
 
 ;;; tnote PDF Mode
 ;; Minor mode for the pdf file buffer associated with the notes
