@@ -287,12 +287,6 @@ Files stored in ~/Work/ are controlled by git or svn."
 
 (put 'narrow-to-region 'disabled nil)
 
-;; special handling for emacsmacport
-(when (boundp 'mac-option-modifier)
-  (setq mac-option-modifier 'meta)
-  (setq mac-command-modifier 'hyper)
-  (set-mouse-color "black"))
-
 (provide '01-generics)
 
 ;; Local Variables:

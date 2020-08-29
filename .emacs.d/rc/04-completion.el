@@ -194,6 +194,10 @@ It will try complete via `company' and then switch to `hippie-expand' as fallbac
 
    ;adjust regexp make `company-dabbrev' search words like `dabbrev-expand'
   (company-dabbrev-char-regexp "[\\.0-9a-z-_'/]")
+  (company-dabbrev-ignore-buffers (rx (or (:"." (or "pdf" "png" "jpg"))
+                                             (: "*elfeed" (+ nonl))
+                                             (: "magit" (+ nonl)))
+                                         buffer-end))
   (company-dabbrev-other-buffers 'all)
   ;; Make `company-dabbrev' fully case-sensitive, to improve UX with
   ;; domain-specific words with particular casing.
