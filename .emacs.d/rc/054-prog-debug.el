@@ -48,11 +48,11 @@ ORIG-FUNC is called with ARGS."
 
  ;; realgud
 (use-package realgud
-  :commands (realgud:gdb realgud:gdb-pid)
   :hook ((realgud-short-key-mode . setup-prog-keybindings))
   :custom
   (realgud-safe-mode nil)
   (realgud-file-find-function (lambda (&rest args) nil))
+  (realgud-window-split-orientation 'horizontal)
   :config
   (defadvice! yc/realgud:gdb-track-mode-hook-adv (&rest args)
     "Setup realgud-track-mode, to make sure comint-key-map works."
@@ -85,6 +85,7 @@ ORIG-FUNC is called with ARGS."
   :commands (realgud--lldb))
 
 (use-package realgud-gdb
+  :commands (realgud:gdb realgud:gdb-pid)
   :config
   (require 'realgud))
 
