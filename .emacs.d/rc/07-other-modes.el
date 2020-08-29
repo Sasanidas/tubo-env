@@ -434,6 +434,7 @@ ORIG-FUNC is called with ARGS."
  ;; PDF
 (use-package pdf-tools
   :preface
+
   (defun yc/pdf-tools-re-install ()
     "Re-install `epdfinfo' even if it is installed.
 The re-installation is forced by deleting the existing `epdfinfo'
@@ -446,6 +447,8 @@ Useful to run after `pdf-tools' updates."
       (pdf-info-kill))
     (delete-file pdf-info-epdfinfo-program)
     (pdf-tools-install :no-query-p))
+
+  (defvar-local yc/pdf-scaled-pages nil "List of scaled pages.")
 
   :commands (pdf-tools-install pdf-tools-enable-minor-modes)
   :mode (("\\.pdf\\'" . pdf-view-mode))
@@ -464,8 +467,17 @@ Useful to run after `pdf-tools' updates."
     (setq pdf-view-use-scaling t
           pdf-view-use-imagemagick nil)
 
-    (defadvice pdf-info-renderpage (before double-width-arg activate)
-      (ad-set-arg 1 (* 2 (ad-get-arg 1)))))
+    (defadvice! yc/pdf-info-renderpage-adv (orig-func page width &rest args)
+      "Docs
+ORIG-FUNC is called with ARGS."
+      :around  #'pdf-info-renderpage
+      (unless (member page yc/pdf-scaled-pages)
+        (push page yc/pdf-scaled-pages)
+        (setq width (* width 2)))
+      (PDEBUG "ENTER: PAGE- " page "WIDTH-" width)
+      (apply orig-func (append (list page width) args))
+      )
+    )
 
   (unless (file-executable-p pdf-info-epdfinfo-program)
     (message "Tool %s does not exist, compiling ...")
