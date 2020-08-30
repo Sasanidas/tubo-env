@@ -477,7 +477,12 @@ ORIG-FUNC is called with ARGS."
       (PDEBUG "ENTER: PAGE- " page "WIDTH-" width)
       (apply orig-func (append (list page width) args))
       )
-    )
+
+    (defun yc/pdf-clear-caches ()
+      "Clear pdf caches.
+For now, only scale pages."
+      (interactive)
+      (setq-local yc/pdf-scaled-pages nil)))
 
   (unless (file-executable-p pdf-info-epdfinfo-program)
     (message "Tool %s does not exist, compiling ...")
