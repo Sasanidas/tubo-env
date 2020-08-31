@@ -4,23 +4,40 @@
 ;;; Code:
 
  ;; *************************** Python Settings ****************************
-(defun yc/lsp-load-project-configuration-python-mode (root-file)
-  "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
-  (PDEBUG "ENTER, ROOT:" root-file)
-
-  (unless (featurep 'lsp-pyright)
-    (require 'lsp-pyright)))
-
 (use-package python
+  :preface
+  (defun yc/lsp-load-project-configuration-python-mode (root-file)
+    "Load python-specific configurations of LSP, for workspace rooted at ROOT-FILE.."
+    (PDEBUG "ENTER, ROOT:" root-file)
+    (unless (featurep 'lsp-pyright)
+      (require 'lsp-pyright)))
+
+  (defvar yc/missing-autoflake-reported nil)
+
+  (defun python-remove-unused-imports()
+    "Removes unused imports and unused variables with autoflake."
+    (interactive)
+    (if (executable-find "autoflake")
+        (progn (shell-command
+                (format "autoflake --remove-all-unused-imports -i %s"
+                        (shell-quote-argument (buffer-file-name))))
+               (revert-buffer t t t))
+      (unless yc/missing-autoflake-reported
+        (setq yc/missing-autoflake-reported t)
+        (warn "python-mode: Cannot find autoflake executable.\nExecute: pip install autoflake to install it"))))
+
+  (defun yc/python-remove-unused-import ()
+    "Hook to call `python-remove-unused-imports' after saving python file."
+    (when (and buffer-file-name
+               (equal major-mode 'python-mode))
+      (python-remove-unused-imports)))
+
+  :hook ((after-save . yc/python-remove-unused-import))
+
   :custom
   (python-shell-interpreter "python")
   (python-indent-guess-indent-offset-verbose nil)
-  :hook (
-         (python-mode
-          .
-          (lambda ()
-            (unless (buffer-file-name)
-              (flycheck-mode -1))))))
+  )
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()

@@ -1062,7 +1062,7 @@ Keybindings (org-mode buffer):
             (0
              (push (tnote/find-or-create-file
                     (completing-read "Input title of new note: "
-                                      nil nil nil (file-name-base buffer-file-name)))
+                                      nil nil nil document-base))
                      notes-files))
             (1
              (push (read-file-name "Select note file: "

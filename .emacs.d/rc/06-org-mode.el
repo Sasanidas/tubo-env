@@ -90,7 +90,7 @@
       (apply orig-func args))
     )
 
-  (defadvice! yc/org-download-insert-link-adv (orig-func &rest args)
+  (defadvice! yc/org-download-insert-link-adv (orig-func link filename)
     "Set image width to proper value before calling ORIG-FUNC is called with ARGS.
 This will add proper attributes into org file so image won't be too large."
     :around #'org-download-insert-link
@@ -108,8 +108,7 @@ This will add proper attributes into org file so image won't be too large."
            (org-download-image-html-width width)
            (org-download-image-org-width width))
       (PDEBUG "width: " width)
-      (funcall orig-func link filename))
-    )
+      (funcall orig-func link filename)))
 
   (advice-add 'org-download--image/url-retrieve :override
               #'yc/org-download--image/url-retrieve-adv)
@@ -477,7 +476,7 @@ ORIG-FUNC is called with ARGS."
           (apply orig-func args)
         (error nil)))
 
-    (defadvice! yc/org-publish-file-adv (&rest args)
+    (defadvice! yc/org-publish-file-adv (filename &rest args)
       "Don't publish it if this is gtd file.
 ORIG-FUNC is called with ARGS."
       :before-while #'org-publish-file
