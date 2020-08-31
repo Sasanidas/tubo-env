@@ -60,12 +60,11 @@
       (car (image-size
             (image-get-display-property) t))))
 
-
   :commands (org-download-image org-download-screenshot)
   :custom
   (org-download-method 'directory)
   (org-download-image-dir "images")
-  (org-download-heading-lvl nil)
+  (org-download-heading-lvl 0)
   (org-download-timestamp nil)
   (org-download-image-html-width 960)
   (org-download-image-org-width 960)
@@ -110,9 +109,6 @@ This will add proper attributes into org file so image won't be too large."
       (PDEBUG "width: " width)
       (funcall orig-func link filename)))
 
-  (advice-add 'org-download--image/url-retrieve :override
-              #'yc/org-download--image/url-retrieve-adv)
-
   (defadvice! yc/org-download--image/url-retrieve-adv (link filename)
     "Retrieve LINK and save as FILENAME."
     :override #'org-download--image/url-retrieve
@@ -145,7 +141,17 @@ This will add proper attributes into org file so image won't be too large."
      (list
       (expand-file-name filename)
       (current-buffer))
-     nil t)))
+     nil t))
+
+  (defadvice! yc/org-download--dir-2-adv ()
+    "Use base-name of current buffer as seccond part of directory name.
+Final image name looks like 'images/org_file_name/xxx.png'.
+This makes it easier to move org file (and associated images) to other directory."
+    :override  #'org-download--dir-2
+    (file-name-base (buffer-file-name)))
+  )
+
+
 
 
  ;; *************************** Org Mode ********************************
