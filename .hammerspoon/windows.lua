@@ -162,8 +162,3 @@ hotkey.bind(hyperShift, "2", function()
   local win = window.focusedWindow()
   moveto(win, 2)
 end)
-
-hotkey.bind(hyperShift, "3", function()
-  local win = window.focusedWindow()
-  moveto(win, 3)
-end)

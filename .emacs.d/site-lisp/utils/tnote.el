@@ -177,7 +177,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
         result)))
 
 
-(defun path-to-title (file)
+(defun tnote/path-to-title (file)
   "Get title from FILE."
   (let* ((content
           (with-temp-buffer
@@ -217,7 +217,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
   "ivy-rich"
   (plist-put ivy-rich-display-transformers-list 'tnote/find-note
            '(:columns
-             ((path-to-title (:width 0.8))
+             ((tnote/path-to-title (:width 0.8))
               (ivy-rich-file-last-modified-time (:face
                                                  font-lock-comment-face)))))
 
@@ -252,6 +252,28 @@ recursively, that is, when `tnote/recursive' is non-nil.")
       (save-buffer)))
   (buffer-file-name))
 
+(defun tnote/find-note-matcher (regexp candidates)
+  "Return REGEXP matching CANDIDATES."
+  (let ((yc/debug-log-limit -1))
+    (PDEBUG "REGEXP:" regexp
+            "CANDS:" candidates
+            "IVY-TEXT:" ivy-text))
+
+
+  (unless (stringp regexp)
+    (error "Regex should be a string"))
+
+  (let (res)
+    (dolist (fn candidates)
+      (when (or (string-match-p regexp fn)
+                (string-match-p regexp (tnote/path-to-title fn)))
+        (push fn res)))
+
+    (let ((yc/debug-log-limit -1))
+      (PDEBUG "RES:" res))
+
+    (nreverse res)))
+
 ;;;###autoload
 (defun tnote/find-note ()
   "Find note file.."
@@ -262,6 +284,7 @@ recursively, that is, when `tnote/recursive' is non-nil.")
         (files (tnote/find-files (tnote/get-notes-dir))))
     (ivy-read "Find note: " files
               :action 'tnote/find-or-create-file
+              :matcher #'tnote/find-note-matcher
               :caller 'tnote/find-note)))
 
 (defun tnote/do-dispatch-file (item)
