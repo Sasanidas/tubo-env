@@ -403,7 +403,8 @@ ORIG-FUNC is called with ARGS."
   (shrface-toggle-bullets nil)
   :hook ((eww-after-render . shrface-mode)
          (nov-mode . shrface-mode)
-         (mu4e-view-mode . shrface-mode)))
+         (mu4e-view-mode . shrface-mode)
+         (elfeed-show-mode  . shrface-mode)))
 
 (use-package shr
   :custom
