@@ -395,6 +395,16 @@ ORIG-FUNC is called with ARGS."
                                       "/usr/bin/xdg-open"))
                                     (t nil))))
 
+(use-package shrface
+  :commands (shrface-basic shrface-trial)
+  :config
+  :custom
+  (shrface-href-versatile t)
+  (shrface-toggle-bullets nil)
+  :hook ((eww-after-render . shrface-mode)
+         (nov-mode . shrface-mode)
+         (mu4e-view-mode . shrface-mode)))
+
 (use-package shr
   :custom
   (shr-use-fonts nil)
@@ -405,7 +415,10 @@ ORIG-FUNC is called with ARGS."
               (or
                "/media/img/about/press/elephant.png"
                "/media/img/atpostgresql.png"
-               "/media/img/git.png"))))))
+               "/media/img/git.png")))))
+  :config
+  (shrface-basic)
+  (shrface-trial))
 
 (use-package eww
   :defer t
@@ -1083,21 +1096,16 @@ ORIG-FUNC is called with ARGS."
   (defun yc/elfeed-search-eww ()
     "Open feed item via eww."
     (interactive)
-    (let ((entries (elfeed-search-selected)))
-      (cl-loop for entry in entries
-               do (elfeed-untag entry 'unread)
-               when (elfeed-entry-link entry)
-               do (eww it))
-      (mapc #'elfeed-search-update-entry entries)
-      (unless (or elfeed-search-remain-on-entry (use-region-p))
-        (forward-line))))
+    (let ((browse-url-browser-function 'eww))
+      (elfeed-search-browse-url)))
 
   (defun yc/elfeed-show-eww ()
     "Visit the current entry in eww."
     (interactive)
-    (let ((link (elfeed-entry-link elfeed-show-entry)))
-      (when link
-        (eww link))))
+    (let ((browse-url-browser-function 'eww))
+      (aif (get-text-property (point) 'shr-url)
+          (shr-browse-url)
+        (elfeed-show-visit))))
 
   (defun +rss/delete-pane ()
   "Delete the *elfeed-entry* split pane."

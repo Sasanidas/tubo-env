@@ -176,7 +176,9 @@ Otherwise return word around point."
   (let* ((default (tdict--region-or-word))
          (prompt  (if default (format "Define (%s): " default)
                     "Define: "))
-         (word (if current-prefix-arg (read-string prompt nil nil default) default)))
+         (word (if (or current-prefix-arg
+                       (not default))
+                   (read-string prompt nil nil default) default)))
     (tdict--view-result word)))
 
 (provide 'tdict)
