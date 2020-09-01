@@ -195,7 +195,7 @@
           "". sql/eval-sql))
   :config
   (yc/set-company-backends '(sql-mode sql-interactive-mode)
-    'company-sql 'company-keywords  'company-dabbrev-code 'company-dabbrev)
+     'company-files 'company-sql 'company-keywords  'company-dabbrev-code 'company-dabbrev)
   (progn
     (require 'sql+)))
 

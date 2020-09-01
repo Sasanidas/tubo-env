@@ -93,8 +93,8 @@
       (1 font-lock-keyword-face)
       (2 font-lock-constant-face nil t))))
   (yc/add-company-backends 'emacs-lisp-mode 'company-elisp 'company-dabbrev-code)
-  (yc/add-auto-delete-spaces 'emacs-lisp-mode)
-  )
+  (yc/add-auto-delete-spaces 'emacs-lisp-mode))
+
 
  ;; native compile..
 (when (fboundp 'native-compile-async)

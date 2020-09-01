@@ -181,7 +181,7 @@ It will try complete via `company' and then switch to `hippie-expand' as fallbac
               (;; ,(kbd "TAB")
                "	". company-complete))
   :custom
-  (company-backends '((company-capf company-yasnippet)))
+  (company-backends '((company-capf company-yasnippet) company-files))
   (company-minimum-prefix-length 2)
   (company-idle-delay 0.25)
   (company-tooltip-limit 14)
@@ -222,7 +222,7 @@ first backend."
        (defalias (intern func-name)
          (lambda (&rest args)
            (set (make-local-variable 'company-backends)
-                (let ((backends ,(push 'list others)))
+                (let ((backends (append ,(push 'list others) '(company-files))))
                   (push
                    (append
                     ;; XXX: why (if ...) can't be evaluated ...
