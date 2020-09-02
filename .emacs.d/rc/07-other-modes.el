@@ -1122,7 +1122,7 @@ ORIG-FUNC is called with ARGS."
     (pop-to-buffer buff)
     (with-current-buffer buff
       (let* ((width (window-width))
-             (target (* (/ (display-pixel-width ) (frame-char-width)) 0.52))
+             (target (* (/ (display-pixel-width ) (frame-char-width)) 0.55))
              (delta (truncate (- target width))))
         (window-resize (selected-window) delta t)
         (elfeed-show-refresh))))
