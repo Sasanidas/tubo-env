@@ -1415,14 +1415,8 @@ args should be a list, but to make caller's life easier, it can accept one atom 
 
 (defun yc/adjust-window-calc-lines ()
   "Calculate lines to adjust."
-
   (if current-prefix-arg
-      (cond
-       ((numberp current-prefix-arg) current-prefix-arg)
-       ((and (listp current-prefix-arg)
-             (numberp (car current-prefix-arg)))
-        (car current-prefix-arg))
-       (t (error "??")))
+      (prefix-numeric-value current-prefix-arg)
     10))
 
 ;;;; Make current-buffer 10 lines higher.

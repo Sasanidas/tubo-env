@@ -1117,12 +1117,23 @@ ORIG-FUNC is called with ARGS."
     (when (buffer-live-p buf)
       (kill-buffer buf))))
 
+  (defun yc/elfeed-show-entry-buffer (buff)
+    "Customized function to show entry buffer (BUFF)."
+    (pop-to-buffer buff)
+    (with-current-buffer buff
+      (let* ((width (window-width))
+             (target (* (/ (display-pixel-width ) (frame-char-width)) 0.52))
+             (delta (truncate (- target width))))
+        (window-resize (selected-window) delta t)
+        (elfeed-show-refresh))))
+
+
   :custom
   (elfeed-db-directory (yc/make-cache-path "elfeed/db/"))
   (elfeed-enclosure-default-dir (yc/make-cache-path "elfeed/enclosures/"))
 
   (elfeed-search-filter "@2-week-ago +unread")
-  (elfeed-show-entry-switch #'pop-to-buffer)
+  (elfeed-show-entry-switch #'yc/elfeed-show-entry-buffer)
   (elfeed-show-entry-delete #'+rss/delete-pane)
 
   (shr-max-image-proportion 0.8)
