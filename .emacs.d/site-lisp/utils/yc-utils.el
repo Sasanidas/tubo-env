@@ -640,6 +640,7 @@ inserts comment at the end of the line."
   (let ((path (expand-file-name file)))
     (if (file-exists-p path)
         path
+      (PDEBUG "File does not exist:" file)
       nil)))
 
 (defun increase-font-size ()

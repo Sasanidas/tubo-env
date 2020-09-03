@@ -326,11 +326,11 @@ auto-killed (which is a potentially expensive process)."
       (setq +lsp--deferred-shutdown-timer
             (run-at-time
              5
-             nil (lambda (workspace)
+             nil (lambda (workspace orig-fn)
                    (let ((lsp--cur-workspace workspace))
                      (unless (lsp--workspace-buffers lsp--cur-workspace)
                        (funcall orig-fn))))
-             lsp--cur-workspace))))
+             lsp--cur-workspace orig-fn))))
 
   (defadvice! yc/lsp-adv (orig-func  &rest args)
     "Advice for 'lsp'.
