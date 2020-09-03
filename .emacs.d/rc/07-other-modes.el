@@ -702,8 +702,7 @@ create new buffer."
                . dired-find-file-other-window)
               (;; (kbd "<M-return>")
                [M-return]
-               . yc/open-with-external-app)
-              ([f12] . dired-ediff))
+               . yc/open-with-external-app))
 
   :config
   (defadvice! yc/dired-compress-adv (&rest args)
@@ -731,6 +730,12 @@ ORIG-FUNC is called with ARGS."
 
   (load-library "ls-lisp")
   (define-key ctl-x-map "d" nil))
+
+(use-package dired-aux
+  :custom
+  (dired-create-destination-dirs 'ask)
+  :bind (:map dired-mode-map
+              ([f12] . dired-diff)))
 
 (use-package wdired
   :after dired

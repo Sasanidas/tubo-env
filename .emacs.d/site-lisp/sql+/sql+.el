@@ -118,23 +118,26 @@ Sql is a cross-platform, open-source make system."
 
 
 ;;;###autoload
+(defun eval-sql/filter (process msg)
+  (with-current-buffer (get-buffer-create "*SQL-Interpreter*")
+  (if (one-window-p)
+      (display-buffer (current-buffer))
+    (pop-to-buffer (current-buffer)))
+
+  (goto-char (point-max))
+  (insert msg)
+  (goto-char (point-max))))
+
+(defun eval-sql/sentinel (process event)
+  (with-current-buffer (get-buffer-create "*SQL-Interpreter*")
+    (goto-char (point-max))
+    (insert "\n-- Execution finished..\n\n")
+    (read-only-mode 1)
+    (goto-char (point-max))))
+
 (defun sql/eval-sql ()
   "Evaluate this file."
   (interactive)
-
-  (defun eval-sql/filter (process msg)
-    (with-current-buffer (get-buffer-create "*SQL-Interpreter*")
-      (display-buffer (current-buffer))
-      (goto-char (point-max))
-      (insert msg)))
-
-  (defun eval-sql/sentinel (process event)
-    (with-current-buffer (get-buffer-create "*SQL-Interpreter*")
-      (display-buffer (current-buffer))
-      (goto-char (point-max))
-      (insert "\n-- Execution finished..\n\n")
-      (read-only-mode 1)
-      (goto-char (point-max))))
 
   (aif (buffer-file-name)
       (progn
@@ -146,8 +149,9 @@ Sql is a cross-platform, open-source make system."
           (if (yes-or-no-p "Buffer modified, save before evaluate? ")
               (save-buffer)))
         (with-current-buffer (get-buffer-create "*SQL-Interpreter*")
+          (sql-mode)
           (read-only-mode -1)
-          ;; (sql-mode)
+          (erase-buffer)
           (goto-char (point-max))
           (display-buffer (current-buffer))
 

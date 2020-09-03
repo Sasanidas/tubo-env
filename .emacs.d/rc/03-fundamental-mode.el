@@ -383,7 +383,7 @@ ORIG-FUNC is called with ARGS."
 If file SIZE larger than `large-file-warning-threshold', allow user to use
 `vlf' to view part of this file, or call original FUNC which is
 `abort-if-file-too-large' with OP-TYPE, FILENAME."
-    :before-while #'abort-if-file-too-large
+    :before-until #'abort-if-file-too-large
     (when (and (string= op-type "open")
                large-file-warning-threshold size
                (> size (* 100 1024 1024))
@@ -391,9 +391,7 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
       (if (y-or-n-p (format "File %s is large (%s), view with VLF mode? "
                             (file-name-nondirectory filename)
                             (file-size-human-readable size)))
-          (progn
-            (vlf filename)
-            t)))))
+          (vlf filename)))))
 
 
 (use-package server
@@ -551,7 +549,7 @@ ORIG-FUNC is called with ARGS."
   :custom
   (which-key-sort-order #'which-key-prefix-then-key-order)
   (which-key-show-early-on-C-h t)
-  (which-key-idle-delay 9999)
+  (which-key-idle-delay 15)
   (which-key-idle-secondary-delay 0.05)
   (which-key-sort-uppercase-first nil)
   (which-key-add-column-padding 1)

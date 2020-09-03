@@ -172,9 +172,12 @@
   :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
-  :commands (sql/eval-sql sql/choose-dbms sql/choose-database company-sql
-                         company-sql-update-candidates
-                         eshell/restart_pg sql/remove-costs))
+  :commands (sql/choose-dbms sql/choose-database company-sql
+                             company-sql-update-candidates
+                             eshell/restart_pg sql/remove-costs)
+  :bind (:map sql-mode-map
+              (;; (kbd "C-c C-x")
+               "" . sql/eval-sql)))
 
 (defun yc/sql-mode-hook ()
   "My hook to run for sql mode."
@@ -191,8 +194,6 @@
                  ) eol)  . sql-mode)
   :init
   (add-hook! '(sql-mode-hook sql-interactive-mode-hook) #'yc/sql-mode-hook)
-  :bind ((;; ,(kbd "C-c C-b")
-          "". sql/eval-sql))
   :config
   (yc/set-company-backends '(sql-mode sql-interactive-mode)
      'company-files 'company-sql 'company-keywords  'company-dabbrev-code 'company-dabbrev)
