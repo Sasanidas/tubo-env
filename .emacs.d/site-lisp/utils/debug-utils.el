@@ -135,74 +135,78 @@
 
     (yc/call-gdb (concat "-p " pid))))
 
-;;  ;; utility functions to debug postgresql.
-;; (defun attach-pg-proc (&optional name)
-;;   "Attach to pg process named `NAME'."
-;;   (interactive)
-;;   (let ((ps-cmd (format "ps -u %s -o pid -o user -o start_time -o command | grep '[p]ostgres.*%s'"
-;;                         user-login-name (or name "")))
-;;         (r-match-entry (rx
-;;                         (group (+ digit)) (+ space)
-;;                         (group (+? ascii)) (+ space)
-;;                         (+? ascii) eol))
-;;         (init-input (if (region-active-p)
-;;                       (buffer-substring-no-properties (region-beginning)
-;;                                                       (region-end))
-;;                       (aif (number-at-point)
-;;                           (number-to-string it))))
-;;         pid-list)
+ ;; utility functions to debug postgresql.
+(defun attach-pg-proc (&optional name)
+  "Attach to pg process named `NAME'."
+  (interactive)
+  (let ((ps-cmd (format "ps -u %s -o pid -o user -o start_time -o command | grep '[p]ostgres.*%s'"
+                        user-login-name (or name "")))
+        (r-match-entry (rx
+                        (group (+ digit)) (+ space)
+                        (group (+? ascii)) (+ space)
+                        (+? ascii) eol))
+        (init-input (if (region-active-p)
+                      (buffer-substring-no-properties (region-beginning)
+                                                      (region-end))
+                      (aif (number-at-point)
+                          (number-to-string it))))
+        pid-list)
 
-;;     (PDEBUG "PS-COMMAND: " ps-cmd)
+    (PDEBUG "PS-COMMAND: " ps-cmd)
 
-;;     (with-temp-buffer
-;;       (insert (shell-command-to-string ps-cmd))
-;;       (goto-char (point-min))
-;;       (while (search-forward-regexp ".+?$" nil t)
-;;         (push (match-string 0) pid-list)))
+    (with-temp-buffer
+      (insert (shell-command-to-string ps-cmd))
+      (goto-char (point-min))
+      (while (search-forward-regexp ".+?$" nil t)
+        (push (match-string 0) pid-list)))
 
-;;     (PDEBUG "PID-LIST: " pid-list)
+    (PDEBUG "PID-LIST: " pid-list)
 
-;;     (let ((choosen
-;;            (if (= 1 (length pid-list))
-;;                (car pid-list)
-;;              (ivy-read "Choose process: " (nreverse pid-list)
-;;                        :initial-input init-input))))
+    (let ((choosen
+           (if (= 1 (length pid-list))
+               (car pid-list)
+             (ivy-read "Choose process: " (nreverse pid-list)
+                       :initial-input init-input))))
 
-;;       (if (string-match r-match-entry choosen)
-;;           (attach-proc (match-string 1 choosen))
-;;         (error "Failed to parse PID")))))
+      (if (string-match r-match-entry choosen)
+          (attach-proc (match-string 1 choosen))
+        (error "Failed to parse PID")))))
 
 
-;; (defun attach-pg-main ()
-;;   "Attach to idle process (waiting for user input)."
-;;   (interactive)
-;;   (attach-pg-proc "-D"))
+(defun attach-pg-main ()
+  "Attach to idle process (waiting for user input)."
+  (interactive)
+  (attach-pg-proc "-D"))
 
-;; (defun attach-pg-idle ()
-;;   "Attach to idle process (waiting for user input)."
-;;   (interactive)
-;;   (attach-pg-proc "idle"))
+(defun attach-pg-idle ()
+  "Attach to idle process (waiting for user input)."
+  (interactive)
+  (attach-pg-proc "idle"))
 
-;; (defun attach-pg-wal ()
-;;   "Attach to idle process (waiting for user input)."
-;;   (interactive)
-;;   (attach-pg-proc "wal"))
+(defun attach-pg-wal ()
+  "Attach to idle process (waiting for user input)."
+  (interactive)
+  (attach-pg-proc "wal"))
 
 
 
 (defun yc/kill-gdb-buffers ()
   "Kill all buffers used by dead gdb."
   (interactive)
-  (mapc
-   (lambda (buffer)
-     (when (string-match-p
-            (rx "*gdb" (+ space) (+ digit) (+ space) "shell*")
-            (buffer-name buffer)
-            )
-       (unless (get-buffer-process buffer)
-         (kill-buffer buffer))))
+  (let ((killed-buffers 0))
+    (mapc
+     (lambda (buffer)
+       (when (string-match-p
+              (rx "*gdb" (+ space) (+ nonl) (+ space) "shell*")
+              (buffer-name buffer)
+              )
+         (unless (get-buffer-process buffer)
+           (kill-buffer buffer)
+           (setq killed-buffers (1+ killed-buffers)))))
 
-   (buffer-list)))
+     (buffer-list))
+    (message "Total killed buffers: %d" killed-buffers)))
+
 
 (defvar gdb-kwlist nil "List of gdb keywords.")
 
