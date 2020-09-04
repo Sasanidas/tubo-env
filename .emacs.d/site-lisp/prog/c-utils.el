@@ -22,6 +22,7 @@
 
 
 (require 'use-package)
+(require 'ccls)
 (eval-when-compile
   (require 'cl))
 

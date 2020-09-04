@@ -488,7 +488,8 @@ And install necessary packages if there are errors while executing FUNC."
                  (if package-name
                      (when (yes-or-no-p (format fmt package-name))
                        (yc/try-install-package package-name)
-                       (set-auto-mode))))))))))
+                       (set-auto-mode)))))
+         (error "Operation failed: %s" msg))))))
 
 (advice-add  'command-execute :around #'yc/install-package-on-error)
 (advice-add 'run-hooks :around #'yc/install-package-on-error)

@@ -172,10 +172,10 @@
   :bind ((;; ,(kbd "<f12>")
           [f12]. ediff-buffers))
   :custom
-  (ediff-diff-options "-w") ;; turn off whitespace checking
+  (ediff-diff-options "") ;; turn off whitespace checking
   (ediff-split-window-function 'split-window-horizontally)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
-  (ediff-ignore-similar-regions t)
+  (ediff-ignore-similar-regions nil)
 
   :config
   (defadvice! yc/ediff-buffers-adv (buffer-A buffer-B &rest args)
