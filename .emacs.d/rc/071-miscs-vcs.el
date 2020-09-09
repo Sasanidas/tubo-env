@@ -14,7 +14,7 @@
      'kill-buffer  'git-commit-abort git-commit-mode-map)
     (substitute-key-definition
      'ido-kill-buffer  'git-commit-abort git-commit-mode-map)
-    (yc/add-company-backends 'git-commit-mode 'company-dabbrev-code 'company-dabbrev)
+    (yc/set-company-backends 'git-commit-mode 'company-capf 'company-dabbrev 'company-ispell)
   :custom
   (git-commit-summary-max-length 72)
   (git-commit-major-mode 'text-mode))
@@ -89,7 +89,11 @@ This function accept file name as argument, and return t if file is merged autom
               ("gs" . magit-status)
               ("gf" . magit-find-file-other-window)
               ("gb" . magit-blame-addition)
-              ("ga" . 'yc/git-add-current-file))
+              ("ga" . 'yc/git-add-current-file)
+              )
+
+  :bind ((;; (kbd "C-x M-g")
+               [24 134217831] . magit-dispatch))
   :hook ((magit-process-mode . goto-address-mode))
   :custom
   (magit-diff-refine-hunk t)  ;; show granular diffs in selected hunk
