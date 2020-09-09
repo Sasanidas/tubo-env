@@ -115,7 +115,7 @@
               (flycheck-mode -1))
 
             (yc/lsp--setup "yaml-language-server"
-                           "https://github.com/redhat-developer/yaml-language-server")))))
+                           "npm install -g yaml-language-server")))))
 
 
 (use-package qml-mode :mode "\\.qml$")
