@@ -24,6 +24,8 @@
 (require 'projectile)
 (require '02-functions)
 
+(require 'cl-macs)
+
  ;; cmake..
 
 (defun yc/yank-cmake-command (&optional arg)
