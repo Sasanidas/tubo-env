@@ -187,14 +187,12 @@ If makefile is specified use it as path to Makefile"
   (interactive)
   (require 'projectile)
   (let* ((proj-root (projectile-project-root))
-         (cands (mapcar
-                 (lambda (x)
-                   (if (file-exists-p (expand-file-name "Makefile" x))
-                       x nil))
-                 (directory-files proj-root t "build.*" t))))
+         (dirs (directory-files proj-root t "build.*" t))
+         cands)
 
-    (if (file-exists-p (expand-file-name "Makefile" proj-root))
-        (push proj-root cands))
+    (dolist (dir (push proj-root dirs))
+      (if (file-exists-p (expand-file-name "Makefile" dir))
+          (push dir cands)))
 
     (unless cands
       (error "Could not find proper makefile"))
@@ -202,8 +200,8 @@ If makefile is specified use it as path to Makefile"
     (PDEBUG "CANDS: " cands)
     (let ((dir (ivy-read "Choose Compile Root: " (sort cands 'string-lessp))))
       (if dir
-        (let ((default-directory dir))
-          (counsel-make))
+          (let ((default-directory dir))
+            (counsel-make))
         (error "Failed to get compile directory")))))
 
 (provide 'counsel-compile2)
