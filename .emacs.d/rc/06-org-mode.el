@@ -269,6 +269,8 @@ This makes it easier to move org file (and associated images) to other directory
              "* %?\nEntered on %U\n  %i\n  %a")
             ("i" "Idea" entry (file+headline ,capture-file "Idea")
              "* %?\nEntered on %U\n  %i\n  %a")
+            ("m" "Mail" entry (file+headline ,(expand-file-name "~/tmp/mail.org") "Mail")
+             "* %?\nEntered on %U\n  %i\n  %a")
             ))))
 
 
