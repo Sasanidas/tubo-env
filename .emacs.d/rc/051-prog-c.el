@@ -86,6 +86,11 @@ ORIG-FUNC is called with ARGS."
       :initialization-options (lambda () ccls-initialization-options)
       :library-folders-fn nil)))
 
+(use-package lsp-clangd
+  :config
+  (setq lsp-clients-clangd-executable (executable-find "clangd"))
+  )
+
 (defun yc/c-mode-common-hook ()
   "My hooks to run for c-mode-common-hook."
   (interactive)
@@ -165,14 +170,13 @@ simpler."
                         "\\)")))
            (objc-mode))
           ((+cc--re-search-for
-            (let ((id "[a-zA-Z0-9_]+") (ws "[ \t\r]+") (ws-maybe "[ \t\r]*"))
-              (concat "^" ws-maybe "\\(?:"
-                      "using" ws "\\(?:namespace" ws "std;\\|std::\\)"
-                      "\\|" "namespace" "\\(?:" ws id "\\)?" ws-maybe "{"
-                      "\\|" "class"     ws id ws-maybe "[:{\n]"
-                      "\\|" "template"  ws-maybe "<.*>"
-                      "\\|" "#include"  ws-maybe "<\\(?:string\\|iostream\\|map\\)>"
-                      "\\)")))
+            (rx (or
+                 (: "#include" (+ space) (or "<" "\"")
+                    (or "string" "iostream" "map" "vector")
+                    (or ">" "\""))
+                 (: bol (* space) (or "template" "class" "using namespace"))
+                 (: bol (* space) "namespace" (+? anything) "{")
+                 )))
            (c++-mode))
           ((c-mode)))))
 

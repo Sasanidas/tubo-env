@@ -68,7 +68,6 @@ alias reboot="shutdown -r now"
 
 # do a du -hs on each dir on current path
 alias lsdir="for dir in *;do;if [ -d \$dir ];then;du -hsL \$dir;fi;done"
-ulimit -c unlimited
 
 alias rcp="rsync -a -P --exclude='.ccls-cache' --exclude='.ccls_cached/'  --exclude='cmake_build_*'"
 which dcfldd > /dev/null 2>&1 && alias dd="dcfldd"

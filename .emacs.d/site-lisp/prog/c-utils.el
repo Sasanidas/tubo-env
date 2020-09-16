@@ -226,6 +226,7 @@ variable.")))))
                                (cond
                                 ((string= arg "-o") (cl-incf i))
                                 ((string-match-p "\\`-o.+" arg))
+                                ((string-match-p "\\`--driver-mode=.+" arg) (cl-incf i))
                                 ((string-match "\\`-working-directory=\\(.+\\)" arg)
                                  (setq working-directory (match-string 1 arg)))
                                 (t (push arg ret))))

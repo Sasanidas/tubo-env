@@ -1135,10 +1135,9 @@ inserts comment at the end of the line."
   (ivy-read "Compiler: " yc/compiler-env
             :action
             (lambda (x)
-              (with-ivy-window
-                (dolist (pair (cdr x))
+              (dolist (pair (cdr x))
                   (PDEBUG "ENV: " pair)
-                  (setenv (car pair) (cdr pair)))))
+                  (setenv (car pair) (cdr pair))))
             :require-match 'confirm-after-completion
             :caller 'counsel-find-file))
 

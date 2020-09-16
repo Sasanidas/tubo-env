@@ -270,6 +270,43 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
       (if (= (point-min) (point))
           (goto-char p))))
 
+  (defun yc/lsp-switch-client ()
+    "Switch to another LSP server."
+    (interactive)
+    (require 'lsp-mode)
+
+    (let ((matching-clients
+           (mapcar (lambda (client)
+                     (cons (lsp--client-server-id client)
+                           (lsp--client-priority client)))
+                   (lsp--filter-clients (-andfn #'lsp--matching-clients?
+                                                #'lsp--server-binary-present?)))))
+      (unless matching-clients
+        (error "No matching lsp client was found"))
+
+      (let* ((client (ivy-read "Choose client: " matching-clients))
+             (match (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client))))))
+             (workspaces (lsp-workspaces)))
+        (unless match
+          (user-error "Couldn't find an LSP client named %S" client))
+
+        (PDEBUG "CLIENT" (stringp client)
+                "MATCH:" match)
+
+        (let ((old-priority (lsp--client-priority match)))
+          (setf (lsp--client-priority (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client)))))) 9999)
+          (unwind-protect
+              (if workspaces
+                  (lsp-workspace-restart
+                   (if (cdr workspaces)
+                       (lsp--completing-read "Select server: "
+                                             workspaces
+                                             'lsp--workspace-print
+                                             nil t)
+                     (car workspaces)))
+                (lsp-mode +1))
+            (setf (lsp--client-priority (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client)))))) old-priority))))))
+
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
                  lsp-format-buffer lsp-mode-line)
   :custom
@@ -377,34 +414,7 @@ ORIG-FUNC is called with ARGS."
     (when-let (root-file (yc/lsp-get-root-file))
       (expand-file-name (file-name-directory root-file))))
 
-  (defun yc/lsp-switch-client (client)
-    "Switch to another LSP server."
-    (interactive
-     (progn
-       (require 'lsp-mode)
-       (list (completing-read
-              "Select server: "
-              (or (mapcar #'lsp--client-server-id (lsp--find-clients))
-                  (user-error "No available LSP clients for %S" major-mode))))))
-    (require 'lsp-mode)
-    (let* ((client (if (symbolp client) client (intern client)))
-           (match (car (lsp--filter-clients (lambda (c) (eq (lsp--client-server-id c) client)))))
-           (workspaces (lsp-workspaces)))
-      (unless match
-        (user-error "Couldn't find an LSP client named %S" client))
-      (let ((old-priority (lsp--client-priority match)))
-        (setf (lsp--client-priority match) 9999)
-        (unwind-protect
-            (if workspaces
-                (lsp-workspace-restart
-                 (if (cdr workspaces)
-                     (lsp--completing-read "Select server: "
-                                           workspaces
-                                           'lsp--workspace-print
-                                           nil t)
-                   (car workspaces)))
-              (lsp-mode +1))
-          (setf (lsp--client-priority match) old-priority))))))
+  )
 
 
 
