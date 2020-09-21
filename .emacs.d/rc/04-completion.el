@@ -181,13 +181,12 @@ It will try complete via `company' and then switch to `hippie-expand' as fallbac
               (;; ,(kbd "TAB")
                "	". company-complete))
   :custom
-  (company-backends '((company-capf company-yasnippet) company-files))
+  (company-backends '((company-yasnippet company-capf) company-files))
   (company-minimum-prefix-length 2)
-  (company-idle-delay 0.25)
+  (company-idle-delay 0.5)
   (company-tooltip-limit 14)
   (company-tooltip-align-annotations t)
   (company-show-numbers  t)
-  (company-require-match 'never)
   (company-frontends '(company-pseudo-tooltip-frontend
                        company-echo-metadata-frontend))
 
@@ -229,7 +228,7 @@ first backend."
                     (if (listp ,first)
                         ,first
                       (list ,first))
-                    '(company-capf  :with company-yasnippet))
+                    '(:with company-yasnippet company-capf))
                    backends)
                   )
                 ))

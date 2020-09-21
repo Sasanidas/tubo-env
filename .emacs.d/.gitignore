@@ -44,3 +44,4 @@ emacs.pdmp
 image-dired/
 srecode-map.el
 tools/post-pack_emacs_env.sh
+/templates/srecode/private/

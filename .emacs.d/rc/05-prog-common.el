@@ -285,7 +285,8 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
         (error "No matching lsp client was found"))
 
       (let* ((client (ivy-read "Choose client: " matching-clients))
-             (match (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client))))))
+             (match (car (lsp--filter-clients
+                          (lambda (c) (eq  (lsp--client-server-id c) (intern client))))))
              (workspaces (lsp-workspaces)))
         (unless match
           (user-error "Couldn't find an LSP client named %S" client))
@@ -294,7 +295,11 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
                 "MATCH:" match)
 
         (let ((old-priority (lsp--client-priority match)))
-          (setf (lsp--client-priority (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client)))))) 9999)
+          (setf (lsp--client-priority
+                 (car (lsp--filter-clients
+                       (lambda (c)
+                         (eq  (lsp--client-server-id c) (intern client))))))
+                9999)
           (unwind-protect
               (if workspaces
                   (lsp-workspace-restart
@@ -305,7 +310,11 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
                                              nil t)
                      (car workspaces)))
                 (lsp-mode +1))
-            (setf (lsp--client-priority (car (lsp--filter-clients (lambda (c) (eq  (lsp--client-server-id c) (intern client)))))) old-priority))))))
+            (setf (lsp--client-priority
+                   (car (lsp--filter-clients
+                         (lambda (c)
+                           (eq  (lsp--client-server-id c) (intern client))))))
+                  old-priority))))))
 
   :commands (lsp lsp-workspaces lsp--workspace-print lsp-format-region
                  lsp-format-buffer lsp-mode-line)
@@ -327,14 +336,12 @@ Call FUNC which is 'lsp-format-buffer with ARGS."
   (lsp-prefer-capf t)
   (read-process-output-max (* 1024 1024))
 
-  ;; Disable LSP's superfluous, expensive and/or debatably unnecessary features.
-  ;; Some servers implement these poorly. Better to just rely on Emacs' native
-  ;; mechanisms and make these opt-in.
-  (lsp-enable-folding nil)
-  ;; Potentially slow
+  ;; Disable features that have great potential to be slow.
   (lsp-enable-file-watchers nil)
+  (lsp-enable-folding nil)
   (lsp-enable-text-document-color nil)
   (lsp-enable-semantic-highlighting nil)
+
   ;; Don't modify our code without our permission
   (lsp-enable-indentation nil)
   (lsp-enable-on-type-formatting nil)
@@ -414,7 +421,11 @@ ORIG-FUNC is called with ARGS."
     (when-let (root-file (yc/lsp-get-root-file))
       (expand-file-name (file-name-directory root-file))))
 
-  )
+  (defadvice! yc/lsp-completion-mode-adv (&rest arg)
+    "Remove `company-capf' from `company-backends'."
+    :after  #'lsp-completion-mode
+    (when (eq (car company-backends) 'company-capf)
+      (pop company-backends))))
 
 
 
