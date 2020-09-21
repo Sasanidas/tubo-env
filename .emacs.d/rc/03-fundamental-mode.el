@@ -325,13 +325,21 @@ Call FUNC which is 'projectile-find-file with ARGS."
       (require 'counsel-projectile))
     (cond
      (current-prefix-arg
-      (ivy-read "Find file: " (projectile-files-via-ext-command default-directory (projectile-get-ext-command nil))
+      (ivy-read "Find file: "
+
+                (let ((cmd (cond
+                             ((executable-find "fd")
+                              "fd . -0 --no-ignore --type f --color=never")
+                             ((executable-find "rg")
+                              "rg -0 --no-ignore  --files --follow  --color=never --hidden")
+                             (t (projectile-get-ext-command nil)))))
+                  (projectile-files-via-ext-command default-directory cmd))
+
                 :matcher counsel-projectile-find-file-matcher
                 :require-match t
                 :sort counsel-projectile-sort-files
                 :action counsel-projectile-find-file-action
-                :caller 'counsel-projectile-find-file
-                ))
+                :caller 'counsel-projectile-find-file))
 
      ((file-exists-p (concat (projectile-project-root) ".git"))
       ;; find file, exclude files in submodules.

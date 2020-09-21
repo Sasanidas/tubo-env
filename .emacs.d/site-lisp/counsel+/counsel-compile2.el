@@ -32,9 +32,9 @@
 ;;; Code:
 
 (require 'counsel)
+(require '02-functions)
 
 (autoload 'yc/get-compiling-threads "yc-utils" ""  t)
-(autoload 'PDEBUG "02-functions" ""  nil)
 (autoload 'projectile-project-root "projectile" ""  nil)
 (autoload 's-split "s" ""  nil)
 

@@ -221,19 +221,18 @@ This is a variadic `cl-pushnew'."
 
 (defvar yc/debug-log-limit 1024 "Nil.")
 
-(defun yc/debug-log (&rest msgs)
-  "Output MSGS with FILE and LINE."
+(defun yc/debug-log (func &rest msgs)
+  "Output MSGS with FUNC."
   (let ((buf (get-buffer-create YC-DEBUG-BUF))
         (last  (if msgs
-                   (nth (1- (length msgs)) msgs)
-                   ))
-        pos-start
-        )
+                   (nth (1- (length msgs)) msgs)))
+        pos-start)
     (save-excursion
       (with-current-buffer buf
         (goto-char (point-max))
         (princ "\n" buf)
-        (princ (format-time-string  "%a %b %d %H:%M:%S %Z %Y" (current-time)) buf)
+        (princ (concat (format-time-string  "%a %b %d %H:%M:%S %Z %Y" (current-time))
+               "    " func) buf)
         (princ " ======>\n" buf)
         (setq pos-start (point))
         (princ (pop msgs) buf)
@@ -246,20 +245,16 @@ This is a variadic `cl-pushnew'."
                                 (when (or (< yc/debug-log-limit 0)
                                           (< count yc/debug-log-limit))
                                   (insert x)
-                                  (setq count (1+ count))
-                                    )
-                                ))
-            )
-          )
-        (princ "\n" buf)
-
-        ))
+                                  (setq count (1+ count)))))))
+        (princ "\n" buf)))
     last))
 
-(defun PDEBUG (&rest args)
+(defmacro PDEBUG (&rest args)
   "Write log, if YC-DEBUG is non-nil."
-  (when YC-DEBUG
-    (apply 'yc/debug-log args)))
+  `(when YC-DEBUG
+     (let ((func ,(or (when (fboundp 'which-function) (which-function)) "unkown")) )
+       (funcall 'yc/debug-log func ,@args))))
+
 
 
 (defcustom available-width '(78 82 86 92 98)
@@ -478,13 +473,16 @@ And install necessary packages if there are errors while executing FUNC."
   (interactive)
   (condition-case err (apply func args)
     (file-error
-     (let ((msg (prin1-to-string err)))
+     (let ((msg (prin1-to-string err))
+           (yc/debug-log-limit -1))
        (PDEBUG "ERR: " err
-               "MSG: " msg)
+               "MSG: " msg
+               "Backtrace: "
+               (backtrace-to-string))
        (if (string-match ".*Cannot open load file.*" msg)
            (if (listp err)
                (let* ((package-name (nth (1- (length err)) err))
-                      (fmt "Package %s can not be loaded, install it with ELPA? "))
+                      (fmt "Package %s can not be loaded, try install it? "))
                  (if package-name
                      (when (yes-or-no-p (format fmt package-name))
                        (yc/try-install-package package-name)
