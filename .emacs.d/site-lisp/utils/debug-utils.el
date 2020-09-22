@@ -8,10 +8,13 @@
 
 (require '02-functions)
 (require 'cl)
-(require 'realgud)
 (require 's)
 (require 'ivy)
 (require 'swiper)
+
+(autoload 'realgud:gdb "realgud"  "" t)
+
+
 
 
 (defun yc/call-gdb (cmd)
@@ -21,7 +24,8 @@
    "GDB ARGS" cmd)
   (if current-prefix-arg
       (gdb (concat "gdb -i=mi " cmd))
-    (realgud:gdb (concat "gdb "cmd))))
+    (realgud:gdb (concat "gdb "cmd))
+    ))
 
 (defun yc/directory-files (dir)
   "List files in DIR except . & .. ."
