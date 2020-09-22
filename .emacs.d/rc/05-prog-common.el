@@ -616,11 +616,6 @@ This function returns a string as compile command, or nil if it can't handle
   "Append to yc/run-commands."
   `(yc/add-unit-to-target yc/run-commands ,name ,priority ,@body))
 
-
-(use-package counsel-compile2
-
-  :commands (makefile/get-target-list))
-
 (yc/add-compile-unit 'makefile 99
   (aif (or (yc/file-exists-p "makefile")
            (yc/file-exists-p "Makefile"))

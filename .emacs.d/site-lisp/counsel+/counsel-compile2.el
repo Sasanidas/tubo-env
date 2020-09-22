@@ -49,36 +49,6 @@
 
 (autoload '-uniq "dash")
 
-(defun makefile/get-target-list (file)
-  "Get list of targets from FILE."
-  (let ((r-match-targets
-         (rx bol (group (+ (not (any "#
-"))) ) ":" (? (: space (+ nonl))) eol))
-        (r-match-target
-         (rx (group (+ (not (any space))))))
-        targets)
-
-    (when (file-exists-p file)
-      (with-temp-buffer
-        (insert-file-contents file)
-        (goto-char (point-min))
-        (while (re-search-forward r-match-targets nil t)
-          (let ((str (match-string 1))
-                (pos 0))
-            (PDEBUG "TARGETS: " str
-              "BEG: " (match-beginning 0)
-              "END: " (match-end 0))
-            (while (string-match r-match-target str pos)
-              (push (match-string 1 str) targets)
-              (setq pos (match-end 0)))
-
-
-            ;; (unless (string-match "^\\." str)
-            ;;   (push str targets))
-            ))))
-
-    targets))
-
 (defun counsel-make (&optional makefile no-choose no-execute)
   "Use `counsel' to select a MAKEFILE target and `compile'.
 If makefile is specified use it as path to Makefile.
@@ -99,20 +69,12 @@ If NO-EXECUTE is t, don't execute, but return compile command."
          (jobs  (if (= 0 arg) 1 arg))
          (target (if no-choose
                      ""
-                   (let* ((files (cond
-                                  ((not makefile) '("GNUmakefile" "makefile" "Makefile"))
-                                  ((listp makefile) makefile)
-                                  ((stringp makefile) (list makefile))
-                                  (t (error "Oops: %s" makefile))))
-                          (targets (flatten-list (mapcar 'makefile/get-target-list files)))
-                          )
-
-                     (PDEBUG "FILES: " files)
-
+                   (let* ((targets (remove "" (counsel-compile--probe-make-targets default-directory))))
                      (unless targets
                        (error "No target in %s" default-directory))
 
                      (PDEBUG "TARGET: " targets)
+
                      ;; save buffers before calling make
                      (let* ((regex (format "^%s" default-directory))
                             (buffers
