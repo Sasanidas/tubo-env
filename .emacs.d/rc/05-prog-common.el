@@ -195,7 +195,7 @@ LIMIT is the limit of search."
   "List of functions to run to return to previous context.")
 
 (defun yc/push-stack (&optional m)
-  "Add FUNC at the beginning of `yc/marker-stack'."
+  "Add marker M at the beginning of `yc/marker-stack'."
   (ring-insert yc/marker-stack (or m (point-marker))))
 
 (use-package gxref
@@ -369,7 +369,7 @@ auto-killed (which is a potentially expensive process)."
         (cancel-timer +lsp--deferred-shutdown-timer))
       (setq +lsp--deferred-shutdown-timer
             (run-at-time
-             5
+             300
              nil (lambda (workspace orig-fn)
                    (let ((lsp--cur-workspace workspace))
                      (unless (lsp--workspace-buffers lsp--cur-workspace)
