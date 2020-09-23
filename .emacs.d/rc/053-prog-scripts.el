@@ -4,6 +4,23 @@
 ;;; Code:
 
  ;; *************************** Python Settings ****************************
+(use-package lsp-pyright
+  :hook (python-mode . (lambda ()
+                         (yc/lsp--setup
+                          "pyright-langserver"
+                          "pip install -g pyright"))))
+
+(use-package py-autopep8
+  :commands (py-autopep8-buffer)
+  :config
+  (progn
+    (setq py-autopep8-options '("--max-line-length=120"))))
+
+(use-package pydoc
+  :bind (:map python-mode-map
+              (;; ,(kbd "<S-f1>")
+               [S-f1]. pydoc-at-point)))
+
 (use-package python
   :preface
   (defun yc/lsp-load-project-configuration-python-mode (root-file)
@@ -38,23 +55,6 @@
   (python-shell-interpreter "python")
   (python-indent-guess-indent-offset-verbose nil)
   )
-
-(use-package lsp-pyright
-  :hook (python-mode . (lambda ()
-                         (yc/lsp--setup
-                          "pyright-langserver"
-                          "pip install -g pyright"))))
-
-(use-package py-autopep8
-  :commands (py-autopep8-buffer)
-  :config
-  (progn
-    (setq py-autopep8-options '("--max-line-length=120"))))
-
-(use-package pydoc
-  :bind (:map python-mode-map
-              (;; ,(kbd "<S-f1>")
-               [S-f1]. pydoc-at-point)))
 
 ;; ***************** sh-mode *****************
 (use-package sh-script

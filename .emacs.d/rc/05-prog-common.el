@@ -229,13 +229,6 @@ LIMIT is the limit of search."
  ;; lsp
 (defvar yc/lsp-warned-mode-list nil "List of modes already been warn for disabling LSP.")
 
-(defcustom yc/lsp-server-dir (expand-file-name "~/.local/lsp/")
-  "Where lsp server should be installed."
-  :type 'string
-  :group 'user
-  )
-
-
 (defun yc/lsp--setup (executable install-tip)
   "Setup LSP.
 Enable LSP if EXECUTABLE is t, and if `SETUP-FUNC' is not nil,
