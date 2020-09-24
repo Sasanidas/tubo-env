@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 's)
+(require '02-functions)
 
 (defmacro aif (test-form then-form &rest else-forms)
   "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
