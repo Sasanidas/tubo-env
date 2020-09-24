@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: pragma_diagnostic
+# key: prd
+# --
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+#pragma GCC diagnostic pop

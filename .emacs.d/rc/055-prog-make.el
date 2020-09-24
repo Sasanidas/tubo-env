@@ -59,7 +59,7 @@
               ("\C-cl" . cmake-help-list-commands)
               ("\C-cu" .  unscreamify-cmake-buffer))
   :custom
-  (cmake-tab-width 4)
+  (cmake-tab-width 2)
   :config
   (yc/set-company-backends 'cmake-mode 'company-yasnippet 'company-cmake 'company-dabbrev-code 'company-dabbrev))
 

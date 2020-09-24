@@ -1409,8 +1409,6 @@ inserts comment at the end of the line."
       (kill-new ret)
       ret)))
 
-(yc/git-copy-file-path)
-
 (defun yc/command-output-to-string (&rest args)
   "Execute a command and return result as string.
 args should be a list, but to make caller's life easier, it can accept one atom instead of a
