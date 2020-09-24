@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 's)
+
 (defmacro aif (test-form then-form &rest else-forms)
   "Like `if' but set the result of TEST-FORM in a temprary variable called `it'.
 THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
@@ -1383,18 +1385,30 @@ inserts comment at the end of the line."
   "Copy path of current visited file."
   (interactive)
   (let ((url (magit-git-string "config" "remote.origin.url"))
+        (branch (magit-git-string "rev-parse" "--abbrev-ref" "HEAD"))
         (root (magit-toplevel)))
 
     (unless url (error "Not in a git repo"))
 
-    (kill-new
-     (concat (replace-regexp-in-string
-              (rx "git@github.com:" (group (+? nonl)) ".git")
-              "https://github.com/\\1"
-              url)
-             "/blob/master/"
-             (and root (file-relative-name buffer-file-name root))
-             ))))
+    (when (s-ends-with-p ".git" url)
+      (setq url (substring url 0 -4)))
+
+    (when (string-match (rx "git@" (group (+? nonl))":" (group (+? nonl)) eol)
+                    url)
+      (let* ((host (match-string 1 url))
+             (proj (match-string 2 url))
+             (protol (if (s-starts-with-p "192.168." host) "http" "https")))
+
+        (setq url (concat protol "://" host "/" proj)))
+      )
+
+    (let ((ret (concat url "/blob/" branch "/"
+                       (and root (file-relative-name buffer-file-name root)))) )
+
+      (kill-new ret)
+      ret)))
+
+(yc/git-copy-file-path)
 
 (defun yc/command-output-to-string (&rest args)
   "Execute a command and return result as string.
