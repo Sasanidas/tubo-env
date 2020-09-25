@@ -1404,7 +1404,8 @@ inserts comment at the end of the line."
       )
 
     (let ((ret (concat url "/blob/" branch "/"
-                       (and root (file-relative-name buffer-file-name root)))) )
+                       (and root (file-relative-name buffer-file-name root))
+                       (if current-prefix-arg (format "#L%d" (line-number-at-pos))))))
 
       (kill-new ret)
       ret)))
