@@ -7,6 +7,7 @@
 ;;; Code:
 
 (use-package highlight-parentheses
+  :ensure t
   :commands (highlight-parentheses-mode)
   :hook ((prog-mode . highlight-parentheses-mode))
   :config
