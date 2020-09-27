@@ -241,18 +241,6 @@ Return output file name."
                    t))))
 
 
-
-(use-package ox-html
-  :defer t
-  :init
-  (progn
-    (custom-set-variables
-     '(org-html-inline-image-rules
-       '(("file" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
-         ("http" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
-         ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'"))))))
-
-
 (defun yc/fetch-field (field)
   (save-excursion
     (goto-char (point-min))
@@ -432,8 +420,8 @@ Call FUNC with ARGS."
              (apply func args)))
 
 (use-package ox-publish
+  :straight nil
   :config
-
   (require 'ox-html)
   (require 'ox-odt)
   (require 'ox-md)
@@ -452,6 +440,7 @@ Call FUNC with ARGS."
   )
 
 (use-package ox-odt
+  :straight nil
   ;; org v8 bundled with Emacs 24.4
   :custom
   (org-odt-preferred-output-format "doc")
@@ -518,9 +507,7 @@ Call FUNC with ARGS."
 
 (use-package ox-reveal
   :config
-  (advice-add 'org-reveal-export-to-html :around #'yc/org-reveal-export-to-html-adv)
-  )
-
+  (advice-add 'org-reveal-export-to-html :around #'yc/org-reveal-export-to-html-adv))
 
 (defun yc/org-reveal-export-to-html-adv (func &rest args)
   "Advice for 'org-reveal-export-to-html'.

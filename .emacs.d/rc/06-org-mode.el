@@ -414,7 +414,10 @@ ORIG-FUNC is called with ARGS."
      ("LOW" . (:foreground "blue" :weight bold))))
 
   (org-return-follows-link t) ;; make RET follow links
-
+  (org-html-inline-image-rules
+       '(("file" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
+         ("http" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")
+         ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|tiff\\|svg\\)\\'")))
 
   :hook ((org-after-todo-statistics . org-summary-todo)
          (org-mode . yc/org-mode-hook))

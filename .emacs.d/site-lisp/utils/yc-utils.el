@@ -511,11 +511,7 @@ Uses `current-date-time-format' for the formatting the date/time."
 (defun yc/copy-current-buffername ()
   "Copy full path of current file."
   (interactive)
-  (let ((fn (buffer-file-name (current-buffer))))
-    (when fn
-      (with-temp-buffer
-        (insert fn)
-        (copy-region-as-kill (point-min) (point-max))))))
+  (kill-new (buffer-file-name (current-buffer))))
 
 (defvar shift-indent-offset 4)
 
