@@ -85,6 +85,7 @@ ORIG-FUNC is called with ARGS."
   :commands (realgud--lldb))
 
 (use-package realgud-gdb
+  :straight nil
   :commands (realgud:gdb realgud:gdb-pid)
   :config
   (require 'realgud))
@@ -95,6 +96,7 @@ ORIG-FUNC is called with ARGS."
 
 ;; Function to debug process, either attaching to a running one, or start a new one.
 (use-package debug-utils
+  :straight nil
   :commands (;; attach-pg-idle attach-pg-wal attach-pg-main attach-pg-proc
              debug-proc attach-proc attach-proc-su
                         yc/kill-gdb-buffers company-gdb))

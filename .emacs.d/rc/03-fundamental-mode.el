@@ -7,14 +7,11 @@
 
 ;;; Code:
 
-
 (use-package helpful
   :commands (helpful-callable helpful-variable)
   :bind (([remap describe-key] . 'helpful-key)))
 
- ;; ivy mode
 (use-package ivy
-  :ensure t
   :commands (ivy-read)
   :custom
   (ivy-use-virtual-buffers t)        ;; Enable bookmarks and recentf
@@ -35,8 +32,7 @@
          )
   :config
   (require 'ivy-rich)
-  (ivy-mode)
-  )
+  (ivy-mode))
 
 ;;;; Ivy-rich
 ;; More friendly display transformer for Ivy
@@ -68,7 +64,7 @@
               (propertize (format "%s" val) 'face 'font-lock-builtin-face))
              ((format "%s" val)))
        t)))
-  :ensure t
+
   :custom
   (ivy-rich-parse-remote-buffer nil)
   (ivy-rich-path-style 'abbrev)
@@ -135,11 +131,11 @@ ORIG-FUNC is called with CANDIDATE."
     'counsel-projectile-switch-to-buffer
     (plist-get ivy-rich-display-transformers-list 'ivy-switch-buffer))
 
-
   (ivy-rich-mode +1))
 
 
 (use-package counsel-utils
+  :straight nil
   :commands (yc/counsel-grep counsel-find-file-as-user counsel-grep-in-dir yc/projectile-grep)
   :bind (
          (;; ,(kbd "C-c k")
@@ -256,6 +252,7 @@ ORIG-FUNC is called with ARGS."
       (yc/push-stack m))))
 
 (use-package bookmark
+  :straight nil
   :custom
   (bookmark-default-file (yc/make-cache-path "bookmarks"))
   :config
@@ -265,14 +262,11 @@ ORIG-FUNC is called with ARGS."
     :after #'bookmark-set
     (bookmark-save)))
 
-
 ;; With smex, ivy can sort commands by frequency.
 (use-package amx
-  :ensure t
   :custom
   (amx-history-length 20))
 
- ;; Projectile...
 (use-package projectile
   :preface
   (defun yc/kill-non-project-buffers (&optional kill-special)
@@ -314,7 +308,6 @@ With prefix argument (`C-u'), also kill the special buffers."
 
 
 (use-package counsel-projectile
-  :ensure t
   :preface
   (defun yc/projectile-find-file (&rest args)
     "My own version of `projectile-find-file'.
@@ -363,7 +356,6 @@ Call FUNC which is 'projectile-find-file with ARGS."
          ([remap project-switch-project] . counsel-projectile-switch-project)))
 
 (use-package smartparens
-  :ensure t
   :commands (smartparens-global-mode sp-local-pairs sp-with-modes)
   :hook ((after-init . smartparens-global-mode))
   :custom
@@ -385,7 +377,6 @@ Call FUNC which is 'projectile-find-file with ARGS."
               (;; (kbd "C-M-w")
                [134217751] . sp-copy-sexp)))
 
- ; VLF: view large file.
 (use-package vlf
   :commands (vlf)
   :custom
@@ -393,6 +384,7 @@ Call FUNC which is 'projectile-find-file with ARGS."
   )
 
 (use-package files
+  :straight nil
   :custom
   (large-file-warning-threshold (* 20 1024 1024))
   :config
@@ -426,17 +418,16 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
                             (file-size-human-readable size)))
           (vlf filename)))))
 
-
 (use-package server
+  :straight nil
   :commands (server-start server-running-p)
   :hook ((emacs-startup .
                         (lambda ()
                           (unless (server-running-p)
                             (server-start))))))
 
- ;;; ABBREV-MODE;;;
 (use-package abbrev
-
+  :straight nil
   :custom
   (abbrev-file-name  "~/.emacs.d/abbrev_defs")
   (save-abbrevs 'silently)
@@ -446,12 +437,12 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
     (if (file-exists-p abbrev-file-name)
         (quietly-read-abbrev-file))))
 
- ;; unset Ctrl+\: toggle-input methods
-
+;; unset Ctrl+\: toggle-input methods
 (yc/unset-keys
  (list (kbd "C-\\")))
 
 (use-package ibuffer
+  :straight nil
   :custom
   (ibuffer-show-empty-filter-groups nil)
   :config
@@ -469,46 +460,32 @@ If file SIZE larger than `large-file-warning-threshold', allow user to use
               (;; (kbd "C-x C-f")
                "" . counsel-find-file)))
 
-
-(autoload 'switch-window "switch-window" ""  t)
-(defun yc/switch-window (&optional reverse)
-  "Switch window.
+(use-package switch-window
+  :preface
+  (defun yc/switch-window ()
+    "Switch window.
 With REVERSE is t, switch to previous window."
-  (interactive)
-  (if (> (length (window-list)) 3)
-      (switch-window)
-    (other-window (if reverse 2 1))))
+    (interactive)
+    (if (> (length (window-list)) 3)
+        (switch-window)
+      (other-window 1)))
+  :commands (switch-window)
+  :bind (:map ctl-x-map
+              ("o" . 'yc/switch-window)))
 
-(defun auto-rename-buffer ()
-  "Rename current buffer."
-  (interactive)
-  (let ((newname (concat (buffer-name) "-" (format-time-string  "%H:%M:%S" (current-time)))))
-    (rename-buffer newname)))
-
-(yc/set-keys
- (list
-  (cons (kbd "<C-f2>") 'rename-buffer)
-  (cons (kbd "<f2>") 'auto-rename-buffer)
-  (cons (kbd "C-x o") 'yc/switch-window)
-  (cons (kbd "C-x O") (lambda ()(interactive) (yc/switch-window t)))))
-
-;; string functions..
 (use-package s
   :commands (s-contains?
              s-ends-with? s-ends-with-p
              s-starts-with? s-blank? s-split))
 
 (use-package super-save
-  :ensure t
   :commands (super-save-mode)
   :hook ((emacs-startup . super-save-mode))
   :custom
   (super-save-auto-save-when-idle t)
   (auto-save-default nil))
 
-;; Tabs and spaces
 (use-package ws-butler
-  :ensure t
   :commands (ws-butler-mode)
   :hook ((prog-mode .  ws-butler-mode))
   :custom
@@ -517,10 +494,8 @@ With REVERSE is t, switch to previous window."
   (c-basic-offset 4)
   (indent-tabs-mode nil))
 
-
 (use-package undo-tree
   :defer t
-  :ensure t
   :commands (global-undo-tree-mode undo-tree-undo undo-tree-visualize undo-tree-redo)
   :bind (:map undo-tree-map
               (;; (kbd "C-x U")
@@ -542,15 +517,12 @@ With REVERSE is t, switch to previous window."
   (undo-tree-enable-undo-in-region nil)
   (undo-tree-auto-save-history nil)
 
-  :hook (after-init . global-undo-tree-mode)
-)
+  :hook (after-init . global-undo-tree-mode))
 
 ;; Preview when `goto-line`
-
 (use-package goto-line-preview
   :preface
   (defvar-local preview-hl-overlay nil "Nil.")
-  :ensure t
   :bind ([remap goto-line] . goto-line-preview)
   :config
   (defun yc/remove-preview-overlay ()
@@ -570,14 +542,12 @@ ORIG-FUNC is called with ARGS."
     (overlay-put preview-hl-overlay 'face 'swiper-line-face))
 
   :hook ((goto-line-preview-after . yc/remove-preview-overlay)))
-
 
 (use-package layout-restore
+  :straight nil
   :commands (layout-save-current layout-restore))
 
-
 (use-package which-key
-  :ensure t
   :commands (which-key-mode)
   :custom
   (which-key-sort-order #'which-key-prefix-then-key-order)
@@ -591,7 +561,6 @@ ORIG-FUNC is called with ARGS."
   (which-key-side-window-slot -10)
   :hook ((after-init . which-key-mode)))
 
-
 ;; Local Variables:
 ;; coding: utf-8
 ;; indent-tabs-mode: nil

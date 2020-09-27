@@ -9,6 +9,7 @@
  ;; cc-mode and derived.
 
 (use-package member-function
+  :straight nil
   :commands (expand-member-functions)
   :bind (:map c++-mode-map
               ("m" . expand-member-functions))
@@ -16,11 +17,12 @@
   (mf--insert-commentary nil))
 
 (use-package prog-utils
-  :commands (
-             yc/asm-post-process
+  :straight nil
+  :commands (yc/asm-post-process
              uniq-stack gcrash-analyze-buffer))
 
 (use-package hideif
+  :straight nil
   :commands (hide-ifdef-mode hif-set-var)
   :custom
   (hide-ifdef-initially t)
@@ -50,14 +52,15 @@
 
   (define-key hide-ifdef-mode-map "\C-c@t" 'hide-ifdef-toggle-shadowing))
 
-
 (use-package clang-format
   :commands (clang-format-region clang-format-buffer))
 
 (use-package cwarn
+  :straight nil
   :hook ((c-mode-common . cwarn-mode)))
 
 (use-package c-utils
+  :straight nil
   :commands (yc/get-c-style yc/format-files yc/switch-h-cpp yc/enable-disable-c-block
              yc/preprocess-file yc/insert-empty-template yc/header-make
              c++filt-buffer))
@@ -85,11 +88,6 @@ ORIG-FUNC is called with ARGS."
               ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
       :initialization-options (lambda () ccls-initialization-options)
       :library-folders-fn nil)))
-
-(use-package lsp-clangd
-  :config
-  (setq lsp-clients-clangd-executable (executable-find "clangd"))
-  )
 
 (defun yc/c-mode-common-hook ()
   "My hooks to run for c-mode-common-hook."
@@ -181,6 +179,7 @@ simpler."
           ((c-mode)))))
 
 (use-package cc-mode
+  :straight nil
   :commands (c++-mode objc-mode c-mode)
   :mode (((rx "." (or "H" "cc" "hh" "moc" "ipp") (? ".in") buffer-end) . c++-mode)
          ((rx "." (or "C" "c" "ic") buffer-end) . c-mode)

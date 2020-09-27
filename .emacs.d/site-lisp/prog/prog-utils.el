@@ -49,12 +49,15 @@
 
 
 (use-package srecode/find
+  :straight nil
   :commands (srecode-load-tables-for-mode))
 
 (use-package semantic/util-modes
+  :straight nil
   :commands (semantic-stickyfunc-tag-to-stick))
 
 (use-package srecode/insert
+  :straight nil
   :commands (srecode-insert))
 
 (defun yc/insert-single-comment ()

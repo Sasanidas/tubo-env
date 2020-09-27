@@ -22,7 +22,6 @@ ORIG-FUNC is called with ARGS."
        (which-func-update-1 w))) nil 'visible)))
 
 (use-package flycheck
-  :ensure t
   :commands (flycheck-mode global-flycheck-mode flycheck-define-checker)
   :bind (:map flycheck-mode-map
               ([M-S-f9] . flycheck-first-error)
@@ -60,24 +59,19 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
         (apply orig-func args)
       (user-error (progn
                     (PDEBUG "Wrap to first error...")
-                    (flycheck-first-error))))
-    )
-)
+                    (flycheck-first-error))))))
 
 (use-package flycheck-popup-tip
-  :ensure t
   :custom
   (flycheck-popup-tip-error-prefix "✕ ")
   :commands (flycheck-popup-tip-mode)
   :hook ((flycheck-mode . flycheck-popup-tip-mode)))
 
- ;; EMR.
-
+;; EMR.
 (use-package list-utils)
 (use-package iedit)
-
 (use-package emr
-
+  :straight nil
   :bind (([S-f6] . emr-show-refactor-menu))
   :commands (emr-initialize)
   ;; :local-repo (expand-file-name "site-lisp/emr" user-emacs-directory)
@@ -93,14 +87,13 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
                             ("UseTab" . "Never"))))
 
 
- ;; Common Settings for prog-mode.
+;; Common Settings for prog-mode.
 (yc/defmacro yc/add-keyword (sym type)
   `(font-lock-add-keywords
     nil (list (list ,sym 1 ,type t))))
 
 ;;;; Function and macro to add an regular expression string formed by (rx)
 ;;;; macro into specified face.
-
 (defun yc/warning-keywords-matcher (limit)
   "Setup warning keywords.
 LIMIT is the limit of search."
@@ -145,28 +138,13 @@ LIMIT is the limit of search."
    '(semantic-lex-maximum-depth 20)
    '(pulse-flag 'never)
    '(semanticdb-default-save-directory (yc/make-cache-path "semanticdb"))
-   '(srecode-map-save-file (yc/make-cache-path "srecode-map.el")))
-  )
+   '(semantic-decoration-styles
+     '(("semantic-decoration-on-includes" . t)))
+   '(srecode-map-save-file (yc/make-cache-path "srecode-map.el"))))
 
-(use-package semantic/decorate/mode
-  :defer t
-  :config
-  (progn
-    (setq-default semantic-decoration-styles
-                  '(("semantic-decoration-on-includes" . t)))))
-
-
-;;;; Semanticdb 定制
-;; Semantic DataBase存储位置
-(use-package semantic/db-mode
-  :commands (global-semanticdb-minor-mode)
-  :config
-  (setq-mode-local c-mode semanticdb-find-default-throttle
-                   '(project unloaded system recursive))
-  (setq-mode-local c++-mode semanticdb-find-default-throttle
-                   '(project unloaded system recursive)))
 
 (use-package srecode/mode
+  :straight nil
   :commands (srecode-minor-mode)
   :hook ((prog-mode . srecode-minor-mode))
   :custom
@@ -180,6 +158,7 @@ LIMIT is the limit of search."
 
  ;; *************************** TAGS Database Settings *********************
 (use-package counsel-xgtags
+  :straight nil
   :commands (counsel-xgtags-find-header counsel-xgtags-mode counsel-xgtags-find-definition
                                         counsel-xgtags-update-tags counsel-xgtags-parse-file)
   :custom
@@ -187,8 +166,7 @@ LIMIT is the limit of search."
   :config
   (yc/set-keys
    (list  (cons "M->" 'counsel-xgtags-find-definition))
-   counsel-xgtags-mode-map)
-  )
+   counsel-xgtags-mode-map))
 
  ;; **** Unified Stack ****
 (defvar yc/marker-stack (make-ring 256)
@@ -219,6 +197,7 @@ LIMIT is the limit of search."
 
 
 (use-package semantic-uml
+  :straight nil
   :commands (uml/struct-to-dot uml/struct-to-dia uml/struct-to-puml)
   :bind (:map prog-mode-map
               ("\C-csD" . uml/struct-to-dot)
@@ -517,6 +496,7 @@ ORIG-FUNC is called with ARGS."
 
 ;;;; Common Program settings
 (use-package prog-utils
+  :straight nil
   :commands (yc/doc-at-point yc/insert-single-comment yc/show-methods-dwim
                              yc/open-header)
   ;; :bind ((;; (kbd "M-m")
@@ -570,7 +550,7 @@ ORIG-FUNC is called with ARGS."
   (flycheck-mode 1))
 
 (use-package prog-mode
-  :defer t
+  :straight nil
   :hook ((prog-mode . yc/common-program-hook)))
 
 

@@ -10,7 +10,7 @@
 
  ;; Package Management...
 
-(require 'package)
+;; (require 'package)
 
 (custom-set-variables
  '(package-archives
@@ -23,14 +23,12 @@
      ("gnu" . 5)
      ("melpa" . 10))))
 
-(add-hook 'package-menu-mode-hook 'hl-line-mode)
-
-(package-initialize)
-
 (custom-set-variables
+ '(straight-use-package-by-default t)
+ '(straight-check-for-modifications 'never)
+ '(straight-vc-git-default-clone-depth 1)
+
  '(ivy--display-transformers-alist nil)
- '(quelpa-checkout-melpa-p nil)
- '(quelpa-update-melpa-p nil)
  '(use-package-always-ensure nil) ; Auto-download package if not exists
  '(use-package-always-defer t) ; Always defer load package to speed up startup
  '(use-package-verbose nil) ; Report loading details
@@ -38,17 +36,26 @@
  '(use-package-always-pin nil)
  '(use-package-enable-imenu-support t))
 
+ ;; initialize straight.
+(defvar bootstrap-version 5)
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+(defvar bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
 
+(unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+(message "Loading bootstrap.")
+(load bootstrap-file nil 'nomessage)
+
+(require 'straight)
+(straight-use-package 'use-package)
 (require 'use-package)
 
-(use-package quelpa-use-package
-  :ensure t)
-
-(require 'quelpa-use-package)
 
 
 ;;;; User Info
