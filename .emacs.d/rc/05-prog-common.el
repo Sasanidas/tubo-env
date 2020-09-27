@@ -73,8 +73,8 @@ Call ORIG-FUNC which is 'flycheck-next-error with ARGS."
 
  ;; EMR.
 
-(use-package list-utils)
-(use-package iedit)
+(use-package list-utils :ensure t)
+(use-package iedit :ensure t)
 
 (use-package emr
 
