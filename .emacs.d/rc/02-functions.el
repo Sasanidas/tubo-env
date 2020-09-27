@@ -489,13 +489,12 @@ And install necessary packages if there are errors while executing FUNC."
                        (set-auto-mode)))))
          (error "Operation failed: %s" msg))))))
 
-;; (advice-add  'command-execute :around #'yc/install-package-on-error)
+(advice-add  'command-execute :around #'yc/install-package-on-error)
+(advice-add 'run-hooks :around #'yc/install-package-on-error)
 
-;; (advice-add 'run-hooks :around #'yc/install-package-on-error)
-
-;; (eval-after-load
-;;   "timer"
-;;   (advice-add 'timer-event-handler :around #'yc/install-package-on-error))
+(eval-after-load
+  "timer"
+  (advice-add 'timer-event-handler :around #'yc/install-package-on-error))
 
 (defun yc/in-comments-p ()
   "Check if current point is in comment."

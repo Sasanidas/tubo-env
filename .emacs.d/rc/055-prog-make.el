@@ -15,7 +15,6 @@
   :hook ((cmake-mode . cmake-font-lock-activate)))
 
 (use-package company-cmake
-  :straight nil
   :commands (company-cmake))
 
 (use-package cmake-mode
@@ -112,6 +111,7 @@ ORIG-FUNC is called with ARGS."
 
 
   ;; *********** Makefile ***************
+
 (use-package make-mode
   :mode (((rx bol (or "Makefile" "makefile"
                       (: "." (+ alnum) (: (+ alnum) ".mk")) )
@@ -120,7 +120,6 @@ ORIG-FUNC is called with ARGS."
   :hook ((makefile-mode . (lambda () (set (make-local-variable 'yas-indent-line) 'fixed)))))
 
 (use-package counsel-compile2
-  :straight nil
   :commands (counsel-compile2 counsel-compile-projectile counsel-make)
   :bind ((;; ,(kbd "<M-f6>")
           [M-f6]. counsel-compile2)
@@ -137,7 +136,6 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package compile-utils
-  :straight nil
   :commands (yc/yank-cmake-command yc/cmake-generate-fake-project)
   :bind (([f6] . do-compile)
          ([f7] . do-run)

@@ -7,7 +7,6 @@
 ;;; Code:
 
 (use-package counsel-woman
-  :straight nil
   :bind (([f1] . counsel-woman))
   :custom
   (woman-use-own-frame nil)
@@ -19,17 +18,20 @@
        '("usr/share/man"
          "usr/local/share/man"
          "share/man"
-         "local/share/man"))))
+         "local/share/man")))
 
-;; php mode
+  )
+
+ ;; php mode
 (use-package php-mode
   :mode (rx "." (or (: "php" (* (or "s" "t" digit))) "phtml" "Amkfile" "amk"))
   :interpreter ("php" . php-mode))
 
+
 (use-package systemtap-mode :mode "\\.stp\\'")
 
-;; Javascript mode
-(use-package js
+ ;; Javascript mode
+(use-package js-mode
   :commands (js-mode)
   :mode (rx (or (: bow "manifest") ".json" ".js" ".pac") eol)
   :config
@@ -48,6 +50,7 @@
 ;;               (require 'lsp-java))
 ;;             (lsp)))))
 
+
 (use-package batch-mode :mode (rx "." (or "bat" "cmd")))
 
 ;; Poweshell
@@ -116,7 +119,7 @@
 
 
 (use-package qml-mode :mode "\\.qml$")
-(use-package swig-mode :straight nil :mode (rx (or ".i" ".swig") eol))
+(use-package swig-mode  :mode (rx (or ".i" ".swig") eol))
 
 (defun yc/bison-setup-imenu-function ()
   "Setup imenu-index-function for Bison mode.."
@@ -169,7 +172,6 @@
   :hook ((sql-mode . sqlind-minor-mode)))
 
 (use-package sql+
-  :straight nil
   :commands (sql/choose-dbms sql/choose-database company-sql
                              company-sql-update-candidates
                              eshell/restart_pg sql/remove-costs)
@@ -179,7 +181,8 @@
 
 (defun yc/sql-mode-hook ()
   "My hook to run for sql mode."
-  (ws-butler-mode -1))
+  (ws-butler-mode -1)
+  )
 
 (use-package sql
   :mode ((rx (or (: "." (or "sql" "ddl") (? (or "_in" ".result" ".reject")))
@@ -200,35 +203,34 @@
  ;; protobuf-mode
 (use-package protobuf-mode :mode (rx ".proto" eol))
 
-(use-package console-mode
-  :straight nil
-  :commands (console-mode))
+ ;; console mode
+(use-package console-mode  :commands (console-mode))
 
  ;; scala-mode.
-;; (use-package ensime
-;;   :preface
-;;   (defun yc/ensime-find-definition (pt)
-;;     "Find definition at PT."
-;;     (unless (fboundp 'ensime-edit-definition)
-;;       (require 'ensime))
-;;     (if (ensime-edit-definition nil)
-;;         (yc/push-stack (cons 'ensime-pop-find-definition-stack nil))))
-;;   :commands (ensime)
-;;   :custom
-;;   (ensime-startup-notification nil)
-;;   (ensime-startup-snapshot-notification nil)
-;;   (ensime-db-default-port "5005")
-;;   (ensime-startup-dirname (yc/make-cache-path "ensime"))
-;;   :config
-;;   (yc/add-company-backends 'ensime-mode 'ensime-company)
-;;   (add-to-list 'yc/find-def-func-list 'yc/ensime-find-definition))
+(use-package ensime
+  :preface
+  (defun yc/ensime-find-definition (pt)
+    "Find definition at PT."
+    (unless (fboundp 'ensime-edit-definition)
+      (require 'ensime))
+    (if (ensime-edit-definition nil)
+        (yc/push-stack (cons 'ensime-pop-find-definition-stack nil))))
+  :commands (ensime)
+  :custom
+  (ensime-startup-notification nil)
+  (ensime-startup-snapshot-notification nil)
+  (ensime-db-default-port "5005")
+  (ensime-startup-dirname (yc/make-cache-path "ensime"))
+  :config
+  (yc/add-company-backends 'ensime-mode 'ensime-company)
+  (add-to-list 'yc/find-def-func-list 'yc/ensime-find-definition))
 
-;; (use-package scala-mode
-;;   :mode (rx ".scala" eol)
-;;   :hook ((scala-mode . yc/scala-mode-hook))
-;;   :config
-;;   (modify-syntax-entry ?\" "\"" scala-syntax:syntax-table)
-;;   (require 'ensime))
+(use-package scala-mode
+  :mode (rx ".scala" eol)
+  :hook ((scala-mode . yc/scala-mode-hook))
+  :config
+  (modify-syntax-entry ?\" "\"" scala-syntax:syntax-table)
+  (require 'ensime))
 
 
 (use-package cperl-mode
@@ -322,19 +324,23 @@
 
   :mode ((rx ".rs" buffer-end)))
 
+
 (use-package lua-mode
   :commands (lua-mode)
-  :mode (rx "." (or "lua") eow))
+  :mode (rx "." (or "lua") eow)
+  )
 
 (use-package typescript-mode
   :mode (rx "." (or "ts") buffer-end)
   :hook ((typescript-mode . lsp)))
 
 (use-package go-mode
-  :mode "\\.go\\'")
+  :mode "\\.go\\'"
+  )
 
 (use-package groovy-mode
-  :mode (rx "." (or "grovvy" "gradle") buffer-end) )
+  :mode (rx "." (or "grovvy" "gradle") buffer-end)
+  )
 
 
 (provide '056-prog-others)

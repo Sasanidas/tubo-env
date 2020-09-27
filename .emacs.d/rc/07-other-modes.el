@@ -14,10 +14,9 @@
                           "IndianRed4")))
 
 (use-package highlight-indentation
-  :commands (highlight-indentation-mode)
-  :hook ((python-mode . highlight-indentation-mode)))
+  :commands (highlight-indentation-mode))
 
-;; Info settings.
+ ;; Info settings.
 (use-package info
   :commands (info)
   :config
@@ -33,9 +32,10 @@
             Info-default-directory-list)))
 
 (use-package counsel-info
-  :straight nil
+
   :commands (counsel/info)
-  :bind (([remap info] . counsel/info)))
+  :bind (([remap info] . counsel/info))
+  )
 
 
  ;;; spell checker..
@@ -57,7 +57,8 @@
    (ispell-extra-args '("--sug-mode=ultra" "--run-together" "--dont-tex-check-comments"))
    (ispell-skip-html t)
    (ispell-dictionary "english")
-   (ispell-local-dictionary "english"))
+   (ispell-local-dictionary "english")
+  )
 
 (use-package flyspell
   :commands (flyspell-mode flyspell-prog-mode)
@@ -89,13 +90,11 @@
 
  ;;; Dictionary.
 (use-package tdict
-  :straight nil
   :bind ((;; (kbd "<C-f10>")
           [C-f10]
           . tdict-search)))
 
 (use-package tabbr
-  :straight nil
   :bind ((;; ,(kbd "<S-f10>")
           [S-f10]. tabbr-search)
          (;; ,(kbd "<C-S-f10>")
@@ -103,7 +102,6 @@
 
  ;; image-mode
 (use-package image-mode
-  :straight nil
   :bind (:map image-mode-map
               (;; ,(kbd "C-c o")
                "o". yc/open-with-external-app)))
@@ -219,7 +217,6 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package yc-utils
-  :straight nil
   :commands (
              edit-elpa   edit-project   edit-rcs
              edit-template
@@ -249,7 +246,6 @@ ORIG-FUNC is called with ARGS."
              yc/new-snippet
              yc/dired-compress-file
              yc/list-attentions
-             yc/insert-today
              )
 
   :bind ((;(kbd "C-x J")
@@ -303,19 +299,17 @@ ORIG-FUNC is called with ARGS."
           "<" . yc/shrink-window-horizontal)
 
          ([f5] . yc/open-eshell)
-         ([f2] . rename-buffer)
-         (;; (kbd "<f2>")
-          [f2] . yc/auto-rename-buffer)
          ([remap shell-command] . yc/exec-command-via-eshell))
 
-  :hook ((before-save . yc/make-file-writable)))
+  :hook ((before-save . yc/make-file-writable))
+  )
 
 (use-package yc-dump
-  :straight nil
   :commands (yc/dump-emacs yc/config-emacs))
 
 
-;; diff-mode
+ ;; diff-mode
+
 (use-package diff-mode
   :mode (rx (or ".rej"  "patch") eol)
   :bind (:map diff-mode-map
@@ -347,7 +341,6 @@ ORIG-FUNC is called with ARGS."
 
  ;; **************************** RFCs ******************************
 (use-package irfc
-  :straight nil
   :commands (irfc-visit irfc-follow)
   :config
   (custom-set-variables
@@ -359,8 +352,8 @@ ORIG-FUNC is called with ARGS."
  ;; ********************* tramp *******************************
 ;; (cdsq tramp-ssh-controlmaster-options
 ;;   "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
+
 (use-package tramp
-  :straight nil
   :custom
   (tramp-default-method
      (cond
@@ -442,7 +435,6 @@ ORIG-FUNC is called with ARGS."
               ))
 
 (use-package my-net-utils
-  :straight nil
   :commands (yc/download-url yc/open-url)
   :bind ((;; ,(kbd "C-x C-d")
           "". yc/download-url)
@@ -512,7 +504,6 @@ For now, only scale pages."
 
 
 (use-package stringtemplate-mode
-  :straight nil
   :mode "\\.st\\'")
 
 
@@ -548,11 +539,9 @@ For now, only scale pages."
   (add-hook 'comint-output-filter-functions 'comint-truncate-buffer))
 
 (use-package eshell+
-  :straight nil
   :commands (eshell/ldd eshell/restart_pg))
 
 (use-package em-term
-  :straight nil
   :config
   (mapc (lambda (x) (push x eshell-visual-commands))
         '("el" "elinks" "htop" "less" "ssh" "tmux" "top" "vim" "tail"
@@ -580,7 +569,7 @@ create new buffer."
 
  ;; comint hook
 (use-package comint
-  :straight nil
+  :defer t
   :init
   (progn
     (add-hook 'comint-mode-hook
@@ -602,7 +591,6 @@ create new buffer."
 
 
 (use-package tabify
-  :straight nil
   :bind (("\C-xt" . untabify)
          ("\C-xT" . tabify)))
 
@@ -690,7 +678,6 @@ create new buffer."
 
  ;; Dired
 (use-package dired
-  :straight nil
   :commands (dired)
   :custom
   (ls-lisp-dirs-first t)
@@ -745,20 +732,17 @@ ORIG-FUNC is called with ARGS."
   (define-key ctl-x-map "d" nil))
 
 (use-package dired-aux
-  :straight nil
   :custom
   (dired-create-destination-dirs 'ask)
   :bind (:map dired-mode-map
               ([f12] . dired-diff)))
 
 (use-package wdired
-  :straight nil
   :after dired
   :bind (:map dired-mode-map
               ("r" . wdired-change-to-wdired-mode)))
 
 (use-package dired-x
-  :straight nil
   :commands (dired-jump)
   :init
   (define-key ctl-x-map "\C-j" 'dired-jump)
@@ -785,13 +769,9 @@ ORIG-FUNC is called with ARGS."
 (use-package ztree
   :commands (ztree-dir ztree-diff))
 
-(use-package charset-util
-  :straight nil
-  :commands (yc/list-non-ascii))
+(use-package charset-util :commands (yc/list-non-ascii))
 
-(use-package x86-help
-  :straight nil
-  :bind (("x" . x86-help)))
+(use-package x86-help   :bind (("x" . x86-help))) ;;(kbd "C-h x")
 
 (use-package image-file
   :commands (auto-image-file-mode)
@@ -799,9 +779,7 @@ ORIG-FUNC is called with ARGS."
   (when window-system
     (auto-image-file-mode 1))) ; 自动加载图像
 
-(use-package t-report
-  :straight nil
-  :commands (yc/new-wp yc/new-mail))
+(use-package t-report  :commands (yc/new-wp yc/new-mail))
 
  ;; edit-indirect mode.
 (use-package edit-indirect
@@ -827,8 +805,8 @@ ORIG-FUNC is called with ARGS."
   :bind ((;; ,(kbd "C-c hr")
           "hr". yc/vimish-fold-toggle)))
 
-;; (use-package mediawiki
-;;   :commands (mediawiki-open mediawiki-site))
+(use-package mediawiki
+  :commands (mediawiki-open mediawiki-site))
 
 (use-package desktop
   :commands (desktop-save-in-desktop-dir desktop-read)
@@ -862,11 +840,11 @@ ORIG-FUNC is called with ARGS."
   :config
   (yc/add-company-backends 'css-mode 'company-css)
   :custom
-  (css-indent-offset 2))
+  (css-indent-offset 2)
+)
 
-;; *************************** nxml mode for XML *******************
+ ;; *************************** nxml mode for XML *******************
 (use-package nxml-mode
-  :straight nil
   :mode (rx "." (or "xml" "xsd" "sch" "rng" "xslt" "svg" "rss" "rdf" "plist") eol)
   :custom
   (nxml-attribute-indent 2)
@@ -915,7 +893,6 @@ ORIG-FUNC is called with ARGS."
   yc/ditaa-package)
 
 (use-package text-mode
-  :straight nil
   :preface
   (defun yc/txt-to-png ()
     "Change a txt file into png file using ditaa."
@@ -976,7 +953,6 @@ ORIG-FUNC is called with ARGS."
 
  ;; markdown
 (use-package org-table
-  :straight nil
   :commands (orgtbl-mode))
 
 (use-package markdown-mode
@@ -1044,7 +1020,6 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package logviewer
-  :straight nil
   :commands (logviewer-special-handling-csv)
   :mode (((rx (or (: bow "messages" eow)
                   (:  "/" (+? nonl) "_log/" (+? nonl) "."
@@ -1069,11 +1044,10 @@ ORIG-FUNC is called with ARGS."
 ;;   :mode (((rx "github.io/" (+ nonl) ".md" eol) . jekyll-markdown-mode)
 ;;          ((rx "github.io/" (+ nonl) "." (or "html" "htm") eol) . jekyll-html-mode)))
 
-(use-package tblog
-  :straight nil
-  :commands (tblog/new-post tblog/export tblog/find-file))
+(use-package tblog :commands (tblog/new-post tblog/export tblog/find-file))
 
 (use-package conf-mode
+
   :mode (rx (or "Doxyfile"
                 (: (? "_" (+? nonl)) "init_file" (? "_" (+? nonl)))
 
@@ -1110,12 +1084,13 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package fontawesome
-  :straight nil
   :commands (counsel-fontawesome))
 
 (use-package counsel-nerd-fonts
-  :straight nil
   :commands (counsel-nerd-fonts))
+
+(use-package dockerfile-mode
+  :mode (rx buffer-start (or "D" "d") "ockerfile" buffer-end))
 
 (use-package elfeed-org
   :commands (elfeed-org))

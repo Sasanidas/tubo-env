@@ -7,7 +7,6 @@
 ;;; Code:
 
 (use-package ox-plus
-  :straight nil
   :commands (yc/ditaa-path yc/plantuml-path uml/parse-stringfied-nodes company-plantuml))
 
  ;; PlantUML,
@@ -149,12 +148,14 @@ This will add proper attributes into org file so image won't be too large."
 Final image name looks like 'images/org_file_name/xxx.png'.
 This makes it easier to move org file (and associated images) to other directory."
     :override  #'org-download--dir-2
-    (file-name-base (buffer-file-name))))
+    (file-name-base (buffer-file-name)))
+  )
+
+
 
 
  ;; *************************** Org Mode ********************************
 (use-package org-indent
-  :straight nil
   :commands (org-indent-mode))
 
 ;; hide blocks marked as :hidden
@@ -236,11 +237,9 @@ This makes it easier to move org file (and associated images) to other directory
 
 
 (use-package ol
-  :straight nil
   :bind (("\C-cl" . org-store-link)))
 
 (use-package org-agenda
-  :straight nil
   :custom
   (org-agenda-files (list (expand-file-name "~/Documents/Database/org/")))
   (org-agenda-dim-blocked-tasks (quote invisible))
@@ -252,10 +251,10 @@ This makes it easier to move org file (and associated images) to other directory
     (dolist (item (directory-files org-directory t))
       (unless (or (not (file-directory-p item))
                   (member (file-name-base item) '(".git" "slides" "images" "assets" "references" "." "..")))
-        (add-to-list 'org-agenda-files item))))
+        (add-to-list 'org-agenda-files item)))
+  )
 
 (use-package org-capture
-  :straight nil
   :bind ((;; ,(kbd "<M-S-f10>")
           [M-S-f10]. org-capture))
   :config
@@ -304,7 +303,6 @@ This makes it easier to move org file (and associated images) to other directory
   (org-superstar-headline-bullets-list '( "●"  "◎" "○" "✸" "✿" "✤" "✜" "◆" "▶")))
 
 (use-package ox-latex
-  :straight nil
   :custom
   (org-latex-compiler "xelatex")
   (org-latex-default-figure-position "htbp";; "H"
@@ -335,7 +333,6 @@ ORIG-FUNC is called with ARGS."
     (apply orig-func args))))
 
 (use-package ox-publish
-  :straight nil
   :commands (org-publish-needed-p)
   :config
   (defadvice! yc/org-publish-needed-p-adv (orig-func &rest args)
@@ -346,7 +343,6 @@ ORIG-FUNC is called with ARGS."
 
 
 (use-package org
-  :straight nil
   :preface
   (defun yc/open-gtd ()
     "Open my gtd file."
@@ -527,7 +523,6 @@ ORIG-FUNC is called with ARGS."
   )
 
 (use-package tnote
-  :straight nil
   :commands (tnote
              tnote/dispatch-file tnote/dispatch-directory
              tnote/find-note)

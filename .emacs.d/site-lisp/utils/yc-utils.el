@@ -1673,20 +1673,7 @@ If `current-prefix-arg' is given, search for all files under default-folder."
   (if current-prefix-arg
       (yc/counsel-grep r-match-attentions)
     (counsel-grep-or-swiper r-match-attentions))))
-
-
-(defun yc/auto-rename-buffer ()
-  "Rename current buffer."
-  (interactive)
-  (let ((newname (concat (buffer-name) "-" (format-time-string  "%H:%M:%S" (current-time)))))
-    (rename-buffer newname)))
-
-(defun yc/insert-today ()
-  "Insert today's date into buffer."
-  (interactive)
-  (insert (format-time-string "%Y-%m-%d" (current-time))))
-
-
+
 (provide 'yc-utils)
 
 ;; Local Variables:

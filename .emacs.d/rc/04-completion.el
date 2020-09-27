@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-;; hippie settings
+ ;; hippie settings
 (custom-set-variables
  '(hippie-expand-try-functions-list
    '(
@@ -23,23 +23,25 @@
      try-complete-lisp-symbol
      try-expand-whole-kill)))
 
-;; ************** Autoinsert templates *****************
-(use-package autoinsert
-  :straight nil
-  :commands (auto-insert)
-  :preface
-  (defun auto-update-defaults ()
-  "Update inserted template."
+ ;; ************** Autoinsert templates *****************
+(defun insert-today ()
+  "Insert today's date into buffer."
+  (interactive)
+  (insert (format-time-string "%Y-%m-%d" (current-time))))
 
-  (defun yc/auto-update-template (a b)
-    "Replace A with B."
-    (PDEBUG "ENTER: " a "--> " b)
-    (save-excursion
-      (goto-char (point-min))
-      (while (search-forward (format "(>>%s<<)" a) nil t)
-        (save-restriction
-          (narrow-to-region (match-beginning 0) (match-end 0))
-          (replace-match b t)))))
+(defun yc/auto-update-template (a b)
+  "Replace A with B."
+  (PDEBUG "ENTER: " a "--> " b)
+
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward (format "(>>%s<<)" a) nil t)
+      (save-restriction
+        (narrow-to-region (match-beginning 0) (match-end 0))
+        (replace-match b t)))))
+
+(defun auto-update-defaults ()
+  "Update inserted template."
 
   (when buffer-file-name
     (let ((fn (file-name-nondirectory buffer-file-name)))
@@ -49,7 +51,11 @@
   (yc/auto-update-template "DATE" (format-time-string "%Y-%m-%d" (current-time)))
   (yc/auto-update-template "TIMESTAMP" (format-time-string "%s" (current-time)))
   (yc/auto-update-template "USER" user-full-name)
-  (yc/auto-update-template "EMAIL" user-mail-address))
+  (yc/auto-update-template "EMAIL" user-mail-address)
+)
+
+(use-package autoinsert
+  :commands (auto-insert)
   :hook ((find-file . auto-insert))
   :custom
   (auto-insert-directory "~/.emacs.d/templates/auto-insert/")
@@ -74,10 +80,12 @@
     (,(rx "." (or "perl" "pl") eol)
      . ["insert.pl" auto-update-defaults])
     (,(rx "yasnippets" (? "-private") "/")
-      . ["insert.snip" auto-update-defaults]))))
+      . ["insert.snip" auto-update-defaults])))
+  )
 
-; ******************** Yasnippet ****************************
+;; ******************** Yasnippet ****************************
 (use-package yasnippet
+  :ensure t
   :preface
   (defun yas-with-comment (&rest strings)
     "Insert STRINGS as comment."
@@ -150,8 +158,9 @@
          ;; Format inserted codes after yas-expand.
          (yas-after-exit-snippet . yc/format-snippets-after-expand)))
 
-;; company mode..
+ ;; company mode..
 (use-package company
+  :ensure t
   :preface
   (defun yc/compelete ()
     "Complete at point.

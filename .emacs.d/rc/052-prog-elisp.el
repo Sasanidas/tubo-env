@@ -7,7 +7,6 @@
 ;;; Code:
 
 (use-package  elisp-mode
-  :straight nil
   :preface
   (defun yc/insert-key-sequence-kbd ()
     "Insert key sequence (with kbd function)."
@@ -48,11 +47,7 @@
     "Byte compile Lisp file."
     (interactive)
     (when (eq major-mode 'emacs-lisp-mode)
-      (if (or (string-match-p (rx (or
-                                   (: (or ".emacs.d/rc/"
-                                          ".emacs.d/stragit/repos/"))
-                                   (+ nonl)
-
+      (if (or (string-match-p (rx (or (: ".emacs.d/rc/" (+ nonl))
                                       ".dir-locals")
                                   ".el")
                               buffer-file-name)

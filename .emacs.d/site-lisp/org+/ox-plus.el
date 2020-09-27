@@ -420,7 +420,6 @@ Call FUNC with ARGS."
              (apply func args)))
 
 (use-package ox-publish
-  :straight nil
   :config
   (require 'ox-html)
   (require 'ox-odt)
@@ -436,11 +435,9 @@ Call FUNC with ARGS."
   (yc/org-reload-projects)
 
   (advice-add 'org-publish-get-base-files :around
-              #'yc/org-publish-get-base-files)
-  )
+              #'yc/org-publish-get-base-files))
 
 (use-package ox-odt
-  :straight nil
   ;; org v8 bundled with Emacs 24.4
   :custom
   (org-odt-preferred-output-format "doc")
