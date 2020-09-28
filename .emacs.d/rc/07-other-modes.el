@@ -563,20 +563,21 @@ For now, only scale pages."
 
       (when (or current-prefix-arg ;; if called with prefix-arg, recompile.
                 (not (file-exists-p vterm-module)))
-        (with-current-buffer (get-buffer-create vterm-install-buffer-name)
+        (with-current-buffer (get-buffer-create "*Compile-Vterm*")
           (pop-to-buffer (current-buffer))
-          (if (zerop (call-process "sh" nil (current-buffer) t "-c"
+          (read-only-mode -1)
+          (erase-buffer)
+          (let ((ret (call-process "sh" nil (current-buffer) t "-c"
                                    (concat
                                     "cd " (shell-quote-argument build-dir) "; \
              mkdir -p build; \
              cd build; \
-             cmake "
-                                    vterm-module-cmake-args
-                                    " ..; \
-             make; \
-             cd -")))
-              (message "Compilation of `emacs-libvterm' module succeeded")
-            (error "Compilation of `emacs-libvterm' module failed!"))))
+             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ..; make;"))))
+
+            (compilation-mode)
+            (if (zerop ret)
+                (message "Compilation of `emacs-libvterm' module succeeded")
+              (error "Compilation of `emacs-libvterm' module failed!")))))
       (load-file vterm-module)))
   (defun yc/open-vterm ()
     "Open or switch to vterm.
