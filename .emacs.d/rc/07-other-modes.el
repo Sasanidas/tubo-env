@@ -550,12 +550,40 @@ For now, only scale pages."
 
 (use-package vterm
   :commands (vterm vterm-mode)
+  :quelpa (vterm :fetcher github :repo "akermu/emacs-libvterm")
   :preface
+  (defun yc/vterm-module-compile ()
+    "Compile vterm module in quelpa-build directory, to avoid recompile it frequently."
+    (interactive)
+    (unless (executable-find "cmake")
+      (error "Vterm needs CMake to be compiled.  Please, install CMake"))
+
+    (let* ((build-dir (file-name-as-directory (expand-file-name "vterm" quelpa-build-dir)))
+           (vterm-module (concat build-dir "vterm-module.so")))
+
+      (when (or current-prefix-arg ;; if called with prefix-arg, recompile.
+                (not (file-exists-p vterm-module)))
+        (with-current-buffer (get-buffer-create vterm-install-buffer-name)
+          (pop-to-buffer (current-buffer))
+          (if (zerop (call-process "sh" nil (current-buffer) t "-c"
+                                   (concat
+                                    "cd " (shell-quote-argument build-dir) "; \
+             mkdir -p build; \
+             cd build; \
+             cmake "
+                                    vterm-module-cmake-args
+                                    " ..; \
+             make; \
+             cd -")))
+              (message "Compilation of `emacs-libvterm' module succeeded")
+            (error "Compilation of `emacs-libvterm' module failed!"))))
+      (load-file vterm-module)))
   (defun yc/open-vterm ()
     "Open or switch to vterm.
 If *vterm* buffer not exist, or called with current-prefix-arg,
 create new buffer."
     (interactive)
+    (yc/vterm-module-compile)
     (if current-prefix-arg
         (vterm)
       (let* ((name "*vterm*")
@@ -566,7 +594,12 @@ create new buffer."
         (switch-to-buffer vbuffer))))
   :bind (([S-f5] . yc/open-vterm))
   :custom
-  (vterm-kill-buffer-on-exit t))
+  (vterm-kill-buffer-on-exit t)
+  :config
+  (defadvice! yc/vterm-module-compile-adv (&rest args)
+    "Compile vterm module in quelpa-build directory, to avoid recompile it frequently."
+    :override  #'vterm-module-compile
+    (yc/vterm-module-compile)))
 
  ;; comint hook
 (use-package comint
