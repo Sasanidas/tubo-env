@@ -584,7 +584,8 @@ For now, only scale pages."
 If *vterm* buffer not exist, or called with current-prefix-arg,
 create new buffer."
     (interactive)
-    (yc/vterm-module-compile)
+    (unless (featurep 'vterm-module)
+      (yc/vterm-module-compile))
     (if current-prefix-arg
         (vterm)
       (let* ((name "*vterm*")
