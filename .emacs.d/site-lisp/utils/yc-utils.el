@@ -1669,9 +1669,9 @@ Should be run from find-file-hook, change write permissions."
   "List items needs attention.
 If `current-prefix-arg' is given, search for all files under default-folder."
   (interactive)
-  (let ((r-match-attentions (rx (or "xxx" "yyc" "todo" "bug") ":")))
-  (if current-prefix-arg
-      (yc/counsel-grep r-match-attentions)
+  (let ((r-match-attentions (rx bow (or "xxx" "yyc" "todo" "bug") ":")))
+  (if (eq major-mode 'dired-mode)
+      (yc/counsel-grep "'\\b(bug:\|todo:\|xxx:\|yyc:)'")
     (counsel-grep-or-swiper r-match-attentions))))
 
 (provide 'yc-utils)
