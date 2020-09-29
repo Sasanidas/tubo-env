@@ -776,3 +776,8 @@ function update_env_from ()
 }
 
 alias uef="update_env_from"
+
+function activate_homebrew ()
+{
+    test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+}

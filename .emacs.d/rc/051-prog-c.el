@@ -487,7 +487,9 @@ Call FUNC which is 'ccls--suggest-project-root with ARGS."
               (push :compilationDatabaseDirectory ccls-initialization-options))))
 
         (unless (member :index ccls-initialization-options)
-          (push (list :blacklist (vconcat blacklist nil)) ccls-initialization-options)
+          (push (list :threads (max (/ (yc/get-cpu-cores) 4) 2)
+                      :blacklist (vconcat blacklist nil))
+                ccls-initialization-options)
           (push :index ccls-initialization-options))
 
         (PDEBUG "After advice" ccls-initialization-options)))
