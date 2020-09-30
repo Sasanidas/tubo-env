@@ -123,6 +123,7 @@ function eject ()
 
 PLATFORM_RC=$(dirname $0)/helper_$(uname -s).sh
 if [ -f $PLATFORM_RC ]; then
+
     source $PLATFORM_RC
 else
     echo "File $PLATFORM_RC is missing..."

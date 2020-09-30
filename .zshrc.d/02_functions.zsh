@@ -777,7 +777,55 @@ function update_env_from ()
 
 alias uef="update_env_from"
 
-function activate_homebrew ()
+LINUXBREW_BIN=/home/linuxbrew/.linuxbrew/bin
+LINUXBREW_BAK=/tmp/env_${USER}.sh
+function linuxbrew_activate ()
 {
-    test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+    local brew_file=${LINUXBREW_BIN}/brew
+    [ -f ${brew_file} ] || die "Directory ${brew_file} does not exist."
+
+    env | awk -F "=" '{print "export " $1 "=\"" $2"\""}' > ${LINUXBREW_BAK}
+    eval `${brew_file} shellenv`
+    echo "linuxbrew activated..."
+}
+
+function linuxbrew_deactivate ()
+{
+    brew --help >/dev/null
+    if [ $? -ne 0 ]; then
+        echo "brew is not activated.."
+        return 0
+    fi
+
+    if [ -f ${LINUXBREW_BAK} ]; then
+        source ${LINUXBREW_BAK}
+        echo "linuxbrew activated..."
+    else
+        echo "linuxbrew not activated by me..."
+    fi
+}
+
+function linuxbrew_create_link ()
+{
+    local src=
+    local tgt=
+    local promote=
+
+    if [ $# -eq 1 ]; then
+        src=${LINUXBREW_BIN=}/$1
+        tgt=/usr/local/bin/$1
+        promote=1
+    elif [ $# -eq 2 ]; then
+        src=${LINUXBREW_BIN=}/$1
+        tgt=$2
+        die "not implement"
+    else
+        die "usage: linuxbrew_create_link src [tgt]"
+    fi
+
+    if [ -z ${promote} ]; then
+        ln -sf $src $tgt
+    else
+        sudo ln -sf $src $tgt
+    fi
 }
