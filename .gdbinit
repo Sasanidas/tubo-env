@@ -24,10 +24,9 @@ end
 
 ## Frequently used breakpoints.
 b __asan::ReportGenericError
-
-# catch throw
-
 b exit
+
 set startup-with-shell off
 
 set auto-solib-add off
+set auto-load safe-path /

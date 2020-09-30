@@ -1487,7 +1487,7 @@ args should be a list, but to make caller's life easier, it can accept one atom 
           (list (cons 'lisp-interaction-mode 'emacs-lisp-mode)
                 (cons 'c-mode 'cc-mode)))
          (mode (or (cdr (assq major-mode  mode-mapping)) major-mode))
-         (priv (if (yes-or-no-p "Is this public snippet?") "" "-private"))
+         (priv (if (y-or-n-p "Is this public snippet? ") "" "-private"))
          (dirname (expand-file-name
                    (format "~/.emacs.d/templates/yasnippets%s/%s" priv (symbol-name mode))))
          (filename (concat dirname "/" name)))
@@ -1673,6 +1673,15 @@ If `current-prefix-arg' is given, search for all files under default-folder."
   (if (eq major-mode 'dired-mode)
       (yc/counsel-grep "'\\b(bug:\|todo:\|xxx:\|yyc:)'")
     (counsel-grep-or-swiper r-match-attentions))))
+
+(defun yc/get-avaiable-port ()
+  "Description."
+  "Return a port unused."
+  (with-temp-buffer
+    (ignore-errors
+      (when (zerop (call-process "python" nil t nil "-c"
+                                 "import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()"))
+        (string-to-number (buffer-string))))))
 
 (provide 'yc-utils)
 
